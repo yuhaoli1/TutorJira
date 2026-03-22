@@ -4,9 +4,8 @@ import { ROLES } from "@/lib/constants";
 
 const navItems = [
   { label: "首页", href: "/parent/dashboard" },
-  { label: "今日打卡", href: "/parent/checkin" },
-  { label: "任务", href: "/parent/tasks" },
-  { label: "孩子", href: "/parent/children" },
+  { label: "任务看板", href: "/parent/tasks" },
+  { label: "孩子成绩", href: "/parent/children" },
 ];
 
 export default async function ParentLayout({
