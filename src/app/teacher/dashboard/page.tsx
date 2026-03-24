@@ -82,52 +82,52 @@ export default async function TeacherDashboard() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-zinc-900">工作台</h2>
-      <p className="mt-1 text-sm text-zinc-500">欢迎回来，{user.name}</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">工作台</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">欢迎回来，{user.name}</p>
 
       {/* Summary cards */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-4">
         <Link
           href="/teacher/tasks"
-          className="rounded-xl bg-white p-5 shadow-sm border hover:shadow-md transition-shadow"
+          className="rounded-2xl bg-white p-6 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
         >
-          <p className="text-sm text-zinc-500">待完成任务</p>
-          <p className="mt-1 text-3xl font-bold text-zinc-900">
+          <p className="text-sm text-[#B4BCC8]">待完成任务</p>
+          <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {totalPending}
           </p>
         </Link>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">已确认任务</p>
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">已确认任务</p>
           <p className="mt-1 text-3xl font-bold text-green-600">
             {totalConfirmed}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">任务总数</p>
-          <p className="mt-1 text-3xl font-bold text-zinc-900">{totalTasks}</p>
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">任务总数</p>
+          <p className="mt-1 text-3xl font-bold text-[#2E3338]">{totalTasks}</p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">学生总数</p>
-          <p className="mt-1 text-3xl font-bold text-zinc-900">
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">学生总数</p>
+          <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {totalStudents}
           </p>
         </div>
       </div>
 
       {/* Student stats table */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-zinc-900">学生概览</h3>
-        <div className="mt-3 overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <div className="mt-10">
+        <h3 className="text-lg font-bold text-[#2E3338]">学生概览</h3>
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-[#E8EAED] bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-zinc-50 text-left text-zinc-500">
-                <th className="px-4 py-3 font-medium">学生</th>
-                <th className="px-4 py-3 font-medium">年级</th>
-                <th className="px-4 py-3 font-medium text-center">待完成</th>
-                <th className="px-4 py-3 font-medium text-center">已确认</th>
-                <th className="px-4 py-3 font-medium text-center">已打回</th>
-                <th className="px-4 py-3 font-medium text-center">完成率</th>
-                <th className="px-4 py-3 font-medium text-center">
+              <tr className="border-b border-[#E8EAED] bg-[#F4F5F6] text-left text-[#B4BCC8]">
+                <th className="px-5 py-3.5 font-medium">学生</th>
+                <th className="px-5 py-3.5 font-medium">年级</th>
+                <th className="px-5 py-3.5 font-medium text-center">待完成</th>
+                <th className="px-5 py-3.5 font-medium text-center">已确认</th>
+                <th className="px-5 py-3.5 font-medium text-center">已打回</th>
+                <th className="px-5 py-3.5 font-medium text-center">完成率</th>
+                <th className="px-5 py-3.5 font-medium text-center">
                   平均正确率
                 </th>
               </tr>
@@ -136,45 +136,45 @@ export default async function TeacherDashboard() {
               {studentStats.map((s) => (
                 <tr
                   key={s.id}
-                  className="border-b last:border-b-0 hover:bg-zinc-50"
+                  className="border-b border-[#E8EAED] last:border-b-0 hover:bg-[#F4F5F6]/50 transition-colors duration-150"
                 >
-                  <td className="px-4 py-3 font-medium">
+                  <td className="px-5 py-3.5 font-medium">
                     <Link
                       href={`/teacher/students/${s.id}`}
-                      className="text-blue-600 hover:text-blue-700 hover:underline"
+                      className="text-[#163300] hover:text-[#163300]/70 hover:underline"
                     >
                       {s.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-zinc-500">{s.grade}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-5 py-3.5 text-[#B4BCC8]">{s.grade}</td>
+                  <td className="px-5 py-3.5 text-center">
                     {s.pending > 0 ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-600">
                         {s.pending}
                       </span>
                     ) : (
-                      <span className="text-zinc-300">0</span>
+                      <span className="text-[#E8EAED]">0</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-5 py-3.5 text-center">
                     {s.confirmed > 0 ? (
                       <span className="text-green-600 font-medium">
                         {s.confirmed}
                       </span>
                     ) : (
-                      <span className="text-zinc-300">0</span>
+                      <span className="text-[#E8EAED]">0</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-5 py-3.5 text-center">
                     {s.rejected > 0 ? (
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                      <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
                         {s.rejected}
                       </span>
                     ) : (
-                      <span className="text-zinc-300">0</span>
+                      <span className="text-[#E8EAED]">0</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-5 py-3.5 text-center">
                     {s.completionRate !== null ? (
                       <span
                         className={
@@ -188,10 +188,10 @@ export default async function TeacherDashboard() {
                         {s.completionRate}%
                       </span>
                     ) : (
-                      <span className="text-zinc-300">-</span>
+                      <span className="text-[#E8EAED]">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-5 py-3.5 text-center">
                     {s.avgCorrectRate !== null ? (
                       <span
                         className={
@@ -205,7 +205,7 @@ export default async function TeacherDashboard() {
                         {s.avgCorrectRate}%
                       </span>
                     ) : (
-                      <span className="text-zinc-300">-</span>
+                      <span className="text-[#E8EAED]">-</span>
                     )}
                   </td>
                 </tr>
@@ -214,7 +214,7 @@ export default async function TeacherDashboard() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-8 text-center text-zinc-400"
+                    className="px-5 py-10 text-center text-[#B4BCC8]"
                   >
                     暂无学生
                   </td>

@@ -38,6 +38,11 @@ export async function getUser(): Promise<UserProfile> {
 export async function requireRole(allowedRoles: UserRole[]): Promise<UserProfile> {
   const user = await getUser();
 
+  // Admin can access all pages
+  if (user.role === "admin") {
+    return user;
+  }
+
   if (!allowedRoles.includes(user.role)) {
     redirect(`/${user.role}/dashboard`);
   }

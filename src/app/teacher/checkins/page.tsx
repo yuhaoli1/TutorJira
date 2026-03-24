@@ -5,9 +5,9 @@ export default async function CheckinsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-zinc-900">打卡管理</h2>
-      <p className="mt-2 text-sm text-zinc-500">查看学生每日打卡情况</p>
-      <div className="mt-6 rounded-xl border bg-white p-8 text-center text-zinc-400">
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">打卡管理</h2>
+      <p className="mt-2 text-sm text-[#B4BCC8]">查看学生每日打卡情况</p>
+      <div className="mt-8 rounded-2xl border border-[#E8EAED] bg-white p-10 text-center text-[#B4BCC8]">
         暂无打卡记录
       </div>
     </div>

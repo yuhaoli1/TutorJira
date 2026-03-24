@@ -37,7 +37,11 @@ export default function LoginPage() {
     if (!profile) {
       router.push("/setup");
     } else {
-      router.push(`/${profile.role}/dashboard`);
+      const defaultPage =
+        profile.role === "parent" || profile.role === "student"
+          ? `/${profile.role}/tasks`
+          : `/${profile.role}/dashboard`;
+      router.push(defaultPage);
       router.refresh();
     }
   };
@@ -116,26 +120,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-2xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-[#F4F5F6] px-4">
+      <div className="w-full max-w-sm space-y-8 rounded-2xl bg-white p-8 border border-[#E8EAED]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-zinc-900">优培科技辅导学习平台</h1>
-          <p className="mt-2 text-sm text-zinc-500">请登录或注册</p>
+          <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">优培科技辅导学习平台</h1>
+          <p className="mt-2 text-sm text-[#B4BCC8]">请登录或注册</p>
         </div>
 
         {/* 切换登录方式 */}
         {step !== "check-email" && (
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1">
+          <div className="grid grid-cols-2 gap-2 rounded-full bg-[#F4F5F6] p-1">
           <button
             onClick={() => {
               setMethod("email");
               setError("");
               setStep("input");
             }}
-            className={`rounded-md py-2 text-sm font-medium transition-colors ${
+            className={`rounded-full py-2 text-sm font-medium transition-colors duration-150 ${
               method === "email"
-                ? "bg-white text-zinc-900 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-700"
+                ? "bg-white text-[#2E3338] shadow-sm"
+                : "text-[#B4BCC8] hover:text-[#4D5766]"
             }`}
           >
             邮箱登录
@@ -146,10 +150,10 @@ export default function LoginPage() {
               setError("");
               setStep("input");
             }}
-            className={`rounded-md py-2 text-sm font-medium transition-colors ${
+            className={`rounded-full py-2 text-sm font-medium transition-colors duration-150 ${
               method === "phone"
-                ? "bg-white text-zinc-900 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-700"
+                ? "bg-white text-[#2E3338] shadow-sm"
+                : "text-[#B4BCC8] hover:text-[#4D5766]"
             }`}
           >
             手机号登录
@@ -158,7 +162,7 @@ export default function LoginPage() {
         )}
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -171,14 +175,14 @@ export default function LoginPage() {
               placeholder="邮箱地址"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             />
             <input
               type="password"
               placeholder="密码（至少6位）"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             />
             <Button
               onClick={isSignUp ? emailSignUp : emailLogin}
@@ -189,7 +193,7 @@ export default function LoginPage() {
             </Button>
             <button
               onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
-              className="w-full text-sm text-zinc-500 hover:text-zinc-700"
+              className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
               {isSignUp ? "已有账号？去登录" : "没有账号？去注册"}
             </button>
@@ -200,7 +204,7 @@ export default function LoginPage() {
         {method === "phone" && step === "input" && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="rounded-lg border border-zinc-200 px-3 py-3 text-base text-zinc-500">
+              <span className="rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-3 text-base text-[#B4BCC8]">
                 +86
               </span>
               <input
@@ -208,7 +212,7 @@ export default function LoginPage() {
                 placeholder="手机号"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
                 maxLength={11}
               />
             </div>
@@ -225,14 +229,14 @@ export default function LoginPage() {
         {/* 邮箱确认提示 */}
         {step === "check-email" && (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-3xl">
               ✉
             </div>
-            <p className="text-base font-medium text-zinc-900">
+            <p className="text-base font-medium text-[#2E3338]">
               确认邮件已发送
             </p>
-            <p className="text-sm text-zinc-500">
-              请查看 <span className="font-medium text-zinc-700">{email}</span> 的收件箱，点击确认链接完成注册
+            <p className="text-sm text-[#B4BCC8]">
+              请查看 <span className="font-medium text-[#4D5766]">{email}</span> 的收件箱，点击确认链接完成注册
             </p>
             <button
               onClick={() => {
@@ -240,7 +244,7 @@ export default function LoginPage() {
                 setIsSignUp(false);
                 setError("");
               }}
-              className="w-full text-sm text-zinc-500 hover:text-zinc-700"
+              className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
               返回登录
             </button>
@@ -250,7 +254,7 @@ export default function LoginPage() {
         {/* 手机号 OTP 验证 */}
         {method === "phone" && step === "otp" && (
           <div className="space-y-4">
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-[#B4BCC8]">
               验证码已发送至 +86 {phone}
             </p>
             <input
@@ -258,7 +262,7 @@ export default function LoginPage() {
               placeholder="6位验证码"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-center text-2xl tracking-widest outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-center text-2xl tracking-widest text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
               maxLength={6}
             />
             <Button
@@ -273,7 +277,7 @@ export default function LoginPage() {
                 setStep("input");
                 setOtp("");
               }}
-              className="w-full text-sm text-zinc-500 hover:text-zinc-700"
+              className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
               返回修改手机号
             </button>

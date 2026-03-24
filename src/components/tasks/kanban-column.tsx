@@ -7,11 +7,11 @@ import {
 } from "@dnd-kit/sortable";
 import { TaskCard, type TaskCardData } from "./task-card";
 
-const columnColors: Record<string, string> = {
-  pending: "border-t-zinc-400",
-  submitted: "border-t-amber-400",
-  confirmed: "border-t-green-400",
-  rejected: "border-t-red-400",
+const dotColors: Record<string, string> = {
+  pending: "bg-[#B4BCC8]",
+  submitted: "bg-amber-400",
+  confirmed: "bg-green-400",
+  rejected: "bg-red-400",
 };
 
 export function KanbanColumn({
@@ -28,19 +28,18 @@ export function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div
-      className={`flex min-w-[260px] flex-1 flex-col rounded-xl border-t-4 bg-zinc-50 ${columnColors[status] ?? "border-t-zinc-300"}`}
-    >
-      <div className="flex items-center justify-between px-3 py-3">
-        <h3 className="text-sm font-semibold text-zinc-700">{label}</h3>
-        <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600">
+    <div className="flex min-w-[280px] flex-1 flex-col rounded-2xl bg-[#F4F5F6]">
+      <div className="flex items-center gap-2 px-4 py-4">
+        <span className={`h-2 w-2 rounded-full ${dotColors[status] ?? "bg-[#B4BCC8]"}`} />
+        <h3 className="text-[13px] font-semibold text-[#2E3338]">{label}</h3>
+        <span className="ml-auto text-xs font-medium text-[#B4BCC8]">
           {cards.length}
         </span>
       </div>
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2 transition-colors ${
-          isOver ? "bg-blue-50/50" : ""
+        className={`flex flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3 transition-colors duration-150 ${
+          isOver ? "bg-[#9FE870]/10" : ""
         }`}
         style={{ minHeight: 100 }}
       >

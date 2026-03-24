@@ -12,27 +12,30 @@ export default async function ParentChildDetailPage({
   const user = await requireRole(["parent"]);
   const { id } = await params;
   const supabase = await createClient();
+  const isAdmin = user.role === "admin";
 
-  // 验证家长与学生的绑定关系
-  const { data: relation } = await supabase
-    .from("parent_student")
-    .select("student_id")
-    .eq("parent_id", user.id)
-    .eq("student_id", id)
-    .single();
+  // 验证家长与学生的绑定关系（admin 跳过）
+  if (!isAdmin) {
+    const { data: relation } = await supabase
+      .from("parent_student")
+      .select("student_id")
+      .eq("parent_id", user.id)
+      .eq("student_id", id)
+      .single();
 
-  if (!relation) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-zinc-500">您没有查看此学生的权限</p>
-        <Link
-          href="/parent/children"
-          className="mt-3 inline-block text-sm text-blue-600 hover:text-blue-700"
-        >
-          ← 返回孩子列表
-        </Link>
-      </div>
-    );
+    if (!relation) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-[#B4BCC8]">您没有查看此学生的权限</p>
+          <Link
+            href="/parent/children"
+            className="mt-3 inline-block text-sm text-[#163300] hover:text-[#163300]/70 font-medium"
+          >
+            ← 返回孩子列表
+          </Link>
+        </div>
+      );
+    }
   }
 
   // Fetch student
@@ -44,7 +47,7 @@ export default async function ParentChildDetailPage({
 
   if (!student) {
     return (
-      <div className="text-center py-12 text-zinc-500">学生不存在</div>
+      <div className="text-center py-12 text-[#B4BCC8]">学生不存在</div>
     );
   }
 
@@ -135,26 +138,26 @@ export default async function ParentChildDetailPage({
     <div>
       <Link
         href="/parent/children"
-        className="text-sm text-blue-600 hover:text-blue-700"
+        className="text-sm text-[#163300] hover:text-[#163300]/70 font-medium"
       >
         &larr; 返回孩子列表
       </Link>
 
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-5 flex items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900">{student.name}</h2>
-          <p className="text-sm text-zinc-500">{student.grade}</p>
+          <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">{student.name}</h2>
+          <p className="text-sm text-[#B4BCC8]">{student.grade}</p>
         </div>
       </div>
 
       {/* Stats cards */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">任务总数</p>
-          <p className="mt-1 text-3xl font-bold text-zinc-900">{total}</p>
+      <div className="mt-8 grid gap-4 sm:grid-cols-4">
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">任务总数</p>
+          <p className="mt-1 text-3xl font-bold text-[#2E3338]">{total}</p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">完成率</p>
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">完成率</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               completionRate !== null && completionRate >= 80
@@ -167,8 +170,8 @@ export default async function ParentChildDetailPage({
             {completionRate !== null ? `${completionRate}%` : "-"}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">平均正确率</p>
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">平均正确率</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               overallCorrectRate !== null && overallCorrectRate >= 80
@@ -181,9 +184,9 @@ export default async function ParentChildDetailPage({
             {overallCorrectRate !== null ? `${overallCorrectRate}%` : "-"}
           </p>
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm border">
-          <p className="text-sm text-zinc-500">测试次数</p>
-          <p className="mt-1 text-3xl font-bold text-zinc-900">
+        <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
+          <p className="text-sm text-[#B4BCC8]">测试次数</p>
+          <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {(testResults ?? []).length}
           </p>
         </div>
@@ -191,16 +194,16 @@ export default async function ParentChildDetailPage({
 
       {/* Subject breakdown */}
       {subjectSummary.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-zinc-900">各科正确率</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10">
+          <h3 className="text-lg font-bold text-[#2E3338]">各科正确率</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {subjectSummary.map((s) => (
               <div
                 key={s.subject}
-                className="rounded-xl border bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-[#E8EAED] bg-white p-5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-zinc-900">
+                  <span className="font-medium text-[#2E3338]">
                     {s.subject}
                   </span>
                   <span
@@ -215,9 +218,9 @@ export default async function ParentChildDetailPage({
                     {s.correctRate}%
                   </span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-zinc-100">
+                <div className="mt-3 h-1.5 rounded-full bg-[#F4F5F6]">
                   <div
-                    className={`h-2 rounded-full ${
+                    className={`h-1.5 rounded-full ${
                       s.correctRate >= 80
                         ? "bg-green-500"
                         : s.correctRate >= 60
@@ -227,7 +230,7 @@ export default async function ParentChildDetailPage({
                     style={{ width: `${s.correctRate}%` }}
                   />
                 </div>
-                <p className="mt-1 text-xs text-zinc-400">
+                <p className="mt-1.5 text-xs text-[#B4BCC8]">
                   共{s.testCount}次测试 · 总{s.totalQuestions}题 错
                   {s.totalWrong}题
                 </p>
@@ -238,9 +241,9 @@ export default async function ParentChildDetailPage({
       )}
 
       {/* Task history */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-zinc-900">任务历史</h3>
-        <div className="mt-3 space-y-3">
+      <div className="mt-10">
+        <h3 className="text-lg font-bold text-[#2E3338]">任务历史</h3>
+        <div className="mt-4 space-y-3">
           {(assignments ?? []).map((a) => {
             const task = a.task as unknown as {
               title: string;
@@ -253,39 +256,39 @@ export default async function ParentChildDetailPage({
             return (
               <div
                 key={a.id}
-                className="rounded-xl border bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-[#E8EAED] bg-white p-5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                    <span className="rounded-full bg-[#F4F5F6] px-2.5 py-0.5 text-xs font-medium text-[#4D5766]">
                       {TASK_TYPES[task.type]}
                     </span>
-                    <span className="font-medium text-zinc-900">
+                    <span className="font-medium text-[#2E3338]">
                       {task.title}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         status === "confirmed"
-                          ? "bg-green-100 text-green-700"
+                          ? "bg-green-50 text-green-600"
                           : status === "rejected"
-                            ? "bg-red-100 text-red-700"
+                            ? "bg-red-50 text-red-600"
                             : status === "submitted"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-zinc-100 text-zinc-600"
+                              ? "bg-amber-50 text-amber-600"
+                              : "bg-[#F4F5F6] text-[#4D5766]"
                       }`}
                     >
                       {TASK_STATUS[status]}
                     </span>
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-[#B4BCC8]">
                       {new Date(task.due_date).toLocaleDateString("zh-CN")}
                     </span>
                   </div>
                 </div>
 
                 {results.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {results.map((r, i) => {
                       const rate = Math.round(
                         ((r.total_questions - r.wrong_count) /
@@ -295,7 +298,7 @@ export default async function ParentChildDetailPage({
                       return (
                         <span
                           key={i}
-                          className="rounded bg-zinc-50 px-2 py-1 text-xs"
+                          className="rounded-full bg-[#F4F5F6] px-2.5 py-1 text-xs text-[#4D5766]"
                         >
                           {r.subject} {r.total_questions}题 错{r.wrong_count}{" "}
                           <span
@@ -316,7 +319,7 @@ export default async function ParentChildDetailPage({
                 )}
 
                 {a.note && (
-                  <p className="mt-2 text-xs text-zinc-500">
+                  <p className="mt-2 text-xs text-[#B4BCC8]">
                     老师备注：{a.note}
                   </p>
                 )}
@@ -325,7 +328,7 @@ export default async function ParentChildDetailPage({
           })}
 
           {(assignments ?? []).length === 0 && (
-            <div className="rounded-xl border bg-white p-8 text-center text-zinc-400">
+            <div className="rounded-2xl border border-[#E8EAED] bg-white p-10 text-center text-[#B4BCC8]">
               暂无任务记录
             </div>
           )}

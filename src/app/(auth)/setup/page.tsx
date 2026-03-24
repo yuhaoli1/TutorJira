@@ -52,24 +52,24 @@ export default function SetupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm space-y-6 rounded-2xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-[#F4F5F6] px-4">
+      <div className="w-full max-w-sm space-y-8 rounded-2xl bg-white p-8 border border-[#E8EAED]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-zinc-900">完善信息</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">完善信息</h1>
+          <p className="mt-2 text-sm text-[#B4BCC8]">
             首次登录，请填写基本信息
           </p>
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+            <label className="mb-2 block text-sm font-medium text-[#4D5766]">
               姓名
             </label>
             <input
@@ -77,12 +77,12 @@ export default function SetupPage() {
               placeholder="请输入姓名"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 px-4 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+            <label className="mb-2 block text-sm font-medium text-[#4D5766]">
               我的身份
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -90,10 +90,10 @@ export default function SetupPage() {
                 <button
                   key={r.value}
                   onClick={() => setRole(r.value)}
-                  className={`rounded-lg border-2 px-4 py-3 text-base font-medium transition-colors ${
+                  className={`rounded-2xl border-2 px-4 py-3 text-base font-medium transition-colors duration-150 ${
                     role === r.value
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-zinc-200 text-zinc-600 hover:border-zinc-300"
+                      ? "border-[#163300] bg-[#163300]/5 text-[#163300]"
+                      : "border-[#E8EAED] text-[#4D5766] hover:border-[#B4BCC8]"
                   }`}
                 >
                   {r.label}

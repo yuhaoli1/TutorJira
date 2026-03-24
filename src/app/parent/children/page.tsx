@@ -5,16 +5,24 @@ import Link from "next/link";
 export default async function ParentChildrenPage() {
   const user = await requireRole(["parent"]);
   const supabase = await createClient();
+  const isAdmin = user.role === "admin";
 
-  // 获取绑定的学生
-  const { data: relations } = await supabase
-    .from("parent_student")
-    .select("student_id")
-    .eq("parent_id", user.id);
+  let studentIds: string[] = [];
 
-  const studentIds =
-    (relations as { student_id: string }[] | null)?.map((r) => r.student_id) ??
-    [];
+  if (isAdmin) {
+    const { data: allStudents } = await supabase
+      .from("students")
+      .select("id");
+    studentIds = (allStudents ?? []).map((s) => s.id);
+  } else {
+    const { data: relations } = await supabase
+      .from("parent_student")
+      .select("student_id")
+      .eq("parent_id", user.id);
+    studentIds =
+      (relations as { student_id: string }[] | null)?.map((r) => r.student_id) ??
+      [];
+  }
 
   // 获取学生信息
   const { data: students } = await supabase
@@ -111,62 +119,62 @@ export default async function ParentChildrenPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-zinc-900">孩子成绩</h2>
-      <p className="mt-1 text-sm text-zinc-500">查看每个孩子的学习情况</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">孩子成绩</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">查看每个孩子的学习情况</p>
 
       {childStats.length === 0 && (
-        <div className="mt-8 rounded-xl border-2 border-dashed border-zinc-200 p-8 text-center">
-          <p className="text-zinc-500">还没有绑定孩子信息</p>
-          <p className="mt-1 text-xs text-zinc-400">
+        <div className="mt-10 rounded-2xl border-2 border-dashed border-[#E8EAED] p-10 text-center">
+          <p className="text-[#B4BCC8]">还没有绑定孩子信息</p>
+          <p className="mt-1 text-xs text-[#B4BCC8]">
             请联系老师帮您绑定孩子账号
           </p>
         </div>
       )}
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-8 space-y-6">
         {childStats.map((child) => (
           <div
             key={child.id}
-            className="rounded-xl border bg-white shadow-sm overflow-hidden"
+            className="rounded-2xl border border-[#E8EAED] bg-white overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b bg-zinc-50 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-[#E8EAED] bg-[#F4F5F6] px-6 py-5">
               <div>
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="text-lg font-bold text-[#2E3338]">
                   {child.name}
                 </h3>
-                <p className="text-sm text-zinc-500">{child.grade}</p>
+                <p className="text-sm text-[#B4BCC8]">{child.grade}</p>
               </div>
               <Link
                 href={`/parent/children/${child.id}`}
-                className="rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-100 transition-colors"
+                className="rounded-full bg-[#163300] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#163300]/90 transition-colors duration-150"
               >
                 查看详情 →
               </Link>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6">
               <div className="text-center">
-                <p className="text-xs text-zinc-400">任务总数</p>
-                <p className="mt-1 text-2xl font-bold text-zinc-900">
+                <p className="text-xs text-[#B4BCC8]">任务总数</p>
+                <p className="mt-1 text-2xl font-bold text-[#2E3338]">
                   {child.total}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-zinc-400">待完成</p>
+                <p className="text-xs text-[#B4BCC8]">待完成</p>
                 <p
-                  className={`mt-1 text-2xl font-bold ${child.pending > 0 ? "text-amber-600" : "text-zinc-300"}`}
+                  className={`mt-1 text-2xl font-bold ${child.pending > 0 ? "text-amber-600" : "text-[#E8EAED]"}`}
                 >
                   {child.pending}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-zinc-400">完成率</p>
+                <p className="text-xs text-[#B4BCC8]">完成率</p>
                 <p
                   className={`mt-1 text-2xl font-bold ${
                     child.completionRate === null
-                      ? "text-zinc-300"
+                      ? "text-[#E8EAED]"
                       : child.completionRate >= 80
                         ? "text-green-600"
                         : child.completionRate >= 50
@@ -180,11 +188,11 @@ export default async function ParentChildrenPage() {
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-zinc-400">平均正确率</p>
+                <p className="text-xs text-[#B4BCC8]">平均正确率</p>
                 <p
                   className={`mt-1 text-2xl font-bold ${
                     child.avgCorrectRate === null
-                      ? "text-zinc-300"
+                      ? "text-[#E8EAED]"
                       : child.avgCorrectRate >= 80
                         ? "text-green-600"
                         : child.avgCorrectRate >= 60
@@ -201,17 +209,17 @@ export default async function ParentChildrenPage() {
 
             {/* Subject breakdown */}
             {child.subjects.length > 0 && (
-              <div className="border-t px-5 py-4">
-                <p className="text-sm font-medium text-zinc-500 mb-3">
+              <div className="border-t border-[#E8EAED] px-6 py-5">
+                <p className="text-sm font-medium text-[#B4BCC8] mb-3">
                   各科正确率
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {child.subjects.map((s) => (
                     <div
                       key={s.subject}
-                      className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2"
+                      className="flex items-center gap-2 rounded-full bg-[#F4F5F6] px-3 py-2"
                     >
-                      <span className="text-sm text-zinc-700">
+                      <span className="text-sm text-[#4D5766]">
                         {s.subject}
                       </span>
                       <span
@@ -225,7 +233,7 @@ export default async function ParentChildrenPage() {
                       >
                         {s.correctRate}%
                       </span>
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-xs text-[#B4BCC8]">
                         ({s.testCount}次)
                       </span>
                     </div>

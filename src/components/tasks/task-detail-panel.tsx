@@ -61,42 +61,44 @@ export function TaskDetailPanel({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl border-l flex flex-col">
+    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white border-l border-[#E8EAED] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-lg font-semibold text-zinc-900">任务详情</h3>
+      <div className="flex items-center justify-between border-b border-[#E8EAED] px-6 py-5">
+        <h3 className="text-sm font-bold text-[#2E3338]">任务详情</h3>
         <button
           onClick={onClose}
-          className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+          className="rounded-full p-1.5 text-[#B4BCC8] hover:bg-[#F4F5F6] hover:text-[#4D5766] transition-colors duration-150"
         >
           ✕
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
         <div>
-          <span className="text-xs text-zinc-500">类型</span>
-          <p className="text-sm font-medium">{TASK_TYPES[card.taskType]}</p>
+          <span className="text-xs text-[#B4BCC8]">类型</span>
+          <p className="mt-1 text-[13px] font-medium text-[#2E3338]">{TASK_TYPES[card.taskType]}</p>
         </div>
         <div>
-          <span className="text-xs text-zinc-500">标题</span>
-          <p className="text-sm font-medium">{card.taskTitle}</p>
+          <span className="text-xs text-[#B4BCC8]">标题</span>
+          <p className="mt-1 text-[13px] font-medium text-[#2E3338]">{card.taskTitle}</p>
         </div>
         <div>
-          <span className="text-xs text-zinc-500">学生</span>
-          <p className="text-sm font-medium">{card.studentName}</p>
+          <span className="text-xs text-[#B4BCC8]">学生</span>
+          <p className="mt-1 text-[13px] font-medium text-[#2E3338]">{card.studentName}</p>
         </div>
         <div>
-          <span className="text-xs text-zinc-500">截止日期</span>
-          <p className="text-sm font-medium">{card.dueDate}</p>
+          <span className="text-xs text-[#B4BCC8]">截止日期</span>
+          <p className="mt-1 text-[13px] font-medium text-[#2E3338]">{card.dueDate}</p>
         </div>
         <div>
-          <span className="text-xs text-zinc-500">状态</span>
-          <p className="text-sm font-medium">
+          <span className="text-xs text-[#B4BCC8]">状态</span>
+          <p className="mt-1 text-[13px] font-medium text-[#2E3338]">
             {TASK_STATUS[card.status as keyof typeof TASK_STATUS]}
           </p>
         </div>
+
+        <div className="border-t border-[#E8EAED]" />
 
         {/* 成绩显示/录入 */}
         {isTeacher ? (
@@ -108,7 +110,7 @@ export function TaskDetailPanel({
         ) : (
           card.testResults.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-zinc-700">成绩</h4>
+              <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
               {card.testResults.map((r, i) => {
                 const rate = Math.round(
                   ((r.total_questions - r.wrong_count) / r.total_questions) * 100
@@ -116,10 +118,10 @@ export function TaskDetailPanel({
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded bg-zinc-50 px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-xl bg-[#F4F5F6] px-4 py-3 text-[13px]"
                   >
-                    <span>{r.subject}</span>
-                    <span>
+                    <span className="text-[#2E3338]">{r.subject}</span>
+                    <span className="text-[#4D5766]">
                       {r.total_questions}题 错{r.wrong_count}{" "}
                       <span
                         className={
@@ -143,11 +145,11 @@ export function TaskDetailPanel({
         {/* 备注 */}
         {isTeacher ? (
           <div>
-            <label className="text-xs text-zinc-500">备注</label>
+            <label className="text-xs text-[#B4BCC8]">备注</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="mt-1 w-full rounded border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="mt-1.5 w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
               rows={2}
               placeholder="添加备注..."
             />
@@ -155,15 +157,15 @@ export function TaskDetailPanel({
         ) : (
           card.note && (
             <div>
-              <span className="text-xs text-zinc-500">老师备注</span>
-              <p className="mt-1 text-sm text-zinc-700">{card.note}</p>
+              <span className="text-xs text-[#B4BCC8]">老师备注</span>
+              <p className="mt-1 text-[13px] text-[#4D5766]">{card.note}</p>
             </div>
           )
         )}
       </div>
 
       {/* Actions */}
-      <div className="border-t p-4 space-y-2">
+      <div className="border-t border-[#E8EAED] p-5 space-y-2">
         {isTeacher && (
           <div className="flex gap-2">
             {card.status !== "confirmed" && (

@@ -1,38 +1,35 @@
 import { requireRole } from "@/lib/auth/get-user";
 import { createClient } from "@/lib/supabase/server";
 import { TASK_TYPES, TASK_STATUS } from "@/lib/constants";
-import Link from "next/link";
 import type { TaskType, TaskAssignmentStatus } from "@/lib/supabase/types";
 
-export default async function StudentDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  await requireRole(["admin", "teacher"]);
-  const { id } = await params;
+export default async function StudentGradesPage() {
+  const user = await requireRole(["student"]);
   const supabase = await createClient();
 
-  // Fetch student
+  // Find student record
   const { data: student } = await supabase
     .from("students")
     .select("id, name, grade")
-    .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!student) {
     return (
-      <div className="text-center py-12 text-[#B4BCC8]">学生不存在</div>
+      <div className="text-center py-12">
+        <p className="text-[#B4BCC8]">还没有关联学生信息</p>
+        <p className="mt-1 text-xs text-[#B4BCC8]">请联系老师帮你绑定账号</p>
+      </div>
     );
   }
 
-  // Fetch all assignments for this student
+  // Fetch assignments
   const { data: assignments } = await supabase
     .from("task_assignments")
     .select(
-      "id, status, note, created_at, submitted_at, confirmed_at, task:tasks(title, type, due_date)"
+      "id, status, note, created_at, task:tasks(title, type, due_date)"
     )
-    .eq("student_id", id)
+    .eq("student_id", student.id)
     .order("created_at", { ascending: false });
 
   // Fetch test results
@@ -45,17 +42,6 @@ export default async function StudentDetailPage({
       assignmentIds.length > 0 ? assignmentIds : ["__none__"]
     );
 
-  // Build results map
-  const resultsMap = new Map<
-    string,
-    { subject: string; total_questions: number; wrong_count: number }[]
-  >();
-  (testResults ?? []).forEach((r) => {
-    const existing = resultsMap.get(r.task_assignment_id) ?? [];
-    existing.push(r);
-    resultsMap.set(r.task_assignment_id, existing);
-  });
-
   // Stats
   const total = (assignments ?? []).length;
   const confirmed = (assignments ?? []).filter(
@@ -64,13 +50,28 @@ export default async function StudentDetailPage({
   const completionRate =
     total > 0 ? Math.round((confirmed / total) * 100) : null;
 
-  // Per-subject aggregation for all time
-  const subjectStats = new Map<
+  // Overall correct rate
+  let overallCorrectRate: number | null = null;
+  if ((testResults ?? []).length > 0) {
+    const totalQ = (testResults ?? []).reduce(
+      (s, r) => s + r.total_questions,
+      0
+    );
+    const totalWrong = (testResults ?? []).reduce(
+      (s, r) => s + r.wrong_count,
+      0
+    );
+    overallCorrectRate =
+      totalQ > 0 ? Math.round(((totalQ - totalWrong) / totalQ) * 100) : null;
+  }
+
+  // Per-subject stats
+  const subjectMap = new Map<
     string,
     { totalQ: number; totalWrong: number; count: number }
   >();
   (testResults ?? []).forEach((r) => {
-    const existing = subjectStats.get(r.subject) ?? {
+    const existing = subjectMap.get(r.subject) ?? {
       totalQ: 0,
       totalWrong: 0,
       count: 0,
@@ -78,10 +79,10 @@ export default async function StudentDetailPage({
     existing.totalQ += r.total_questions;
     existing.totalWrong += r.wrong_count;
     existing.count += 1;
-    subjectStats.set(r.subject, existing);
+    subjectMap.set(r.subject, existing);
   });
 
-  const subjectSummary = Array.from(subjectStats.entries())
+  const subjects = Array.from(subjectMap.entries())
     .map(([subject, stats]) => ({
       subject,
       totalQuestions: stats.totalQ,
@@ -93,37 +94,23 @@ export default async function StudentDetailPage({
     }))
     .sort((a, b) => a.correctRate - b.correctRate);
 
-  const overallCorrectRate =
-    (testResults ?? []).length > 0
-      ? Math.round(
-          (((testResults ?? []).reduce(
-            (s, r) => s + r.total_questions,
-            0
-          ) -
-            (testResults ?? []).reduce((s, r) => s + r.wrong_count, 0)) /
-            (testResults ?? []).reduce(
-              (s, r) => s + r.total_questions,
-              0
-            )) *
-            100
-        )
-      : null;
+  // Results map for task history
+  const resultsMap = new Map<
+    string,
+    { subject: string; total_questions: number; wrong_count: number }[]
+  >();
+  (testResults ?? []).forEach((r) => {
+    const existing = resultsMap.get(r.task_assignment_id) ?? [];
+    existing.push(r);
+    resultsMap.set(r.task_assignment_id, existing);
+  });
 
   return (
     <div>
-      <Link
-        href="/teacher/dashboard"
-        className="text-sm text-[#163300] hover:text-[#163300]/70 font-medium"
-      >
-        &larr; 返回工作台
-      </Link>
-
-      <div className="mt-5 flex items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">{student.name}</h2>
-          <p className="text-sm text-[#B4BCC8]">{student.grade}</p>
-        </div>
-      </div>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">我的成绩</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">
+        {student.name} · {student.grade}
+      </p>
 
       {/* Stats cards */}
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -168,11 +155,11 @@ export default async function StudentDetailPage({
       </div>
 
       {/* Subject breakdown */}
-      {subjectSummary.length > 0 && (
+      {subjects.length > 0 && (
         <div className="mt-10">
           <h3 className="text-lg font-bold text-[#2E3338]">各科正确率</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {subjectSummary.map((s) => (
+            {subjects.map((s) => (
               <div
                 key={s.subject}
                 className="rounded-2xl border border-[#E8EAED] bg-white p-5"
@@ -279,10 +266,10 @@ export default async function StudentDetailPage({
                           <span
                             className={
                               rate >= 80
-                                ? "text-green-600"
+                                ? "text-green-600 font-medium"
                                 : rate >= 60
-                                  ? "text-amber-600"
-                                  : "text-red-600"
+                                  ? "text-amber-600 font-medium"
+                                  : "text-red-600 font-medium"
                             }
                           >
                             ({rate}%)
@@ -291,10 +278,6 @@ export default async function StudentDetailPage({
                       );
                     })}
                   </div>
-                )}
-
-                {a.note && (
-                  <p className="mt-2 text-xs text-[#B4BCC8]">备注：{a.note}</p>
                 )}
               </div>
             );

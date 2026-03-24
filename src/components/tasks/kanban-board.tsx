@@ -30,7 +30,7 @@ interface Student {
   name: string;
 }
 
-export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
+export function KanbanBoard({ isTeacher, allowedStudentIds }: { isTeacher: boolean; allowedStudentIds?: string[] }) {
   const [cards, setCards] = useState<TaskCardData[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
@@ -45,7 +45,7 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
 
   const fetchBoard = useCallback(async () => {
     // Fetch assignments with joined data
-    const { data: assignments } = await supabase
+    let query = supabase
       .from("task_assignments")
       .select(
         `
@@ -55,6 +55,18 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
       `
       )
       .order("created_at", { ascending: false });
+
+    // Filter by allowed students (for parent view)
+    if (allowedStudentIds && allowedStudentIds.length > 0) {
+      query = query.in("student_id", allowedStudentIds);
+    } else if (allowedStudentIds && allowedStudentIds.length === 0) {
+      // Parent with no bound children
+      setCards([]);
+      setStudents([]);
+      return;
+    }
+
+    const { data: assignments } = await query;
 
     if (!assignments) return;
 
@@ -108,7 +120,7 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
     setStudents(
       Array.from(uniqueStudents.entries()).map(([id, name]) => ({ id, name }))
     );
-  }, [supabase]);
+  }, [supabase, allowedStudentIds]);
 
   useEffect(() => {
     fetchBoard();
@@ -165,12 +177,12 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <select
             value={selectedStudent}
             onChange={(e) => setSelectedStudent(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm outline-none focus:border-blue-500"
+            className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           >
             <option value="all">全部学生</option>
             {students.map((s) => (
@@ -193,7 +205,7 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4 flex-1">
+        <div className="flex gap-5 overflow-x-auto pb-4 flex-1">
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.status}
@@ -207,7 +219,7 @@ export function KanbanBoard({ isTeacher }: { isTeacher: boolean }) {
 
         <DragOverlay>
           {activeCard ? (
-            <div className="rotate-3 scale-105">
+            <div className="rotate-2 opacity-90">
               <TaskCard card={activeCard} onClick={() => {}} />
             </div>
           ) : null}

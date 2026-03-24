@@ -48,7 +48,7 @@ export function TestResultForm({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-zinc-700">成绩录入</h4>
+      <h4 className="text-[13px] font-medium text-[#2E3338]">成绩录入</h4>
       {rows.map((row, i) => (
         <div key={i} className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -58,7 +58,7 @@ export function TestResultForm({
               value={row.subject}
               onChange={(e) => updateRow(i, "subject", e.target.value)}
               list="subject-list"
-              className="w-full rounded border border-zinc-200 px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             />
           </div>
           <input
@@ -68,9 +68,9 @@ export function TestResultForm({
             onChange={(e) =>
               updateRow(i, "total_questions", parseInt(e.target.value) || 0)
             }
-            className="w-16 rounded border border-zinc-200 px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+            className="w-16 rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           />
-          <span className="text-xs text-zinc-400">错</span>
+          <span className="text-xs text-[#B4BCC8]">错</span>
           <input
             type="number"
             placeholder="错题"
@@ -78,12 +78,12 @@ export function TestResultForm({
             onChange={(e) =>
               updateRow(i, "wrong_count", parseInt(e.target.value) || 0)
             }
-            className="w-16 rounded border border-zinc-200 px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+            className="w-16 rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           />
           {rows.length > 1 && (
             <button
               onClick={() => removeRow(i)}
-              className="text-zinc-400 hover:text-red-500"
+              className="text-[#B4BCC8] hover:text-red-500 transition-colors duration-150"
             >
               ×
             </button>
@@ -100,7 +100,7 @@ export function TestResultForm({
       <div className="flex gap-2">
         <button
           onClick={addRow}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-[13px] text-[#163300] hover:text-[#163300]/70 font-medium transition-colors duration-150"
         >
           + 添加科目
         </button>

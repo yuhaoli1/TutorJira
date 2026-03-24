@@ -25,7 +25,11 @@ export async function GET(request: Request) {
         if (!profile) {
           return NextResponse.redirect(`${origin}/setup`);
         }
-        return NextResponse.redirect(`${origin}/${profile.role}/dashboard`);
+        const defaultPage =
+          profile.role === "parent" || profile.role === "student"
+            ? `/${profile.role}/tasks`
+            : `/${profile.role}/dashboard`;
+        return NextResponse.redirect(`${origin}${defaultPage}`);
       }
     }
   }

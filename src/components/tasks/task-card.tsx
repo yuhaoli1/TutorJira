@@ -21,11 +21,11 @@ export interface TaskCardData {
 }
 
 const typeColors: Record<TaskType, string> = {
-  dictation: "bg-purple-100 text-purple-700",
-  recitation: "bg-blue-100 text-blue-700",
-  correction: "bg-orange-100 text-orange-700",
-  homework: "bg-green-100 text-green-700",
-  other: "bg-zinc-100 text-zinc-700",
+  dictation: "bg-purple-50 text-purple-600",
+  recitation: "bg-blue-50 text-blue-600",
+  correction: "bg-orange-50 text-orange-600",
+  homework: "bg-green-50 text-green-600",
+  other: "bg-[#F4F5F6] text-[#4D5766]",
 };
 
 export function TaskCard({
@@ -56,27 +56,27 @@ export function TaskCard({
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`cursor-pointer rounded-lg border bg-white p-3 shadow-sm hover:shadow-md transition-shadow ${
-        isDragging ? "opacity-50 shadow-lg" : ""
+      className={`cursor-pointer rounded-2xl border border-[#E8EAED] bg-white p-4 transition-all duration-150 hover:border-[#B4BCC8] ${
+        isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-center justify-between">
         <span
-          className={`rounded px-2 py-0.5 text-xs font-medium ${typeColors[card.taskType]}`}
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColors[card.taskType]}`}
         >
           {TASK_TYPES[card.taskType]}
         </span>
-        <span className="text-xs text-zinc-400">{card.dueDate}</span>
+        <span className="text-xs text-[#B4BCC8]">{card.dueDate}</span>
       </div>
-      <p className="mt-2 text-sm font-medium text-zinc-900">{card.taskTitle}</p>
-      <p className="mt-1 text-xs text-zinc-500">{card.studentName}</p>
+      <p className="mt-2.5 text-[13px] font-medium text-[#2E3338]">{card.taskTitle}</p>
+      <p className="mt-1 text-xs text-[#B4BCC8]">{card.studentName}</p>
 
       {card.testResults.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-2.5 flex flex-wrap gap-1">
           {card.testResults.map((r, i) => (
             <span
               key={i}
-              className="rounded bg-zinc-50 px-1.5 py-0.5 text-xs text-zinc-600"
+              className="rounded-full bg-[#F4F5F6] px-2 py-0.5 text-xs text-[#4D5766]"
             >
               {r.subject} {r.total_questions}错{r.wrong_count}
             </span>
