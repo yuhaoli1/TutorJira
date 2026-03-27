@@ -1,0 +1,20 @@
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Replace YOUR_SERVER_IP with your actual ECS public IP
+        NEXT_PUBLIC_SUPABASE_URL: http://47.76.170.21/supabase
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_Q7z7NwkXFS_rcv2mpI8Uhg_20Mfm6hm
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - nextjs
+    restart: always
