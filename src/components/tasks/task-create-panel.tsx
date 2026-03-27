@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { TASK_TYPES } from "@/lib/constants";
+import { TASK_TYPES, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import type { TaskType } from "@/lib/supabase/types";
+import type { TaskType, RecurrenceType } from "@/lib/supabase/types";
 
 interface Student {
   id: string;
@@ -27,6 +27,13 @@ export function TaskCreatePanel({
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Recurring task state
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>("daily");
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]);
+  const [endDate, setEndDate] = useState("");
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -53,8 +60,15 @@ export function TaskCreatePanel({
     }
   };
 
+  const toggleDay = (day: number) => {
+    setRecurrenceDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
   const handleSubmit = async () => {
     if (!title.trim() || selectedStudents.length === 0) return;
+    if (isRecurring && recurrenceType === "weekly" && recurrenceDays.length === 0) return;
     setLoading(true);
 
     const {
@@ -62,30 +76,53 @@ export function TaskCreatePanel({
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Create task
-    const { data: task, error: taskError } = await supabase
-      .from("tasks")
-      .insert({
-        title: title.trim(),
-        type,
-        due_date: new Date(dueDate).toISOString(),
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
+    if (isRecurring) {
+      // Create recurring template
+      const { error } = await supabase
+        .from("recurring_task_templates")
+        .insert({
+          title: title.trim(),
+          type,
+          recurrence_type: recurrenceType,
+          recurrence_days: recurrenceType === "weekly" ? recurrenceDays : null,
+          start_date: dueDate,
+          end_date: endDate || null,
+          student_ids: selectedStudents,
+          created_by: user.id,
+        });
 
-    if (taskError || !task) {
-      setLoading(false);
-      return;
+      if (error) {
+        setLoading(false);
+        return;
+      }
+
+      // Trigger immediate generation
+      await fetch("/api/recurring-tasks/generate", { method: "POST" });
+    } else {
+      // Original one-off task creation
+      const { data: task, error: taskError } = await supabase
+        .from("tasks")
+        .insert({
+          title: title.trim(),
+          type,
+          due_date: new Date(dueDate).toISOString(),
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
+
+      if (taskError || !task) {
+        setLoading(false);
+        return;
+      }
+
+      await supabase.from("task_assignments").insert(
+        selectedStudents.map((studentId) => ({
+          task_id: task.id,
+          student_id: studentId,
+        }))
+      );
     }
-
-    // Create assignments
-    await supabase.from("task_assignments").insert(
-      selectedStudents.map((studentId) => ({
-        task_id: task.id,
-        student_id: studentId,
-      }))
-    );
 
     setLoading(false);
     onCreate();
@@ -136,10 +173,95 @@ export function TaskCreatePanel({
           />
         </div>
 
-        {/* 截止日期 */}
+        {/* 重复任务开关 */}
+        <div className="flex items-center justify-between">
+          <label className="text-[13px] font-medium text-[#4D5766]">
+            重复任务
+          </label>
+          <button
+            type="button"
+            onClick={() => setIsRecurring(!isRecurring)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+              isRecurring ? "bg-[#163300]" : "bg-[#E8EAED]"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                isRecurring ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* 重复设置 */}
+        {isRecurring && (
+          <div className="space-y-4 rounded-xl border border-[#E8EAED] p-4 bg-[#FAFAFA]">
+            {/* 频率 */}
+            <div>
+              <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+                频率
+              </label>
+              <select
+                value={recurrenceType}
+                onChange={(e) => setRecurrenceType(e.target.value as RecurrenceType)}
+                className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
+              >
+                {Object.entries(RECURRENCE_TYPES).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 周几 (仅每周模式) */}
+            {recurrenceType === "weekly" && (
+              <div>
+                <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+                  选择周几
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {Object.entries(WEEKDAYS).map(([day, label]) => {
+                    const dayNum = Number(day);
+                    const selected = recurrenceDays.includes(dayNum);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(dayNum)}
+                        className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 ${
+                          selected
+                            ? "bg-[#163300] text-white"
+                            : "bg-white border border-[#B4BCC8] text-[#4D5766] hover:bg-[#F4F5F6]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 结束日期 */}
+            <div>
+              <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+                结束日期（可选）
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 截止日期 / 开始日期 */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            截止日期
+            {isRecurring ? "开始日期" : "截止日期"}
           </label>
           <input
             type="date"
@@ -191,12 +313,19 @@ export function TaskCreatePanel({
       <div className="border-t border-[#E8EAED] p-5">
         <Button
           onClick={handleSubmit}
-          disabled={loading || !title.trim() || selectedStudents.length === 0}
+          disabled={
+            loading ||
+            !title.trim() ||
+            selectedStudents.length === 0 ||
+            (isRecurring && recurrenceType === "weekly" && recurrenceDays.length === 0)
+          }
           className="w-full"
         >
           {loading
             ? "创建中..."
-            : `创建任务（${selectedStudents.length}人）`}
+            : isRecurring
+              ? `创建重复任务（${selectedStudents.length}人）`
+              : `创建任务（${selectedStudents.length}人）`}
         </Button>
       </div>
     </div>

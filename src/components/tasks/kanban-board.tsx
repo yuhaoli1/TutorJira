@@ -44,6 +44,11 @@ export function KanbanBoard({ isTeacher, allowedStudentIds }: { isTeacher: boole
   );
 
   const fetchBoard = useCallback(async () => {
+    // Generate any pending recurring tasks
+    if (isTeacher) {
+      await fetch("/api/recurring-tasks/generate", { method: "POST" });
+    }
+
     // Fetch assignments with joined data
     let query = supabase
       .from("task_assignments")

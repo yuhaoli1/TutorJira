@@ -26,6 +26,21 @@ export const CHECKIN_FREQUENCY = {
   weekly: "每周",
 } as const;
 
+export const RECURRENCE_TYPES = {
+  daily: "每天",
+  weekly: "每周",
+} as const;
+
+export const WEEKDAYS = {
+  1: "周一",
+  2: "周二",
+  3: "周三",
+  4: "周四",
+  5: "周五",
+  6: "周六",
+  7: "周日",
+} as const;
+
 export const GRADES = ["五年级", "六年级"] as const;
 
 export const SUBJECTS = [

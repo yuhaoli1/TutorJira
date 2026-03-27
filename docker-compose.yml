@@ -7,6 +7,11 @@ services:
         # Replace YOUR_SERVER_IP with your actual ECS public IP
         NEXT_PUBLIC_SUPABASE_URL: http://47.76.170.21/supabase
         NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_Q7z7NwkXFS_rcv2mpI8Uhg_20Mfm6hm
+    environment:
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZmVqdnR6Z3Ruc3ZlZGp6cWxsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDExODg5MCwiZXhwIjoyMDg5Njk0ODkwfQ.fwfPuYuha_VVzDaQC8N8IToQZ5g1H8pJALGwzErtR_k
+      - SUPABASE_URL=https://xcfejvtzgtnsvedjzqll.supabase.co
+      - NEXT_PUBLIC_SUPABASE_URL=http://47.76.170.21/supabase
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_Q7z7NwkXFS_rcv2mpI8Uhg_20Mfm6hm
     restart: always
 
   nginx:

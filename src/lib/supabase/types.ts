@@ -12,6 +12,7 @@ export type TaskAssignmentStatus =
   | "confirmed"
   | "rejected";
 export type QuestionType = "choice" | "fill_blank";
+export type RecurrenceType = "daily" | "weekly";
 
 export interface Database {
   public: {
@@ -156,6 +157,8 @@ export interface Database {
           type: TaskType;
           due_date: string;
           created_by: string;
+          recurring_template_id: string | null;
+          recurring_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -166,6 +169,8 @@ export interface Database {
           type: TaskType;
           due_date: string;
           created_by: string;
+          recurring_template_id?: string | null;
+          recurring_date?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -175,6 +180,8 @@ export interface Database {
           description?: string | null;
           type?: TaskType;
           due_date?: string;
+          recurring_template_id?: string | null;
+          recurring_date?: string | null;
           updated_at?: string;
         };
       };
@@ -354,6 +361,51 @@ export interface Database {
           time_spent_seconds?: number | null;
         };
       };
+      recurring_task_templates: {
+        Row: {
+          id: string;
+          title: string;
+          type: TaskType;
+          recurrence_type: RecurrenceType;
+          recurrence_days: number[] | null;
+          start_date: string;
+          end_date: string | null;
+          is_active: boolean;
+          student_ids: string[];
+          created_by: string;
+          last_generated_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          type: TaskType;
+          recurrence_type: RecurrenceType;
+          recurrence_days?: number[] | null;
+          start_date: string;
+          end_date?: string | null;
+          is_active?: boolean;
+          student_ids: string[];
+          created_by: string;
+          last_generated_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          type?: TaskType;
+          recurrence_type?: RecurrenceType;
+          recurrence_days?: number[] | null;
+          start_date?: string;
+          end_date?: string | null;
+          is_active?: boolean;
+          student_ids?: string[];
+          last_generated_date?: string | null;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -363,6 +415,7 @@ export interface Database {
       task_type: TaskType;
       task_assignment_status: TaskAssignmentStatus;
       question_type: QuestionType;
+      recurrence_type: RecurrenceType;
     };
   };
 }
