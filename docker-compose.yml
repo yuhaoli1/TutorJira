@@ -6,9 +6,8 @@ services:
       args:
         NEXT_PUBLIC_SUPABASE_URL: http://47.76.170.21/supabase
         NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_Q7z7NwkXFS_rcv2mpI8Uhg_20Mfm6hm
-    environment:
-      - SUPABASE_URL=https://xcfejvtzgtnsvedjzqll.supabase.co
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    env_file:
+      - .env.production
     restart: always
 
   nginx:
