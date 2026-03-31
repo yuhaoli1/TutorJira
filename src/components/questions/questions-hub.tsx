@@ -32,8 +32,13 @@ export function QuestionsHub() {
   const [extractedQuestions, setExtractedQuestions] = useState<ExtractedQ[]>([]);
 
   const handleProcessed = (id: string, questions: ExtractedQ[]) => {
-    setUploadId(id);
-    setExtractedQuestions(questions);
+    // 先清空再设置，确保 AIReviewPanel 重新挂载
+    setUploadId(null);
+    setExtractedQuestions([]);
+    setTimeout(() => {
+      setUploadId(id);
+      setExtractedQuestions(questions);
+    }, 0);
   };
 
   const handleReviewSaved = () => {
@@ -70,6 +75,7 @@ export function QuestionsHub() {
           <UploadForm onProcessed={handleProcessed} />
           {uploadId && extractedQuestions.length > 0 && (
             <AIReviewPanel
+              key={uploadId}
               uploadId={uploadId}
               questions={extractedQuestions}
               onSaved={handleReviewSaved}
