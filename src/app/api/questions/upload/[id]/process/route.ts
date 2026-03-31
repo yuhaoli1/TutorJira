@@ -35,11 +35,24 @@ export async function POST(
     try {
       const provider = getAIProvider();
 
+      // 从 file_url 提取 storage path，生成签名 URL
+      const storagePath = upload.file_url.replace(/^.*\/question-uploads\//, "");
+      const { data: signedUrlData, error: signedUrlError } = await supabase
+        .storage
+        .from("question-uploads")
+        .createSignedUrl(storagePath, 300); // 5分钟有效
+
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        throw new Error("无法生成文件签名URL");
+      }
+
+      const fileUrl = signedUrlData.signedUrl;
+
       let result;
 
       if (upload.file_type === "image") {
         // 下载图片并转为 base64
-        const imageResponse = await fetch(upload.file_url);
+        const imageResponse = await fetch(fileUrl);
         if (!imageResponse.ok) {
           throw new Error("无法下载图片文件");
         }
@@ -53,7 +66,7 @@ export async function POST(
         });
       } else if (upload.file_type === "pdf") {
         // 下载 PDF 并提取文本
-        const pdfResponse = await fetch(upload.file_url);
+        const pdfResponse = await fetch(fileUrl);
         if (!pdfResponse.ok) {
           throw new Error("无法下载PDF文件");
         }
