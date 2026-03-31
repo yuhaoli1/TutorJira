@@ -4,7 +4,7 @@ import { getAIProvider } from "@/lib/ai";
 
 // POST /api/questions/upload/[id]/process - AI 处理
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -13,6 +13,15 @@ export async function POST(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
+
+    // 解析请求体（可能包含客户端 OCR 文本）
+    let ocrText: string | null = null;
+    try {
+      const body = await request.json();
+      ocrText = body.ocrText || null;
+    } catch {
+      // 没有 JSON body 也没关系
     }
 
     // 获取上传记录
@@ -35,24 +44,26 @@ export async function POST(
     try {
       const provider = getAIProvider();
 
-      // 从 file_url 提取 storage path，生成签名 URL
-      const storagePath = upload.file_url.replace(/^.*\/question-uploads\//, "");
-      const { data: signedUrlData, error: signedUrlError } = await supabase
-        .storage
-        .from("question-uploads")
-        .createSignedUrl(storagePath, 300); // 5分钟有效
-
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        throw new Error("无法生成文件签名URL");
-      }
-
-      const fileUrl = signedUrlData.signedUrl;
-
       let result;
 
-      if (upload.file_type === "image") {
-        // 下载图片并转为 base64
-        const imageResponse = await fetch(fileUrl);
+      // 如果有客户端 OCR 文本（图片），直接用文本处理
+      if (ocrText && upload.file_type === "image") {
+        result = await provider.extractQuestions({
+          textContent: ocrText,
+        });
+      } else if (upload.file_type === "image") {
+        // Fallback: 尝试用 AI 的 vision 能力
+        const storagePath = upload.file_url.replace(/^.*\/question-uploads\//, "");
+        const { data: signedUrlData, error: signedUrlError } = await supabase
+          .storage
+          .from("question-uploads")
+          .createSignedUrl(storagePath, 300);
+
+        if (signedUrlError || !signedUrlData?.signedUrl) {
+          throw new Error("无法生成文件签名URL");
+        }
+
+        const imageResponse = await fetch(signedUrlData.signedUrl);
         if (!imageResponse.ok) {
           throw new Error("无法下载图片文件");
         }
@@ -65,8 +76,19 @@ export async function POST(
           imageMimeType: contentType,
         });
       } else if (upload.file_type === "pdf") {
+        // 从 file_url 提取 storage path，生成签名 URL
+        const storagePath = upload.file_url.replace(/^.*\/question-uploads\//, "");
+        const { data: signedUrlData, error: signedUrlError } = await supabase
+          .storage
+          .from("question-uploads")
+          .createSignedUrl(storagePath, 300);
+
+        if (signedUrlError || !signedUrlData?.signedUrl) {
+          throw new Error("无法生成文件签名URL");
+        }
+
         // 下载 PDF 并提取文本
-        const pdfResponse = await fetch(fileUrl);
+        const pdfResponse = await fetch(signedUrlData.signedUrl);
         if (!pdfResponse.ok) {
           throw new Error("无法下载PDF文件");
         }

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, FileText, Image, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, Camera, FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 interface UploadFormProps {
   onProcessed: (uploadId: string, questions: ExtractedQ[]) => void;
@@ -17,25 +17,60 @@ interface ExtractedQ {
   difficulty: number;
 }
 
-type UploadStep = "idle" | "uploading" | "uploaded" | "processing" | "done" | "error";
+type UploadStep = "idle" | "uploading" | "ocr" | "uploaded" | "processing" | "done" | "error";
+
+function isImageFile(file: File): boolean {
+  return file.type.startsWith("image/");
+}
 
 export function UploadForm({ onProcessed }: UploadFormProps) {
   const [step, setStep] = useState<UploadStep>("idle");
   const [uploadId, setUploadId] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [ocrText, setOcrText] = useState<string | null>(null);
+  const [ocrProgress, setOcrProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const doOCR = async (file: File): Promise<string> => {
+    const { createWorker } = await import("tesseract.js");
+    const worker = await createWorker("chi_sim+eng", undefined, {
+      logger: (m: { progress: number }) => {
+        if (m.progress) setOcrProgress(Math.round(m.progress * 100));
+      },
+    });
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+    return text;
+  };
+
   const handleFile = useCallback(async (file: File) => {
     setFileName(file.name);
-    setStep("uploading");
     setErrorMsg("");
+    setOcrText(null);
 
     try {
+      // 如果是图片，先在浏览器端 OCR
+      let extractedText: string | null = null;
+      if (isImageFile(file)) {
+        setStep("ocr");
+        setOcrProgress(0);
+        extractedText = await doOCR(file);
+        if (!extractedText.trim()) {
+          throw new Error("图片 OCR 未识别到文字，请确保图片清晰");
+        }
+        setOcrText(extractedText);
+      }
+
+      // 上传文件到服务器
+      setStep("uploading");
       const formData = new FormData();
       formData.append("file", file);
+      if (extractedText) {
+        formData.append("ocrText", extractedText);
+      }
 
       const res = await fetch("/api/questions/upload", {
         method: "POST",
@@ -64,6 +99,8 @@ export function UploadForm({ onProcessed }: UploadFormProps) {
     try {
       const res = await fetch(`/api/questions/upload/${uploadId}/process`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ocrText }),
       });
 
       const data = await res.json();
@@ -162,6 +199,22 @@ export function UploadForm({ onProcessed }: UploadFormProps) {
               if (file) handleFile(file);
             }}
           />
+        </div>
+      )}
+
+      {/* OCR 识别中 */}
+      {step === "ocr" && (
+        <div className="rounded-2xl border border-[#E8EAED] p-8 text-center">
+          <Loader2 className="size-8 mx-auto text-[#163300] animate-spin mb-3" />
+          <p className="text-sm font-medium text-[#2E3338]">正在识别图片文字...</p>
+          <p className="text-xs text-[#B4BCC8] mt-1">{fileName}</p>
+          <div className="mt-3 w-48 mx-auto bg-[#F4F5F6] rounded-full h-2">
+            <div
+              className="bg-[#9FE870] h-2 rounded-full transition-all"
+              style={{ width: `${ocrProgress}%` }}
+            />
+          </div>
+          <p className="text-xs text-[#B4BCC8] mt-1">{ocrProgress}%</p>
         </div>
       )}
 
