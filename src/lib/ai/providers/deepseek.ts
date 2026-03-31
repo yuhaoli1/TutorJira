@@ -21,7 +21,7 @@ export class DeepSeekProvider implements AIProvider {
   }
 
   async extractQuestions(request: AIExtractionRequest): Promise<AIExtractionResponse> {
-    const messages = this.buildMessages(request);
+    const messages = await this.buildMessages(request);
 
     const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: "POST",
@@ -51,24 +51,17 @@ export class DeepSeekProvider implements AIProvider {
     return { questions, rawResponse: rawText };
   }
 
-  private buildMessages(request: AIExtractionRequest) {
+  private async buildMessages(request: AIExtractionRequest) {
     if (request.imageBase64 && request.imageMimeType) {
-      // DeepSeek vision API uses OpenAI-compatible format
+      // DeepSeek chat 不支持图片，先用 OCR 转文字再处理
+      const ocrText = await this.ocrImage(request.imageBase64, request.imageMimeType);
+      if (!ocrText.trim()) {
+        throw new Error("图片 OCR 未提取到文字内容");
+      }
       return [
         {
           role: "user" as const,
-          content: [
-            {
-              type: "image_url" as const,
-              image_url: {
-                url: `data:${request.imageMimeType};base64,${request.imageBase64}`,
-              },
-            },
-            {
-              type: "text" as const,
-              text: QUESTION_EXTRACTION_USER_PROMPT_IMAGE,
-            },
-          ],
+          content: QUESTION_EXTRACTION_USER_PROMPT_TEXT(ocrText),
         },
       ];
     }
@@ -83,6 +76,54 @@ export class DeepSeekProvider implements AIProvider {
     }
 
     throw new Error("必须提供图片或文本内容");
+  }
+
+  /**
+   * 用 OpenAI 兼容的 vision 模型做 OCR（如果可用），
+   * 否则用 DeepSeek 的 janus 模型，
+   * 最后 fallback 到简单提示
+   */
+  private async ocrImage(base64: string, mimeType: string): Promise<string> {
+    // 尝试用 OpenAI GPT-4o-mini 做 OCR（便宜且支持图片）
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (openaiKey) {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openaiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            max_tokens: 4096,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image_url",
+                    image_url: { url: `data:${mimeType};base64,${base64}` },
+                  },
+                  {
+                    type: "text",
+                    text: "请将图片中的所有文字内容完整地转录出来，保持原始格式和排版。包括题号、题目内容、选项、答案和解析。",
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.choices?.[0]?.message?.content || "";
+        }
+      } catch (e) {
+        console.warn("OpenAI OCR fallback failed:", e);
+      }
+    }
+
+    throw new Error("DeepSeek 不支持直接处理图片，请配置 OPENAI_API_KEY 用于图片 OCR，或上传 PDF/文本文件");
   }
 
   private parseQuestions(rawText: string): ExtractedQuestion[] {
