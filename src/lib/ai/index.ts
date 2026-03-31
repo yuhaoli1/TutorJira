@@ -3,6 +3,7 @@ import { ClaudeProvider } from "./providers/claude";
 import { DeepSeekProvider } from "./providers/deepseek";
 import { OpenAIProvider } from "./providers/openai";
 import { QwenProvider } from "./providers/qwen";
+import { GeminiProvider } from "./providers/gemini";
 
 export type { AIProvider, AIExtractionRequest, AIExtractionResponse, ExtractedQuestion } from "./types";
 
@@ -11,6 +12,7 @@ const providers: Record<string, () => AIProvider> = {
   deepseek: () => new DeepSeekProvider(),
   openai: () => new OpenAIProvider(),
   qwen: () => new QwenProvider(),
+  gemini: () => new GeminiProvider(),
 };
 
 export function getAIProvider(): AIProvider {
