@@ -35,7 +35,7 @@ export function AIChat() {
     if (!content || loading) return;
 
     const userMsg: Message = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).slice(2) + Date.now().toString(36),
       role: "user",
       content,
       timestamp: new Date(),
@@ -65,7 +65,7 @@ export function AIChat() {
       }
 
       const assistantMsg: Message = {
-        id: crypto.randomUUID(),
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
         role: "assistant",
         content: data.reply,
         timestamp: new Date(),
@@ -74,7 +74,7 @@ export function AIChat() {
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (e) {
       const errorMsg: Message = {
-        id: crypto.randomUUID(),
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
         role: "assistant",
         content: `出错了: ${e instanceof Error ? e.message : "未知错误"}`,
         timestamp: new Date(),
