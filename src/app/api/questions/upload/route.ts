@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 // POST /api/questions/upload - 文件上传
 export async function POST(request: NextRequest) {
@@ -50,9 +51,15 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split(".").pop() || "bin";
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
+    // 用 service client 直连 Supabase（绕过 Nginx 代理，避免 Storage 上传失败）
+    const serviceClient = createServiceClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // 上传到 Supabase Storage
     const fileBuffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await serviceClient.storage
       .from("question-uploads")
       .upload(fileName, fileBuffer, {
         contentType: mimeType,
@@ -67,8 +74,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取文件公开URL
-    const { data: urlData } = supabase.storage
+    // 获取文件URL（用真实 Supabase URL）
+    const { data: urlData } = serviceClient.storage
       .from("question-uploads")
       .getPublicUrl(fileName);
 
