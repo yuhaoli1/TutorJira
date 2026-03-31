@@ -5,9 +5,10 @@ import { QuestionList } from "./question-list";
 import { UploadForm } from "./upload-form";
 import { AIReviewPanel } from "./ai-review-panel";
 import { TopicTree } from "./topic-tree";
-import { BookOpen, Upload, FolderTree } from "lucide-react";
+import { AIChat } from "./ai-chat";
+import { BookOpen, Upload, FolderTree, Sparkles } from "lucide-react";
 
-type TabKey = "browse" | "upload" | "topics";
+type TabKey = "browse" | "upload" | "topics" | "chat";
 
 interface ExtractedQ {
   stem: string;
@@ -22,6 +23,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "browse", label: "题库浏览", icon: <BookOpen className="size-4" /> },
   { key: "upload", label: "上传题目", icon: <Upload className="size-4" /> },
   { key: "topics", label: "知识点管理", icon: <FolderTree className="size-4" /> },
+  { key: "chat", label: "AI 助手", icon: <Sparkles className="size-4" /> },
 ];
 
 export function QuestionsHub() {
@@ -89,6 +91,8 @@ export function QuestionsHub() {
           <TopicTree />
         </div>
       )}
+
+      {activeTab === "chat" && <AIChat />}
     </div>
   );
 }
