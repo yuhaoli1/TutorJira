@@ -13,6 +13,7 @@ interface ExtractedQ {
   explanation?: string;
   difficulty: number;
   topic_id?: string;
+  suggested_topic?: string;
 }
 
 interface Topic {
