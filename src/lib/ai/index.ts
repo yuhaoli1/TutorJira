@@ -1,12 +1,14 @@
 import type { AIProvider } from "./types";
 import { ClaudeProvider } from "./providers/claude";
 import { DeepSeekProvider } from "./providers/deepseek";
+import { OpenAIProvider } from "./providers/openai";
 
 export type { AIProvider, AIExtractionRequest, AIExtractionResponse, ExtractedQuestion } from "./types";
 
 const providers: Record<string, () => AIProvider> = {
   claude: () => new ClaudeProvider(),
   deepseek: () => new DeepSeekProvider(),
+  openai: () => new OpenAIProvider(),
 };
 
 export function getAIProvider(): AIProvider {
