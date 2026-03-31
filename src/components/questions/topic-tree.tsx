@@ -21,20 +21,26 @@ interface TopicTreeProps {
 
 export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
   const [topics, setTopics] = useState<TopicNode[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchTopics();
-  }, []);
+  }, [selectedSubject]);
 
   const fetchTopics = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/topics");
+      const params = selectedSubject ? `?subject=${encodeURIComponent(selectedSubject)}` : "";
+      const res = await fetch(`/api/topics${params}`);
       const data = await res.json();
       setTopics(data.topics || []);
+      if (data.subjects) {
+        setSubjects(data.subjects);
+      }
     } catch (e) {
       console.error("获取知识点失败:", e);
     } finally {
@@ -138,6 +144,36 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
 
   return (
     <div>
+      {/* 学科选择器 */}
+      {subjects.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#E8EAED]">
+          <span className="text-sm text-[#4D5766]">学科：</span>
+          <button
+            onClick={() => setSelectedSubject(null)}
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              selectedSubject === null
+                ? "bg-[#163300] text-white"
+                : "bg-[#F4F5F6] text-[#4D5766] hover:bg-[#E8EAED]"
+            }`}
+          >
+            全部
+          </button>
+          {subjects.map((s) => (
+            <button
+              key={s}
+              onClick={() => setSelectedSubject(s)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                selectedSubject === s
+                  ? "bg-[#163300] text-white"
+                  : "bg-[#F4F5F6] text-[#4D5766] hover:bg-[#E8EAED]"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       {topics.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-[#B4BCC8] text-sm mb-4">暂无知识点数据</p>
