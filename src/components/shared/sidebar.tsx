@@ -14,6 +14,7 @@ interface NavItem {
 const EMOJI_MAP: Record<string, string> = {
   "总览": "📊",
   "任务管理": "📋",
+  "题库管理": "📚",
   "学生管理": "👨‍🎓",
   "家长视角": "👪",
   "设置": "⚙️",
@@ -25,6 +26,7 @@ const EMOJI_MAP: Record<string, string> = {
 const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "总览", href: "/admin/dashboard" },
   { label: "任务管理", href: "/teacher/tasks" },
+  { label: "题库管理", href: "/teacher/questions" },
   { label: "学生管理", href: "/admin/students" },
   { label: "家长视角", href: "/parent/dashboard" },
   { label: "设置", href: "/admin/settings" },

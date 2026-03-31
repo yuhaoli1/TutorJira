@@ -11,8 +11,20 @@ export type TaskAssignmentStatus =
   | "submitted"
   | "confirmed"
   | "rejected";
-export type QuestionType = "choice" | "fill_blank";
+export type QuestionType = "choice" | "fill_blank" | "solution";
+export type UploadFileType = "pdf" | "docx" | "image";
+export type UploadStatus = "pending" | "processing" | "completed" | "failed";
 export type RecurrenceType = "daily" | "weekly";
+
+export interface ExtractedQuestionJSON {
+  stem: string;
+  type: "choice" | "fill_blank" | "solution";
+  options?: string[];
+  answer: string;
+  explanation?: string;
+  difficulty: number;
+  topic_id?: string;
+}
 
 export interface Database {
   public: {
@@ -268,6 +280,8 @@ export interface Database {
             explanation?: string;
           };
           difficulty: number;
+          source_type: string;
+          source_file_url: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -283,6 +297,8 @@ export interface Database {
             explanation?: string;
           };
           difficulty: number;
+          source_type?: string;
+          source_file_url?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -298,6 +314,8 @@ export interface Database {
             explanation?: string;
           };
           difficulty?: number;
+          source_type?: string;
+          source_file_url?: string | null;
           updated_at?: string;
         };
       };
@@ -329,6 +347,45 @@ export interface Database {
           total_questions?: number;
           wrong_count?: number;
           note?: string | null;
+          updated_at?: string;
+        };
+      };
+      question_uploads: {
+        Row: {
+          id: string;
+          file_url: string;
+          file_type: UploadFileType;
+          status: UploadStatus;
+          ai_provider: string | null;
+          extracted_questions: ExtractedQuestionJSON[] | null;
+          question_count: number;
+          error_message: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          file_url: string;
+          file_type: UploadFileType;
+          status?: UploadStatus;
+          ai_provider?: string | null;
+          extracted_questions?: ExtractedQuestionJSON[] | null;
+          question_count?: number;
+          error_message?: string | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          file_url?: string;
+          file_type?: UploadFileType;
+          status?: UploadStatus;
+          ai_provider?: string | null;
+          extracted_questions?: ExtractedQuestionJSON[] | null;
+          question_count?: number;
+          error_message?: string | null;
           updated_at?: string;
         };
       };
@@ -415,6 +472,8 @@ export interface Database {
       task_type: TaskType;
       task_assignment_status: TaskAssignmentStatus;
       question_type: QuestionType;
+      upload_file_type: UploadFileType;
+      upload_status: UploadStatus;
       recurrence_type: RecurrenceType;
     };
   };

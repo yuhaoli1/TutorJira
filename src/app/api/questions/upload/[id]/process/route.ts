@@ -1,0 +1,111 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getAIProvider } from "@/lib/ai";
+
+// POST /api/questions/upload/[id]/process - AI 处理
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
+
+    // 获取上传记录
+    const { data: upload, error: fetchError } = await supabase
+      .from("question_uploads")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !upload) {
+      return NextResponse.json({ error: "上传记录不存在" }, { status: 404 });
+    }
+
+    // 更新状态为处理中
+    await supabase
+      .from("question_uploads")
+      .update({ status: "processing" })
+      .eq("id", id);
+
+    try {
+      const provider = getAIProvider();
+
+      let result;
+
+      if (upload.file_type === "image") {
+        // 下载图片并转为 base64
+        const imageResponse = await fetch(upload.file_url);
+        if (!imageResponse.ok) {
+          throw new Error("无法下载图片文件");
+        }
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const base64 = Buffer.from(imageBuffer).toString("base64");
+        const contentType = imageResponse.headers.get("content-type") || "image/png";
+
+        result = await provider.extractQuestions({
+          imageBase64: base64,
+          imageMimeType: contentType,
+        });
+      } else if (upload.file_type === "pdf") {
+        // 下载 PDF 并提取文本
+        const pdfResponse = await fetch(upload.file_url);
+        if (!pdfResponse.ok) {
+          throw new Error("无法下载PDF文件");
+        }
+        const pdfBuffer = await pdfResponse.arrayBuffer();
+
+        // 动态导入 pdf-parse (v2 class-based API)
+        const { PDFParse } = await import("pdf-parse");
+        const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+        const textResult = await parser.getText();
+        await parser.destroy();
+
+        const pdfText = textResult.text || "";
+        if (!pdfText.trim()) {
+          throw new Error("PDF文件中未提取到文本内容");
+        }
+
+        result = await provider.extractQuestions({
+          textContent: pdfText,
+        });
+      } else {
+        throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
+      }
+
+      // 保存提取结果
+      await supabase
+        .from("question_uploads")
+        .update({
+          status: "completed",
+          ai_provider: provider.name,
+          extracted_questions: result.questions as unknown as Record<string, unknown>[],
+          question_count: result.questions.length,
+        })
+        .eq("id", id);
+
+      return NextResponse.json({
+        questions: result.questions,
+        count: result.questions.length,
+      });
+    } catch (aiError) {
+      const errorMessage = aiError instanceof Error ? aiError.message : "AI处理失败";
+      await supabase
+        .from("question_uploads")
+        .update({
+          status: "failed",
+          error_message: errorMessage,
+        })
+        .eq("id", id);
+
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
+  } catch (error) {
+    console.error("AI处理失败:", error);
+    return NextResponse.json({ error: "AI处理失败" }, { status: 500 });
+  }
+}

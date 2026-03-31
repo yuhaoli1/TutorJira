@@ -41,6 +41,27 @@ export const WEEKDAYS = {
   7: "周日",
 } as const;
 
+export const QUESTION_TYPES = {
+  choice: "选择题",
+  fill_blank: "填空题",
+  solution: "解答题",
+} as const;
+
+export const DIFFICULTY_LABELS = {
+  1: "简单",
+  2: "较简单",
+  3: "中等",
+  4: "较难",
+  5: "困难",
+} as const;
+
+export const UPLOAD_STATUS = {
+  pending: "等待处理",
+  processing: "处理中",
+  completed: "已完成",
+  failed: "处理失败",
+} as const;
+
 export const GRADES = ["五年级", "六年级"] as const;
 
 export const SUBJECTS = [

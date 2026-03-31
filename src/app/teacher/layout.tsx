@@ -5,6 +5,7 @@ import { ROLES } from "@/lib/constants";
 const navItems = [
   { label: "总览", href: "/teacher/dashboard" },
   { label: "任务管理", href: "/teacher/tasks" },
+  { label: "题库管理", href: "/teacher/questions" },
   { label: "学生管理", href: "/admin/students" },
 ];
 
