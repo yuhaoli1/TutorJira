@@ -12,7 +12,7 @@ export class GeminiProvider implements AIProvider {
 
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY || "";
-    this.model = process.env.GEMINI_MODEL || "gemini-2.5-flash-preview-05-20";
+    this.model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     if (!this.apiKey) {
       throw new Error("GEMINI_API_KEY 环境变量未设置");
     }
