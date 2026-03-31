@@ -50,8 +50,15 @@ export async function POST(
         .select("id, title")
         .order("sort_order");
 
-      const topicNames = (allTopics || []).map((t: { title: string }) => t.title);
-      const topicMap = new Map((allTopics || []).map((t: { id: string; title: string }) => [t.title, t.id]));
+      // 去掉 "第X讲：" 前缀，让 AI 更容易匹配
+      const stripPrefix = (title: string) => title.replace(/^第\d+讲[：:]/, "");
+      const topicNames = (allTopics || []).map((t: { title: string }) => stripPrefix(t.title));
+      // 建立两个映射：精确匹配 + 去前缀匹配
+      const topicMap = new Map<string, string>();
+      for (const t of (allTopics || []) as { id: string; title: string }[]) {
+        topicMap.set(t.title, t.id);
+        topicMap.set(stripPrefix(t.title), t.id);
+      }
 
       let result;
 
