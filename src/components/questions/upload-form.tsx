@@ -132,6 +132,10 @@ export function UploadForm({ onProcessed }: UploadFormProps) {
     setUploadId(null);
     setFileName("");
     setErrorMsg("");
+    setOcrText(null);
+    setOcrProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   return (
