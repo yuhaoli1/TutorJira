@@ -166,7 +166,15 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
               <div className="px-4 pb-4 space-y-3 border-t border-[#E8EAED]">
                 {/* 知识点 */}
                 <div className="pt-3">
-                  <label className="block text-xs font-medium text-[#4D5766] mb-1">知识点 *</label>
+                  <label className="block text-xs font-medium text-[#4D5766] mb-1">
+                    知识点 *
+                    {q.suggested_topic && q.topic_id && (
+                      <span className="ml-2 text-[#9FE870] font-normal">AI 已自动匹配</span>
+                    )}
+                    {q.suggested_topic && !q.topic_id && (
+                      <span className="ml-2 text-amber-500 font-normal">AI 建议: {q.suggested_topic}（未匹配到）</span>
+                    )}
+                  </label>
                   <select
                     value={q.topic_id || ""}
                     onChange={(e) => updateQuestion(index, { topic_id: e.target.value })}

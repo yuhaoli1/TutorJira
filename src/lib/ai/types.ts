@@ -5,6 +5,8 @@ export interface ExtractedQuestion {
   answer: string;
   explanation?: string;
   difficulty: number; // 1-5
+  suggested_topic?: string;
+  topic_id?: string;
 }
 
 export interface AIExtractionRequest {
@@ -14,6 +16,8 @@ export interface AIExtractionRequest {
   imageMimeType?: string;
   /** Text content (for PDF/docx extracted text) */
   textContent?: string;
+  /** Topic names for AI to match against */
+  topicNames?: string[];
 }
 
 export interface AIExtractionResponse {

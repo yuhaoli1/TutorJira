@@ -28,7 +28,7 @@ export class GeminiProvider implements AIProvider {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           systemInstruction: {
-            parts: [{ text: QUESTION_EXTRACTION_SYSTEM_PROMPT }],
+            parts: [{ text: QUESTION_EXTRACTION_SYSTEM_PROMPT(request.topicNames) }],
           },
           contents,
           generationConfig: {
@@ -99,6 +99,7 @@ export class GeminiProvider implements AIProvider {
         answer: String(q.answer || "待填写"),
         explanation: q.explanation ? String(q.explanation) : undefined,
         difficulty: Math.min(5, Math.max(1, Number(q.difficulty) || 3)),
+        suggested_topic: q.suggested_topic ? String(q.suggested_topic) : undefined,
       }));
     } catch (e) {
       console.error("解析AI响应失败:", e);

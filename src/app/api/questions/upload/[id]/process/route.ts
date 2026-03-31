@@ -44,12 +44,22 @@ export async function POST(
     try {
       const provider = getAIProvider();
 
+      // 获取所有知识点，传给 AI 做自动匹配
+      const { data: allTopics } = await supabase
+        .from("knowledge_topics")
+        .select("id, title")
+        .order("sort_order");
+
+      const topicNames = (allTopics || []).map((t: { title: string }) => t.title);
+      const topicMap = new Map((allTopics || []).map((t: { id: string; title: string }) => [t.title, t.id]));
+
       let result;
 
       // 如果有客户端 OCR 文本（图片），直接用文本处理
       if (ocrText && upload.file_type === "image") {
         result = await provider.extractQuestions({
           textContent: ocrText,
+          topicNames,
         });
       } else if (upload.file_type === "image") {
         // Fallback: 尝试用 AI 的 vision 能力
@@ -74,6 +84,7 @@ export async function POST(
         result = await provider.extractQuestions({
           imageBase64: base64,
           imageMimeType: contentType,
+          topicNames,
         });
       } else if (upload.file_type === "pdf") {
         // 从 file_url 提取 storage path，生成签名 URL
@@ -107,10 +118,19 @@ export async function POST(
 
         result = await provider.extractQuestions({
           textContent: pdfText,
+          topicNames,
         });
       } else {
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
+
+      // 根据 AI 返回的 suggested_topic 自动匹配 topic_id
+      const questionsWithTopics = result.questions.map((q) => {
+        if (q.suggested_topic && topicMap.has(q.suggested_topic)) {
+          return { ...q, topic_id: topicMap.get(q.suggested_topic) };
+        }
+        return q;
+      });
 
       // 保存提取结果
       await supabase
@@ -118,14 +138,14 @@ export async function POST(
         .update({
           status: "completed",
           ai_provider: provider.name,
-          extracted_questions: result.questions as unknown as Record<string, unknown>[],
-          question_count: result.questions.length,
+          extracted_questions: questionsWithTopics as unknown as Record<string, unknown>[],
+          question_count: questionsWithTopics.length,
         })
         .eq("id", id);
 
       return NextResponse.json({
-        questions: result.questions,
-        count: result.questions.length,
+        questions: questionsWithTopics,
+        count: questionsWithTopics.length,
       });
     } catch (aiError) {
       const errorMessage = aiError instanceof Error ? aiError.message : "AI处理失败";
