@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 const FIREFLY_COUNT = 12;
@@ -104,8 +105,8 @@ export function LandingPage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#FFFDF7]/80 backdrop-blur-md border-b border-amber-100/50">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🪲</span>
+          <div className="flex items-center gap-1.5">
+            <Image src="/logo.png" alt="拾萤" width={32} height={32} className="object-contain" />
             <span className="text-xl font-extrabold text-[#2E3338] tracking-tight">拾萤</span>
           </div>
           <div className="flex items-center gap-3">
@@ -137,9 +138,7 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Mascot area */}
           <div className="mb-8 relative inline-block">
-            <div className="w-32 h-32 mx-auto bg-gradient-to-br from-amber-300 to-yellow-400 rounded-[2rem] rotate-3 flex items-center justify-center shadow-xl shadow-amber-200/40 animate-bounce-slow">
-              <span className="text-6xl -rotate-3">🪲</span>
-            </div>
+            <Image src="/logo.png" alt="拾萤" width={160} height={160} className="object-contain animate-bounce-slow" />
             {/* Small floating elements */}
             <div className="absolute -top-2 -right-4 w-8 h-8 bg-green-300 rounded-xl rotate-12 flex items-center justify-center text-lg animate-float-delayed">
               ✨
@@ -267,7 +266,7 @@ export function LandingPage() {
       {/* Story / Brand section */}
       <section className="py-20 px-6 bg-gradient-to-b from-amber-50/50 to-[#FFFDF7]">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="text-6xl mb-6">🏮</div>
+          <Image src="/logo.png" alt="拾萤" width={80} height={80} className="mx-auto mb-6 object-contain" />
           <h2 className="text-3xl md:text-4xl font-black text-[#2E3338] mb-6">
             「囊萤映雪」
           </h2>
@@ -283,7 +282,7 @@ export function LandingPage() {
             </span>
           </p>
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md text-sm text-[#4D5766]">
-            <span className="text-xl">🪲</span>
+            <Image src="/logo.png" alt="拾萤" width={24} height={24} className="object-contain" />
             <span className="font-bold text-[#2E3338]">拾萤</span> —— 拾起萤火，点亮未来
           </div>
         </div>
@@ -317,8 +316,8 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="py-10 px-6 border-t border-amber-100">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🪲</span>
+          <div className="flex items-center gap-1.5">
+            <Image src="/logo.png" alt="拾萤" width={28} height={28} className="object-contain" />
             <span className="text-lg font-bold text-[#2E3338]">拾萤</span>
             <span className="text-sm text-[#B4BCC8] ml-2">AI智能学习平台</span>
           </div>

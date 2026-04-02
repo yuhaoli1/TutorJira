@@ -124,7 +124,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8 rounded-2xl bg-white p-8 border border-[#E8EAED]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-3xl">🪲</span>
+            <img src="/logo.png" alt="拾萤" className="w-10 h-10 object-contain" />
             <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">拾萤</h1>
           </div>
           <p className="mt-1 text-sm text-[#B4BCC8]">AI智能学习平台 · 请登录或注册</p>
