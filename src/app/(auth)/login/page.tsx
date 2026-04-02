@@ -120,11 +120,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F4F5F6] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#FFFDF7] px-4">
       <div className="w-full max-w-sm space-y-8 rounded-2xl bg-white p-8 border border-[#E8EAED]">
         <div className="text-center">
-          <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">优培科技辅导学习平台</h1>
-          <p className="mt-2 text-sm text-[#B4BCC8]">请登录或注册</p>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-3xl">🪲</span>
+            <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">拾萤</h1>
+          </div>
+          <p className="mt-1 text-sm text-[#B4BCC8]">AI智能学习平台 · 请登录或注册</p>
         </div>
 
         {/* 切换登录方式 */}

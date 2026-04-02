@@ -36,6 +36,7 @@ export async function updateSession(request: NextRequest) {
   // 未登录用户重定向到登录页
   if (
     !user &&
+    request.nextUrl.pathname !== "/" &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/setup") &&
     !request.nextUrl.pathname.startsWith("/api/auth") &&

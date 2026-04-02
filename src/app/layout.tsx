@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "优培科技辅导学习平台",
-  description: "辅导机构一站式学习管理平台",
+  title: "拾萤 - AI智能学习平台",
+  description: "拾起萤火，点亮学习之路。AI驱动的智能学习管理平台。",
 };
 
 export default function RootLayout({

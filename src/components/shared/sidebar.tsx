@@ -67,7 +67,9 @@ export function Sidebar({ title, navItems, userName, role, userRole }: SidebarPr
       <aside className="hidden md:flex md:w-56 md:flex-col md:fixed md:inset-y-0 border-r border-[#E8EAED] bg-white">
         <div className="flex flex-col flex-1 overflow-y-auto">
           <div className="px-5 pt-6 pb-4">
-            <h1 className="text-sm font-bold text-[#2E3338] leading-snug tracking-tight">{title}</h1>
+            <h1 className="text-sm font-bold text-[#2E3338] leading-snug tracking-tight">
+              <span className="mr-1">🪲</span>{title}
+            </h1>
             <p className="mt-1 text-xs text-[#B4BCC8]">
               {userName} · {displayRole}
             </p>
