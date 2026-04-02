@@ -19,7 +19,7 @@ export default async function StudentTasksPage() {
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">我的任务</h2>
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">查看和提交我的任务</p>
-      <KanbanBoard isTeacher={false} allowedStudentIds={allowedStudentIds} />
+      <KanbanBoard isTeacher={false} allowedStudentIds={allowedStudentIds} hideStudentFilter />
     </div>
   );
 }

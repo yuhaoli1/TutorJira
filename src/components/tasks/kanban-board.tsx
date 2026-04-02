@@ -30,7 +30,7 @@ interface Student {
   name: string;
 }
 
-export function KanbanBoard({ isTeacher, allowedStudentIds }: { isTeacher: boolean; allowedStudentIds?: string[] }) {
+export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }: { isTeacher: boolean; allowedStudentIds?: string[]; hideStudentFilter?: boolean }) {
   const [cards, setCards] = useState<TaskCardData[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
@@ -184,18 +184,20 @@ export function KanbanBoard({ isTeacher, allowedStudentIds }: { isTeacher: boole
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <select
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
-            className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
-          >
-            <option value="all">全部学生</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          {!hideStudentFilter && (
+            <select
+              value={selectedStudent}
+              onChange={(e) => setSelectedStudent(e.target.value)}
+              className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
+            >
+              <option value="all">全部学生</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         {isTeacher && (
           <Button onClick={() => setShowCreate(true)} size="sm">
