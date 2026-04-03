@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -47,19 +47,28 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
   const [showCreate, setShowCreate] = useState(false);
   const [selectedCard, setSelectedCard] = useState<TaskCardData | null>(null);
   const [activeCard, setActiveCard] = useState<TaskCardData | null>(null);
-  const supabase = createClient();
+
+  // ✅ 稳定引用：useMemo 避免每次渲染重建 supabase client
+  const supabase = useMemo(() => createClient(), []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
   const fetchBoard = useCallback(async () => {
-    // Generate any pending recurring tasks
+    // ✅ 不阻塞：fire-and-forget 生成周期任务
     if (isTeacher) {
-      await fetch("/api/recurring-tasks/generate", { method: "POST" });
+      fetch("/api/recurring-tasks/generate", { method: "POST" });
     }
 
-    // Fetch assignments with joined data (now including description and priority)
+    // 空学生列表直接返回
+    if (allowedStudentIds && allowedStudentIds.length === 0) {
+      setCards([]);
+      setStudents([]);
+      return;
+    }
+
+    // Fetch assignments with joined data
     let query = supabase
       .from("task_assignments")
       .select(
@@ -71,27 +80,37 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
       )
       .order("created_at", { ascending: false });
 
-    // Filter by allowed students (for parent/student view)
     if (allowedStudentIds && allowedStudentIds.length > 0) {
       query = query.in("student_id", allowedStudentIds);
-    } else if (allowedStudentIds && allowedStudentIds.length === 0) {
-      setCards([]);
-      setStudents([]);
-      return;
     }
 
     const { data: assignments } = await query;
 
     if (!assignments) return;
 
-    // Fetch test results, comment counts, attachment counts in parallel
+    // ✅ 合并成一次 Promise.all — 所有辅助数据并行获取
     const assignmentIds = assignments.map((a) => a.id);
     const safeIds = assignmentIds.length > 0 ? assignmentIds : ["__none__"];
 
-    const [testResultsRes, commentsRes, attachmentsRes] = await Promise.all([
+    const taskIds = [...new Set(
+      assignments
+        .filter((a) => a.task)
+        .map((a) => (a.task as unknown as { id: string }).id)
+    )];
+    const safeTaskIds = taskIds.length > 0 ? taskIds : ["__none__"];
+
+    const [testResultsRes, commentsRes, attachmentsRes, labelsRes, questionsCountRes] = await Promise.all([
       supabase.from("test_results").select("*").in("task_assignment_id", safeIds),
       supabase.from("task_comments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
       supabase.from("task_attachments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
+      supabase
+        .from("task_label_map")
+        .select("task_id, label:task_labels(id, name, color)")
+        .in("task_id", safeTaskIds),
+      supabase
+        .from("task_questions")
+        .select("task_id")
+        .in("task_id", safeTaskIds),
     ]);
 
     const resultsMap = new Map<string, NonNullable<typeof testResultsRes.data>>();
@@ -110,25 +129,6 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
     attachmentsRes.data?.forEach((a) => {
       attachCountMap.set(a.task_assignment_id, (attachCountMap.get(a.task_assignment_id) ?? 0) + 1);
     });
-
-    // Fetch task IDs for label and question lookups
-    const taskIds = [...new Set(
-      assignments
-        .filter((a) => a.task)
-        .map((a) => (a.task as unknown as { id: string }).id)
-    )];
-    const safeTaskIds = taskIds.length > 0 ? taskIds : ["__none__"];
-
-    const [labelsRes, questionsCountRes] = await Promise.all([
-      supabase
-        .from("task_label_map")
-        .select("task_id, label:task_labels(id, name, color)")
-        .in("task_id", safeTaskIds),
-      supabase
-        .from("task_questions")
-        .select("task_id")
-        .in("task_id", safeTaskIds),
-    ]);
 
     // Build label map: taskId -> Label[]
     const labelMap = new Map<string, Label[]>();
@@ -199,7 +199,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
     setStudents(
       Array.from(uniqueStudents.entries()).map(([id, name]) => ({ id, name }))
     );
-  }, [supabase, allowedStudentIds]);
+  }, [supabase, isTeacher, allowedStudentIds]);
 
   useEffect(() => {
     fetchBoard();
