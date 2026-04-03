@@ -173,22 +173,8 @@ export function LandingPage() {
             </div>
 
             {/* Right: Mascot */}
-            <div className="flex-shrink-0 relative">
-              <div className="relative">
-                {/* Glow behind mascot */}
-                <div
-                  className="absolute inset-0 rounded-full blur-2xl opacity-30 scale-90"
-                  style={{ background: GREEN }}
-                />
-                <LogoIcon size={280} className="relative z-10 drop-shadow-2xl animate-mascot-float" />
-              </div>
-              {/* Floating badges */}
-              <div className="absolute -top-2 -right-2 px-3 py-1.5 bg-white rounded-xl shadow-lg border-2 border-green-200 text-sm font-bold animate-badge-float" style={{ color: GREEN_DARK }}>
-                🎯 精准练习
-              </div>
-              <div className="absolute -bottom-4 -left-4 px-3 py-1.5 bg-white rounded-xl shadow-lg border-2 border-blue-200 text-sm font-bold animate-badge-float-delayed text-blue-600">
-                📕 错题追踪
-              </div>
+            <div className="flex-shrink-0">
+              <LogoIcon size={360} className="drop-shadow-2xl" />
             </div>
           </div>
         </div>
