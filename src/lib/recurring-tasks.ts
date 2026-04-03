@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { TaskType } from "./supabase/types";
+import type { TaskType, TaskPriority } from "./supabase/types";
 
 const LOOK_AHEAD_DAYS = 7;
 
@@ -7,6 +7,7 @@ interface RecurringTemplate {
   id: string;
   title: string;
   type: TaskType;
+  priority: TaskPriority;
   recurrence_type: "daily" | "weekly";
   recurrence_days: number[] | null;
   start_date: string;
@@ -101,6 +102,7 @@ export async function generateRecurringTasks(): Promise<number> {
         .insert({
           title: template.title,
           type: template.type,
+          priority: template.priority || "medium",
           due_date: `${date}T23:59:00+08:00`, // CST end of day
           created_by: template.created_by,
           recurring_template_id: template.id,

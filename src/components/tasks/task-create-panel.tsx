@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { TASK_TYPES, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
+import { TASK_TYPES, TASK_PRIORITIES, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import type { TaskType, RecurrenceType } from "@/lib/supabase/types";
+import type { TaskType, TaskPriority, RecurrenceType } from "@/lib/supabase/types";
 
 interface Student {
   id: string;
@@ -20,7 +20,9 @@ export function TaskCreatePanel({
   onCreate: () => void;
 }) {
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState<TaskType>("dictation");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
   const [dueDate, setDueDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -83,6 +85,7 @@ export function TaskCreatePanel({
         .insert({
           title: title.trim(),
           type,
+          priority,
           recurrence_type: recurrenceType,
           recurrence_days: recurrenceType === "weekly" ? recurrenceDays : null,
           start_date: dueDate,
@@ -104,7 +107,9 @@ export function TaskCreatePanel({
         .from("tasks")
         .insert({
           title: title.trim(),
+          description: description.trim() || null,
           type,
+          priority,
           due_date: new Date(dueDate).toISOString(),
           created_by: user.id,
         })
@@ -116,12 +121,18 @@ export function TaskCreatePanel({
         return;
       }
 
-      await supabase.from("task_assignments").insert(
+      const { error: assignError } = await supabase.from("task_assignments").insert(
         selectedStudents.map((studentId) => ({
           task_id: task.id,
           student_id: studentId,
         }))
       );
+
+      if (assignError) {
+        console.error("Failed to create task assignments:", assignError);
+        setLoading(false);
+        return;
+      }
     }
 
     setLoading(false);
@@ -171,6 +182,49 @@ export function TaskCreatePanel({
             placeholder="例如：第三单元默写"
             className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           />
+        </div>
+
+        {/* 描述 */}
+        <div>
+          <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+            描述（可选）
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="详细说明任务要求..."
+            rows={3}
+            className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150 resize-none"
+          />
+        </div>
+
+        {/* 优先级 */}
+        <div>
+          <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+            优先级
+          </label>
+          <div className="flex gap-2">
+            {(Object.entries(TASK_PRIORITIES) as [TaskPriority, string][]).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPriority(value)}
+                className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors duration-150 ${
+                  priority === value
+                    ? value === "urgent"
+                      ? "bg-red-500 text-white"
+                      : value === "high"
+                        ? "bg-orange-400 text-white"
+                        : value === "medium"
+                          ? "bg-blue-400 text-white"
+                          : "bg-[#B4BCC8] text-white"
+                    : "bg-white border border-[#E8EAED] text-[#4D5766] hover:bg-[#F4F5F6]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 重复任务开关 */}

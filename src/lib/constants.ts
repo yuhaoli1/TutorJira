@@ -21,6 +21,28 @@ export const TASK_STATUS = {
   rejected: "已打回",
 } as const;
 
+export const TASK_PRIORITIES = {
+  urgent: "紧急",
+  high: "高",
+  medium: "中",
+  low: "低",
+} as const;
+
+export const TASK_PRIORITY_COLORS = {
+  urgent: { bg: "bg-red-50", text: "text-red-600", border: "border-l-red-500", dot: "bg-red-500" },
+  high: { bg: "bg-orange-50", text: "text-orange-600", border: "border-l-orange-400", dot: "bg-orange-400" },
+  medium: { bg: "bg-blue-50", text: "text-blue-500", border: "border-l-blue-400", dot: "bg-blue-400" },
+  low: { bg: "bg-[#F4F5F6]", text: "text-[#B4BCC8]", border: "border-l-[#B4BCC8]", dot: "bg-[#B4BCC8]" },
+} as const;
+
+export const ACTIVITY_ACTIONS = {
+  created: "创建了任务",
+  status_change: "更改了状态",
+  note_added: "添加了备注",
+  result_recorded: "录入了成绩",
+  priority_changed: "更改了优先级",
+} as const;
+
 export const CHECKIN_FREQUENCY = {
   daily: "每日",
   weekly: "每周",

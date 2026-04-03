@@ -15,6 +15,7 @@ export type QuestionType = "choice" | "fill_blank" | "solution";
 export type UploadFileType = "pdf" | "docx" | "image";
 export type UploadStatus = "pending" | "processing" | "completed" | "failed";
 export type RecurrenceType = "daily" | "weekly";
+export type TaskPriority = "urgent" | "high" | "medium" | "low";
 
 export interface ExtractedQuestionJSON {
   stem: string;
@@ -171,6 +172,7 @@ export interface Database {
           created_by: string;
           recurring_template_id: string | null;
           recurring_date: string | null;
+          priority: TaskPriority;
           created_at: string;
           updated_at: string;
         };
@@ -181,6 +183,7 @@ export interface Database {
           type: TaskType;
           due_date: string;
           created_by: string;
+          priority?: TaskPriority;
           recurring_template_id?: string | null;
           recurring_date?: string | null;
           created_at?: string;
@@ -192,6 +195,7 @@ export interface Database {
           description?: string | null;
           type?: TaskType;
           due_date?: string;
+          priority?: TaskPriority;
           recurring_template_id?: string | null;
           recurring_date?: string | null;
           updated_at?: string;
@@ -463,6 +467,35 @@ export interface Database {
           updated_at?: string;
         };
       };
+      task_activity_log: {
+        Row: {
+          id: string;
+          task_assignment_id: string;
+          action: string;
+          old_value: string | null;
+          new_value: string | null;
+          performed_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          task_assignment_id: string;
+          action: string;
+          old_value?: string | null;
+          new_value?: string | null;
+          performed_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          task_assignment_id?: string;
+          action?: string;
+          old_value?: string | null;
+          new_value?: string | null;
+          performed_by?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -475,6 +508,7 @@ export interface Database {
       upload_file_type: UploadFileType;
       upload_status: UploadStatus;
       recurrence_type: RecurrenceType;
+      task_priority: TaskPriority;
     };
   };
 }

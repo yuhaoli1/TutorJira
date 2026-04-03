@@ -17,6 +17,7 @@ import { KanbanColumn } from "./kanban-column";
 import { TaskCard, type TaskCardData } from "./task-card";
 import { TaskDetailPanel } from "./task-detail-panel";
 import { TaskCreatePanel } from "./task-create-panel";
+import type { TaskPriority } from "@/lib/supabase/types";
 
 const COLUMNS = [
   { status: "pending", label: TASK_STATUS.pending },
@@ -24,6 +25,14 @@ const COLUMNS = [
   { status: "confirmed", label: TASK_STATUS.confirmed },
   { status: "rejected", label: TASK_STATUS.rejected },
 ] as const;
+
+// Priority sort order (urgent first)
+const PRIORITY_ORDER: Record<string, number> = {
+  urgent: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
 
 interface Student {
   id: string;
@@ -49,23 +58,22 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
       await fetch("/api/recurring-tasks/generate", { method: "POST" });
     }
 
-    // Fetch assignments with joined data
+    // Fetch assignments with joined data (now including description and priority)
     let query = supabase
       .from("task_assignments")
       .select(
         `
         id, status, note, created_at,
-        task:tasks(id, title, type, due_date),
+        task:tasks(id, title, description, type, due_date, priority),
         student:students(id, name)
       `
       )
       .order("created_at", { ascending: false });
 
-    // Filter by allowed students (for parent view)
+    // Filter by allowed students (for parent/student view)
     if (allowedStudentIds && allowedStudentIds.length > 0) {
       query = query.in("student_id", allowedStudentIds);
     } else if (allowedStudentIds && allowedStudentIds.length === 0) {
-      // Parent with no bound children
       setCards([]);
       setStudents([]);
       return;
@@ -92,19 +100,29 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
     const cardData: TaskCardData[] = assignments
       .filter((a) => a.task && a.student)
       .map((a) => {
-        const task = a.task as unknown as { id: string; title: string; type: string; due_date: string };
+        const task = a.task as unknown as {
+          id: string;
+          title: string;
+          description: string | null;
+          type: string;
+          due_date: string;
+          priority: TaskPriority;
+        };
         const student = a.student as unknown as { id: string; name: string };
         const results = resultsMap.get(a.id) ?? [];
         return {
           id: a.id,
           status: a.status,
           taskTitle: task.title,
+          taskDescription: task.description,
           taskType: task.type as TaskCardData["taskType"],
+          priority: task.priority || "medium",
           studentName: student.name,
           dueDate: new Date(task.due_date).toLocaleDateString("zh-CN", {
             month: "numeric",
             day: "numeric",
           }),
+          dueDateRaw: task.due_date,
           note: a.note,
           testResults: results.map((r) => ({
             subject: r.subject,
@@ -139,8 +157,11 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
           return student?.id === selectedStudent;
         });
 
+  // Sort cards within columns by priority
   const getColumnCards = (status: string) =>
-    filteredCards.filter((c) => c.status === status);
+    filteredCards
+      .filter((c) => c.status === status)
+      .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
 
   const handleDragStart = (event: DragStartEvent) => {
     const card = cards.find((c) => c.id === event.active.id);
@@ -155,11 +176,12 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
     const cardId = active.id as string;
     const newStatus = over.id as string;
 
-    // Only allow status changes if it's a column drop
     if (!COLUMNS.some((c) => c.status === newStatus)) return;
 
     const card = cards.find((c) => c.id === cardId);
     if (!card || card.status === newStatus) return;
+
+    const oldStatus = card.status;
 
     // Optimistic update
     setCards((prev) =>
@@ -177,6 +199,18 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
       .from("task_assignments")
       .update(updateData)
       .eq("id", cardId);
+
+    // Log activity
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("task_activity_log").insert({
+        task_assignment_id: cardId,
+        action: "status_change",
+        old_value: oldStatus,
+        new_value: newStatus,
+        performed_by: user.id,
+      });
+    }
   };
 
   return (
