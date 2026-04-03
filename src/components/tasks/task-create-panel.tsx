@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { TASK_TYPES, TASK_PRIORITIES, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
+import { TASK_TYPES, TASK_PRIORITIES, QUESTION_TYPES, DIFFICULTY_LABELS, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { LabelPicker } from "./label-picker";
-import type { TaskType, TaskPriority, RecurrenceType } from "@/lib/supabase/types";
+import type { TaskType, TaskPriority, RecurrenceType, QuestionType } from "@/lib/supabase/types";
 
 interface Student {
   id: string;
@@ -32,6 +32,18 @@ export function TaskCreatePanel({
   const [loading, setLoading] = useState(false);
   const [labelIds, setLabelIds] = useState<string[]>([]);
 
+  // 关联题目
+  const [selectedQuestions, setSelectedQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string }[]>([]);
+  const [showQuestionBrowser, setShowQuestionBrowser] = useState(false);
+  const [topics, setTopics] = useState<{ id: string; title: string }[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState("all");
+  const [availableQuestions, setAvailableQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string }[]>([]);
+  const [searchingQ, setSearchingQ] = useState(false);
+
+  // 附件上传
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string }[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   // Recurring task state
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>("daily");
@@ -48,7 +60,42 @@ export function TaskCreatePanel({
       .then(({ data }) => {
         if (data) setStudents(data);
       });
+    supabase
+      .from("knowledge_topics")
+      .select("id, title")
+      .order("sort_order")
+      .then(({ data }) => {
+        if (data) setTopics(data);
+      });
   }, [supabase]);
+
+  const searchQuestions = async () => {
+    setSearchingQ(true);
+    let query = supabase
+      .from("questions")
+      .select("id, type, content, difficulty, topic:knowledge_topics(title)")
+      .limit(30);
+    if (selectedTopic !== "all") query = query.eq("topic_id", selectedTopic);
+    const { data } = await query;
+    if (data) {
+      const selectedIds = new Set(selectedQuestions.map((q) => q.id));
+      setAvailableQuestions(
+        (data as any[])
+          .filter((q) => !selectedIds.has(q.id))
+          .map((q) => ({ id: q.id, type: q.type, stem: q.content.stem, topic: q.topic?.title }))
+      );
+    }
+    setSearchingQ(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newFiles = files
+      .filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024)
+      .map((f) => ({ file: f, preview: URL.createObjectURL(f) }));
+    setPendingFiles((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  };
 
   const toggleStudent = (id: string) => {
     setSelectedStudents((prev) =>
@@ -141,6 +188,48 @@ export function TaskCreatePanel({
         await supabase.from("task_label_map").insert(
           labelIds.map((labelId) => ({ task_id: task.id, label_id: labelId }))
         );
+      }
+
+      // Link questions to the task
+      if (selectedQuestions.length > 0) {
+        await supabase.from("task_questions").insert(
+          selectedQuestions.map((q, i) => ({
+            task_id: task.id,
+            question_id: q.id,
+            sort_order: i,
+          }))
+        );
+      }
+
+      // Upload attachments (linked to first assignment)
+      if (pendingFiles.length > 0) {
+        // Get the first assignment ID for attaching files
+        const { data: assignments } = await supabase
+          .from("task_assignments")
+          .select("id")
+          .eq("task_id", task.id)
+          .limit(1);
+        const assignmentId = assignments?.[0]?.id;
+        if (assignmentId) {
+          for (const pf of pendingFiles) {
+            const ext = pf.file.name.split(".").pop();
+            const path = `tasks/${task.id}/${Date.now()}.${ext}`;
+            const { error: upErr } = await supabase.storage
+              .from("question-uploads")
+              .upload(path, pf.file);
+            if (!upErr) {
+              const { data: urlData } = supabase.storage.from("question-uploads").getPublicUrl(path);
+              await supabase.from("task_attachments").insert({
+                task_assignment_id: assignmentId,
+                file_url: urlData.publicUrl,
+                file_name: pf.file.name,
+                file_size: pf.file.size,
+                file_type: pf.file.type,
+                uploaded_by: user.id,
+              });
+            }
+          }
+        }
       }
     }
 
@@ -242,6 +331,155 @@ export function TaskCreatePanel({
             标签（可选）
           </label>
           <LabelPicker selectedIds={labelIds} onChange={setLabelIds} />
+        </div>
+
+        {/* 关联题目 */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[13px] font-medium text-[#4D5766]">
+              关联题目（可选）
+              {selectedQuestions.length > 0 && (
+                <span className="ml-1.5 text-xs text-[#B4BCC8]">{selectedQuestions.length}</span>
+              )}
+            </label>
+            <button
+              type="button"
+              onClick={() => { setShowQuestionBrowser(!showQuestionBrowser); if (!showQuestionBrowser) searchQuestions(); }}
+              className="text-xs font-medium text-[#163300] hover:text-[#163300]/70 transition-colors"
+            >
+              {showQuestionBrowser ? "收起" : "+ 添加题目"}
+            </button>
+          </div>
+
+          {/* 已选题目 */}
+          {selectedQuestions.length > 0 && (
+            <div className="space-y-1.5 mb-3">
+              {selectedQuestions.map((q, i) => (
+                <div key={q.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
+                  <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                        q.type === "choice" ? "bg-blue-50 text-blue-600"
+                          : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
+                          : "bg-purple-50 text-purple-600"
+                      }`}>
+                        {QUESTION_TYPES[q.type]}
+                      </span>
+                      {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
+                    </div>
+                    <p className="text-[13px] text-[#2E3338] line-clamp-1">{q.stem}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedQuestions((prev) => prev.filter((x) => x.id !== q.id))}
+                    className="text-xs text-[#B4BCC8] hover:text-red-500 flex-shrink-0 mt-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 题目浏览器 */}
+          {showQuestionBrowser && (
+            <div className="rounded-xl border border-[#E8EAED] p-3 space-y-3 bg-[#FAFAFA]">
+              <div className="flex gap-2">
+                <select
+                  value={selectedTopic}
+                  onChange={(e) => setSelectedTopic(e.target.value)}
+                  className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-2.5 py-1.5 text-[13px] outline-none"
+                >
+                  <option value="all">全部知识点</option>
+                  {topics.map((t) => (
+                    <option key={t.id} value={t.id}>{t.title}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={searchQuestions}
+                  disabled={searchingQ}
+                  className="rounded-lg bg-[#163300] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+                >
+                  搜索
+                </button>
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-1.5">
+                {availableQuestions.length === 0 ? (
+                  <p className="text-xs text-[#B4BCC8] py-3 text-center">
+                    {searchingQ ? "搜索中..." : "没有更多可添加的题目"}
+                  </p>
+                ) : (
+                  availableQuestions.map((q) => (
+                    <div
+                      key={q.id}
+                      onClick={() => {
+                        setSelectedQuestions((prev) => [...prev, q]);
+                        setAvailableQuestions((prev) => prev.filter((x) => x.id !== q.id));
+                      }}
+                      className="cursor-pointer flex items-start gap-2 rounded-xl bg-white p-3 border border-[#E8EAED] hover:border-[#163300] transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                            q.type === "choice" ? "bg-blue-50 text-blue-600"
+                              : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
+                              : "bg-purple-50 text-purple-600"
+                          }`}>
+                            {QUESTION_TYPES[q.type]}
+                          </span>
+                          {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
+                        </div>
+                        <p className="text-[13px] text-[#2E3338] line-clamp-2">{q.stem}</p>
+                      </div>
+                      <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ 添加</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 附件上传 */}
+        <div>
+          <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+            附件（可选）
+          </label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <div className="flex flex-wrap gap-2">
+            {pendingFiles.map((pf, i) => (
+              <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#E8EAED]">
+                <img src={pf.preview} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    URL.revokeObjectURL(pf.preview);
+                    setPendingFiles((prev) => prev.filter((_, idx) => idx !== i));
+                  }}
+                  className="absolute top-0 right-0 bg-black/50 text-white text-[10px] rounded-bl px-1"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-16 h-16 rounded-lg border-[1.5px] border-dashed border-[#B4BCC8] flex items-center justify-center text-[#B4BCC8] hover:border-[#163300] hover:text-[#163300] transition-colors"
+            >
+              <span className="text-xl">+</span>
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-[#B4BCC8]">支持图片，单张最大10MB</p>
         </div>
 
         {/* 重复任务开关 */}
