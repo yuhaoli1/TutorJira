@@ -6,7 +6,8 @@ import { TASK_TYPES, TASK_PRIORITIES, TASK_PRIORITY_COLORS } from "@/lib/constan
 import type { TaskType, TaskPriority } from "@/lib/supabase/types";
 
 export interface TaskCardData {
-  id: string;
+  id: string;          // assignment id
+  taskId: string;      // task id (for editing task info)
   status: string;
   taskTitle: string;
   taskDescription: string | null;

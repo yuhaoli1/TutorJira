@@ -112,6 +112,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
         const results = resultsMap.get(a.id) ?? [];
         return {
           id: a.id,
+          taskId: task.id,
           status: a.status,
           taskTitle: task.title,
           taskDescription: task.description,
