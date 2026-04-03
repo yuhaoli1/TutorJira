@@ -11,14 +11,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { createClient } from "@/lib/supabase/client";
+import { fetchBoardData } from "@/lib/fetch-board-data";
 import { TASK_STATUS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard, type TaskCardData } from "./task-card";
 import { TaskCreatePanel } from "./task-create-panel";
 import { TaskDetailPanel } from "./task-detail-panel";
-import type { TaskPriority } from "@/lib/supabase/types";
-import type { Label } from "./label-picker";
 
 const COLUMNS = [
   { status: "pending", label: TASK_STATUS.pending },
@@ -27,7 +26,6 @@ const COLUMNS = [
   { status: "rejected", label: TASK_STATUS.rejected },
 ] as const;
 
-// Priority sort order (urgent first)
 const PRIORITY_ORDER: Record<string, number> = {
   urgent: 0,
   high: 1,
@@ -40,181 +38,65 @@ interface Student {
   name: string;
 }
 
-export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, basePath }: { isTeacher: boolean; allowedStudentIds?: string[]; hideStudentFilter?: boolean; basePath: string }) {
-  const [cards, setCards] = useState<TaskCardData[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
+interface KanbanBoardProps {
+  isTeacher: boolean;
+  allowedStudentIds?: string[];
+  hideStudentFilter?: boolean;
+  basePath: string;
+  initialCards?: TaskCardData[];
+  initialStudents?: Student[];
+}
+
+export function KanbanBoard({
+  isTeacher,
+  allowedStudentIds,
+  hideStudentFilter,
+  basePath,
+  initialCards,
+  initialStudents,
+}: KanbanBoardProps) {
+  // ✅ 用服务端预取的数据初始化，首屏立即显示
+  const [cards, setCards] = useState<TaskCardData[]>(initialCards ?? []);
+  const [students, setStudents] = useState<Student[]>(initialStudents ?? []);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedCard, setSelectedCard] = useState<TaskCardData | null>(null);
   const [activeCard, setActiveCard] = useState<TaskCardData | null>(null);
 
-  // ✅ 稳定引用：useMemo 避免每次渲染重建 supabase client
   const supabase = useMemo(() => createClient(), []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
+  // 客户端刷新（创建/更新/拖拽后用）
   const fetchBoard = useCallback(async () => {
-    // ✅ 不阻塞：fire-and-forget 生成周期任务
+    const { cards: newCards, students: newStudents } = await fetchBoardData(
+      supabase,
+      { allowedStudentIds }
+    );
+    setCards(newCards);
+    setStudents(newStudents);
+  }, [supabase, allowedStudentIds]);
+
+  // 如果没有 initialData，首次加载走客户端获取（兜底）
+  useEffect(() => {
+    if (!initialCards) {
+      fetchBoard();
+    }
+    // fire-and-forget: 生成周期任务
     if (isTeacher) {
       fetch("/api/recurring-tasks/generate", { method: "POST" });
     }
+  }, [fetchBoard, initialCards, isTeacher]);
 
-    // 空学生列表直接返回
-    if (allowedStudentIds && allowedStudentIds.length === 0) {
-      setCards([]);
-      setStudents([]);
-      return;
-    }
-
-    // Fetch assignments with joined data
-    let query = supabase
-      .from("task_assignments")
-      .select(
-        `
-        id, status, note, ticket_number, created_at,
-        task:tasks(id, title, description, type, due_date, priority),
-        student:students(id, name)
-      `
-      )
-      .order("created_at", { ascending: false })
-      .limit(200);
-
-    if (allowedStudentIds && allowedStudentIds.length > 0) {
-      query = query.in("student_id", allowedStudentIds);
-    }
-
-    const { data: assignments } = await query;
-
-    if (!assignments) return;
-
-    // ✅ 合并成一次 Promise.all — 所有辅助数据并行获取
-    const assignmentIds = assignments.map((a) => a.id);
-    const safeIds = assignmentIds.length > 0 ? assignmentIds : ["__none__"];
-
-    const taskIds = [...new Set(
-      assignments
-        .filter((a) => a.task)
-        .map((a) => (a.task as unknown as { id: string }).id)
-    )];
-    const safeTaskIds = taskIds.length > 0 ? taskIds : ["__none__"];
-
-    const [testResultsRes, commentsRes, attachmentsRes, labelsRes, questionsCountRes] = await Promise.all([
-      supabase.from("test_results").select("*").in("task_assignment_id", safeIds),
-      supabase.from("task_comments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
-      supabase.from("task_attachments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
-      supabase
-        .from("task_label_map")
-        .select("task_id, label:task_labels(id, name, color)")
-        .in("task_id", safeTaskIds),
-      supabase
-        .from("task_questions")
-        .select("task_id")
-        .in("task_id", safeTaskIds),
-    ]);
-
-    const resultsMap = new Map<string, NonNullable<typeof testResultsRes.data>>();
-    testResultsRes.data?.forEach((r) => {
-      const existing = resultsMap.get(r.task_assignment_id) ?? [];
-      existing.push(r);
-      resultsMap.set(r.task_assignment_id, existing);
-    });
-
-    const commentCountMap = new Map<string, number>();
-    commentsRes.data?.forEach((c) => {
-      commentCountMap.set(c.task_assignment_id, (commentCountMap.get(c.task_assignment_id) ?? 0) + 1);
-    });
-
-    const attachCountMap = new Map<string, number>();
-    attachmentsRes.data?.forEach((a) => {
-      attachCountMap.set(a.task_assignment_id, (attachCountMap.get(a.task_assignment_id) ?? 0) + 1);
-    });
-
-    // Build label map: taskId -> Label[]
-    const labelMap = new Map<string, Label[]>();
-    labelsRes.data?.forEach((row) => {
-      const r = row as unknown as { task_id: string; label: Label };
-      if (r.label) {
-        const existing = labelMap.get(r.task_id) ?? [];
-        existing.push(r.label);
-        labelMap.set(r.task_id, existing);
-      }
-    });
-
-    // Build question count map: taskId -> count
-    const qCountMap = new Map<string, number>();
-    questionsCountRes.data?.forEach((q) => {
-      qCountMap.set(q.task_id, (qCountMap.get(q.task_id) ?? 0) + 1);
-    });
-
-    const cardData: TaskCardData[] = assignments
-      .filter((a) => a.task && a.student)
-      .map((a) => {
-        const task = a.task as unknown as {
-          id: string;
-          title: string;
-          description: string | null;
-          type: string;
-          due_date: string;
-          priority: TaskPriority;
-        };
-        const student = a.student as unknown as { id: string; name: string };
-        const results = resultsMap.get(a.id) ?? [];
-        return {
-          id: a.id,
-          taskId: task.id,
-          ticketNumber: (a as unknown as { ticket_number: number }).ticket_number || 0,
-          status: a.status,
-          taskTitle: task.title,
-          taskDescription: task.description,
-          taskType: task.type as TaskCardData["taskType"],
-          priority: task.priority || "medium",
-          studentName: student.name,
-          dueDate: new Date(task.due_date).toLocaleDateString("zh-CN", {
-            month: "numeric",
-            day: "numeric",
-          }),
-          dueDateRaw: task.due_date,
-          note: a.note,
-          labels: labelMap.get(task.id) ?? [],
-          questionCount: qCountMap.get(task.id) ?? 0,
-          attachmentCount: attachCountMap.get(a.id) ?? 0,
-          commentCount: commentCountMap.get(a.id) ?? 0,
-          testResults: results.map((r) => ({
-            subject: r.subject,
-            total_questions: r.total_questions,
-            wrong_count: r.wrong_count,
-          })),
-        };
-      });
-
-    setCards(cardData);
-
-    // Extract unique students
-    const uniqueStudents = new Map<string, string>();
-    assignments.forEach((a) => {
-      const student = a.student as unknown as { id: string; name: string };
-      if (student) uniqueStudents.set(student.id, student.name);
-    });
-    setStudents(
-      Array.from(uniqueStudents.entries()).map(([id, name]) => ({ id, name }))
-    );
-  }, [supabase, isTeacher, allowedStudentIds]);
-
-  useEffect(() => {
-    fetchBoard();
-  }, [fetchBoard]);
-
-  // ✅ useMemo: 只在 cards/students/selectedStudent 变化时重算
+  // useMemo: 过滤 + 分列
   const filteredCards = useMemo(() => {
     if (selectedStudent === "all") return cards;
-    // 用 Map 快速查找，避免 O(n*m)
     const studentIdByName = new Map(students.map((s) => [s.name, s.id]));
     return cards.filter((c) => studentIdByName.get(c.studentName) === selectedStudent);
   }, [cards, students, selectedStudent]);
 
-  // ✅ useMemo: 按列预分组+排序，避免每次渲染重算
   const columnCardsMap = useMemo(() => {
     const map = new Map<string, TaskCardData[]>();
     for (const col of COLUMNS) {

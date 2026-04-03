@@ -1,12 +1,12 @@
 import { requireRole } from "@/lib/auth/get-user";
 import { createClient } from "@/lib/supabase/server";
+import { fetchBoardData } from "@/lib/fetch-board-data";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 
 export default async function StudentTasksPage() {
   const user = await requireRole(["student"]);
   const supabase = await createClient();
 
-  // Find the student record linked to this user
   const { data: student } = await supabase
     .from("students")
     .select("id")
@@ -15,11 +15,21 @@ export default async function StudentTasksPage() {
 
   const allowedStudentIds = student ? [student.id] : [];
 
+  // ✅ 服务端预取
+  const { cards, students } = await fetchBoardData(supabase, { allowedStudentIds });
+
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">我的任务</h2>
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">查看和提交我的任务</p>
-      <KanbanBoard isTeacher={false} allowedStudentIds={allowedStudentIds} hideStudentFilter basePath="/student/tasks" />
+      <KanbanBoard
+        isTeacher={false}
+        allowedStudentIds={allowedStudentIds}
+        hideStudentFilter
+        basePath="/student/tasks"
+        initialCards={cards}
+        initialStudents={students}
+      />
     </div>
   );
 }

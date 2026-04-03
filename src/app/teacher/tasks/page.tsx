@@ -1,8 +1,14 @@
 import { requireRole } from "@/lib/auth/get-user";
+import { createClient } from "@/lib/supabase/server";
+import { fetchBoardData } from "@/lib/fetch-board-data";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 
 export default async function TasksPage() {
   await requireRole(["admin", "teacher"]);
+  const supabase = await createClient();
+
+  // ✅ 服务端预取看板数据，首屏直接带数据
+  const { cards, students } = await fetchBoardData(supabase);
 
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)]">
@@ -10,7 +16,12 @@ export default async function TasksPage() {
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">
         管理学生任务和录入抽测成绩
       </p>
-      <KanbanBoard isTeacher={true} basePath="/teacher/tasks" />
+      <KanbanBoard
+        isTeacher={true}
+        basePath="/teacher/tasks"
+        initialCards={cards}
+        initialStudents={students}
+      />
     </div>
   );
 }

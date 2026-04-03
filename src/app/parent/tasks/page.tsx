@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/get-user";
 import { createClient } from "@/lib/supabase/server";
+import { fetchBoardData } from "@/lib/fetch-board-data";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 
 export default async function ParentTasksPage() {
@@ -18,11 +19,20 @@ export default async function ParentTasksPage() {
       (relations as { student_id: string }[] | null)?.map((r) => r.student_id) ?? [];
   }
 
+  // ✅ 服务端预取
+  const { cards, students } = await fetchBoardData(supabase, { allowedStudentIds });
+
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)]">
       <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">任务</h2>
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">查看孩子的任务和成绩</p>
-      <KanbanBoard isTeacher={false} allowedStudentIds={allowedStudentIds} basePath="/parent/tasks" />
+      <KanbanBoard
+        isTeacher={false}
+        allowedStudentIds={allowedStudentIds}
+        basePath="/parent/tasks"
+        initialCards={cards}
+        initialStudents={students}
+      />
     </div>
   );
 }
