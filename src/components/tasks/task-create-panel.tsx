@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_TYPES, TASK_PRIORITIES, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
+import { LabelPicker } from "./label-picker";
 import type { TaskType, TaskPriority, RecurrenceType } from "@/lib/supabase/types";
 
 interface Student {
@@ -29,6 +30,7 @@ export function TaskCreatePanel({
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+  const [labelIds, setLabelIds] = useState<string[]>([]);
 
   // Recurring task state
   const [isRecurring, setIsRecurring] = useState(false);
@@ -133,6 +135,13 @@ export function TaskCreatePanel({
         setLoading(false);
         return;
       }
+
+      // Assign labels to the task
+      if (labelIds.length > 0) {
+        await supabase.from("task_label_map").insert(
+          labelIds.map((labelId) => ({ task_id: task.id, label_id: labelId }))
+        );
+      }
     }
 
     setLoading(false);
@@ -225,6 +234,14 @@ export function TaskCreatePanel({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 标签 */}
+        <div>
+          <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
+            标签（可选）
+          </label>
+          <LabelPicker selectedIds={labelIds} onChange={setLabelIds} />
         </div>
 
         {/* 重复任务开关 */}

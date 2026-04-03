@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const topicId = searchParams.get("topic_id");
     const type = searchParams.get("type");
     const difficulty = searchParams.get("difficulty");
+    const ids = searchParams.getAll("ids");
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("page_size") || "20");
 
@@ -21,14 +22,19 @@ export async function GET(request: NextRequest) {
       .from("questions")
       .select("*, knowledge_topics(id, title)", { count: "exact" });
 
-    if (topicId) {
-      query = query.eq("topic_id", topicId);
-    }
-    if (type) {
-      query = query.eq("type", type);
-    }
-    if (difficulty) {
-      query = query.eq("difficulty", parseInt(difficulty));
+    // Fetch by specific IDs (for task-linked questions)
+    if (ids.length > 0) {
+      query = query.in("id", ids);
+    } else {
+      if (topicId) {
+        query = query.eq("topic_id", topicId);
+      }
+      if (type) {
+        query = query.eq("type", type);
+      }
+      if (difficulty) {
+        query = query.eq("difficulty", parseInt(difficulty));
+      }
     }
 
     query = query

@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { TASK_TYPES, TASK_STATUS, TASK_PRIORITIES, TASK_PRIORITY_COLORS, ACTIVITY_ACTIONS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { TestResultForm, type TestResultRow } from "./test-result-form";
+import { TaskComments } from "./task-comments";
+import { TaskAttachments } from "./task-attachments";
+import { TaskQuestionPicker, TaskQuestionList } from "./task-questions";
+import { LabelPicker, LabelChips, type Label } from "./label-picker";
 import type { TaskCardData } from "./task-card";
 import type { TaskType, TaskPriority } from "@/lib/supabase/types";
 
@@ -42,7 +46,24 @@ export function TaskDetailPanel({
   const [editPriority, setEditPriority] = useState<TaskPriority>(card.priority);
   const [editDueDate, setEditDueDate] = useState(card.dueDateRaw.split("T")[0]);
 
+  // Labels state
+  const [labelIds, setLabelIds] = useState<string[]>(card.labels.map((l) => l.id));
+  const [practiceQuestionIds, setPracticeQuestionIds] = useState<string[] | null>(null);
+
   const supabase = createClient();
+
+  // Sync labels to DB when they change
+  const syncLabels = async (newIds: string[]) => {
+    setLabelIds(newIds);
+    // Remove all existing
+    await supabase.from("task_label_map").delete().eq("task_id", card.taskId);
+    // Insert new
+    if (newIds.length > 0) {
+      await supabase.from("task_label_map").insert(
+        newIds.map((labelId) => ({ task_id: card.taskId, label_id: labelId }))
+      );
+    }
+  };
 
   // Fetch activity log
   useEffect(() => {
@@ -427,6 +448,53 @@ export function TaskDetailPanel({
           </>
         )}
 
+        {/* ========== 以下在编辑和查看模式都显示 ========== */}
+
+        {/* 标签 */}
+        {!editing && (
+          <div className="border-t border-[#E8EAED] pt-4">
+            {isTeacher ? (
+              <div className="space-y-2">
+                <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
+                <LabelPicker selectedIds={labelIds} onChange={syncLabels} />
+              </div>
+            ) : (
+              <LabelChips labels={card.labels} />
+            )}
+          </div>
+        )}
+
+        {/* 关联题目 */}
+        {!editing && (
+          <div className="border-t border-[#E8EAED] pt-4">
+            {isTeacher ? (
+              <TaskQuestionPicker taskId={card.taskId} onUpdate={onUpdate} />
+            ) : (
+              <TaskQuestionList
+                taskId={card.taskId}
+                onStartPractice={(ids) => setPracticeQuestionIds(ids)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* 附件 */}
+        {!editing && (
+          <div className="border-t border-[#E8EAED] pt-4">
+            <TaskAttachments
+              assignmentId={card.id}
+              canUpload={!isTeacher || card.status !== "confirmed"}
+            />
+          </div>
+        )}
+
+        {/* 对话 */}
+        {!editing && (
+          <div className="border-t border-[#E8EAED] pt-4">
+            <TaskComments assignmentId={card.id} />
+          </div>
+        )}
+
         {/* 活动记录（编辑和查看模式都显示） */}
         <div className="border-t border-[#E8EAED] pt-4">
           <button
@@ -523,6 +591,220 @@ export function TaskDetailPanel({
             </Button>
           )}
         </div>
+      )}
+
+      {/* Practice overlay for students */}
+      {practiceQuestionIds && practiceQuestionIds.length > 0 && (
+        <div className="fixed inset-0 z-[60] bg-white">
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#E8EAED] px-6 py-4">
+              <h3 className="text-sm font-bold text-[#2E3338]">任务做题</h3>
+              <button
+                onClick={() => setPracticeQuestionIds(null)}
+                className="rounded-full p-1.5 text-[#B4BCC8] hover:bg-[#F4F5F6] hover:text-[#4D5766]"
+              >
+                ✕ 退出
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <TaskPracticeConsole
+                questionIds={practiceQuestionIds}
+                onFinish={() => setPracticeQuestionIds(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Inline mini practice console that uses the questions API
+function TaskPracticeConsole({
+  questionIds,
+  onFinish,
+}: {
+  questionIds: string[];
+  onFinish: () => void;
+}) {
+  const [questions, setQuestions] = useState<{ id: string; type: string; content: { stem: string; options?: string[]; answer: string; explanation?: string }; difficulty: number }[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [selected, setSelected] = useState("");
+  const [showResult, setShowResult] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      setLoading(true);
+      const params = new URLSearchParams();
+      questionIds.forEach((id) => params.append("ids", id));
+      params.set("page_size", "50");
+      const res = await fetch(`/api/questions?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setQuestions(data.questions || []);
+      }
+      setLoading(false);
+    };
+    fetchQuestions();
+  }, [questionIds]);
+
+  if (loading) return <p className="text-center text-[#B4BCC8] py-8">加载中...</p>;
+  if (questions.length === 0) return <p className="text-center text-[#B4BCC8] py-8">没有题目</p>;
+
+  if (finished) {
+    const rate = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+    return (
+      <div className="text-center py-8 space-y-4">
+        <div className="text-4xl">{rate >= 80 ? "🎉" : rate >= 60 ? "👍" : "💪"}</div>
+        <p className="text-lg font-bold text-[#2E3338]">完成！</p>
+        <p className="text-[#4D5766]">
+          答对 <span className="font-bold text-green-600">{score.correct}</span> / {score.total} 题，
+          正确率 <span className={`font-bold ${rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}`}>{rate}%</span>
+        </p>
+        <button
+          onClick={onFinish}
+          className="rounded-full bg-[#163300] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
+        >
+          返回任务
+        </button>
+      </div>
+    );
+  }
+
+  const q = questions[current];
+  const isChoice = q.type === "choice";
+
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "").replace(/[，。！？、；：""''（）【】]/g, "");
+
+  const checkAnswer = () => {
+    const userAnswer = isChoice ? selected : answer;
+    const correct = normalize(userAnswer) === normalize(q.content.answer);
+    setIsCorrect(correct);
+    setShowResult(true);
+    setScore((prev) => ({
+      correct: prev.correct + (correct ? 1 : 0),
+      total: prev.total + 1,
+    }));
+
+    // Submit attempt
+    fetch("/api/questions/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question_id: q.id,
+        answer: userAnswer,
+        is_correct: correct,
+        time_spent_seconds: 0,
+      }),
+    });
+  };
+
+  const next = () => {
+    if (current + 1 >= questions.length) {
+      setFinished(true);
+    } else {
+      setCurrent(current + 1);
+      setAnswer("");
+      setSelected("");
+      setShowResult(false);
+      setIsCorrect(false);
+    }
+  };
+
+  const typeLabel: Record<string, string> = { choice: "选择题", fill_blank: "填空题", solution: "解答题" };
+  const typeColor: Record<string, string> = { choice: "bg-blue-50 text-blue-600", fill_blank: "bg-amber-50 text-amber-600", solution: "bg-green-50 text-green-600" };
+
+  return (
+    <div className="max-w-lg mx-auto space-y-6">
+      {/* Progress */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-2 rounded-full bg-[#F4F5F6] overflow-hidden">
+          <div className="h-full bg-[#163300] rounded-full transition-all" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
+        </div>
+        <span className="text-xs text-[#B4BCC8]">{current + 1}/{questions.length}</span>
+      </div>
+
+      {/* Question */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColor[q.type] || ""}`}>
+            {typeLabel[q.type] || q.type}
+          </span>
+        </div>
+        <p className="text-base text-[#2E3338] leading-relaxed whitespace-pre-wrap">{q.content.stem}</p>
+
+        {/* Options for choice */}
+        {isChoice && q.content.options && (
+          <div className="space-y-2">
+            {q.content.options.map((opt, i) => {
+              const letter = String.fromCharCode(65 + i);
+              const isSelected = selected === letter;
+              let optClass = "border-[#E8EAED] hover:border-[#B4BCC8]";
+              if (showResult) {
+                if (letter === normalize(q.content.answer).toUpperCase()) optClass = "border-green-500 bg-green-50";
+                else if (isSelected) optClass = "border-red-500 bg-red-50";
+              } else if (isSelected) {
+                optClass = "border-[#163300] bg-[#163300]/5";
+              }
+              return (
+                <button
+                  key={i}
+                  onClick={() => !showResult && setSelected(letter)}
+                  className={`w-full text-left rounded-xl border-[1.5px] px-4 py-3 text-[13px] text-[#2E3338] transition-colors ${optClass}`}
+                >
+                  <span className="font-medium mr-2">{letter}.</span>{opt}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Input for fill/solution */}
+        {!isChoice && !showResult && (
+          <input
+            type="text"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="输入答案..."
+            className="w-full rounded-xl border-[1.5px] border-[#B4BCC8] px-4 py-3 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15"
+            onKeyDown={(e) => { if (e.key === "Enter" && answer.trim()) checkAnswer(); }}
+          />
+        )}
+
+        {/* Result feedback */}
+        {showResult && (
+          <div className={`rounded-xl p-4 ${isCorrect ? "bg-green-50" : "bg-red-50"}`}>
+            <p className={`text-sm font-medium ${isCorrect ? "text-green-700" : "text-red-700"}`}>
+              {isCorrect ? "✓ 回答正确！" : `✗ 正确答案是：${q.content.answer}`}
+            </p>
+            {q.content.explanation && (
+              <p className="mt-2 text-xs text-[#4D5766]">{q.content.explanation}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Action button */}
+      {!showResult ? (
+        <button
+          onClick={checkAnswer}
+          disabled={isChoice ? !selected : !answer.trim()}
+          className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
+        >
+          提交答案
+        </button>
+      ) : (
+        <button
+          onClick={next}
+          className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
+        >
+          {current + 1 >= questions.length ? "查看结果" : "下一题 →"}
+        </button>
       )}
     </div>
   );

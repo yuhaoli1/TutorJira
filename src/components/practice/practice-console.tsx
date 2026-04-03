@@ -27,6 +27,8 @@ interface PracticeConsoleProps {
   onFinish: () => void;
   // For task-linked practice
   taskAssignmentId?: string;
+  // Direct question IDs (from task-linked questions)
+  questionIds?: string[];
 }
 
 interface AttemptResult {
@@ -50,6 +52,7 @@ export function PracticeConsole({
   studentId,
   onFinish,
   taskAssignmentId,
+  questionIds,
 }: PracticeConsoleProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -66,31 +69,50 @@ export function PracticeConsole({
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch questions for all topic IDs
-      const allQuestions: Question[] = [];
-      for (const topicId of topicIds) {
-        const params = new URLSearchParams({
-          topic_id: topicId,
-          page_size: "50",
-        });
-        if (difficulty) params.set("difficulty", String(difficulty));
+      if (questionIds && questionIds.length > 0) {
+        // Fetch specific questions by IDs (for task-linked practice)
+        const allQuestions: Question[] = [];
+        // Fetch in batches of 20
+        for (let i = 0; i < questionIds.length; i += 20) {
+          const batch = questionIds.slice(i, i + 20);
+          const params = new URLSearchParams();
+          batch.forEach((id) => params.append("ids", id));
+          params.set("page_size", "50");
 
-        const res = await fetch(`/api/questions?${params}`);
-        if (res.ok) {
-          const data = await res.json();
-          allQuestions.push(...(data.questions || []));
+          const res = await fetch(`/api/questions?${params}`);
+          if (res.ok) {
+            const data = await res.json();
+            allQuestions.push(...(data.questions || []));
+          }
         }
-      }
+        setQuestions(allQuestions);
+      } else {
+        // Fetch questions for all topic IDs
+        const allQuestions: Question[] = [];
+        for (const topicId of topicIds) {
+          const params = new URLSearchParams({
+            topic_id: topicId,
+            page_size: "50",
+          });
+          if (difficulty) params.set("difficulty", String(difficulty));
 
-      // Shuffle and limit
-      const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-      setQuestions(shuffled.slice(0, questionCount));
+          const res = await fetch(`/api/questions?${params}`);
+          if (res.ok) {
+            const data = await res.json();
+            allQuestions.push(...(data.questions || []));
+          }
+        }
+
+        // Shuffle and limit
+        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+        setQuestions(shuffled.slice(0, questionCount));
+      }
     } catch (error) {
       console.error("获取题目失败:", error);
     } finally {
       setLoading(false);
     }
-  }, [topicIds, difficulty, questionCount]);
+  }, [topicIds, difficulty, questionCount, questionIds]);
 
   useEffect(() => {
     fetchQuestions();

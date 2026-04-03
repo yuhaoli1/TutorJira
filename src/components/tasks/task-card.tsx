@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TASK_TYPES, TASK_PRIORITIES, TASK_PRIORITY_COLORS } from "@/lib/constants";
 import type { TaskType, TaskPriority } from "@/lib/supabase/types";
+import { LabelChips, type Label } from "./label-picker";
 
 export interface TaskCardData {
   id: string;          // assignment id
@@ -17,6 +18,10 @@ export interface TaskCardData {
   dueDate: string;       // formatted display string
   dueDateRaw: string;    // ISO string for computation
   note: string | null;
+  labels: Label[];
+  questionCount: number;
+  attachmentCount: number;
+  commentCount: number;
   testResults: {
     subject: string;
     total_questions: number;
@@ -119,8 +124,16 @@ export function TaskCard({
         <p className="mt-1 text-xs text-[#B4BCC8] line-clamp-1">{card.taskDescription}</p>
       )}
 
-      {/* 学生 */}
-      <p className="mt-1.5 text-xs text-[#B4BCC8]">{card.studentName}</p>
+      {/* 标签 */}
+      <LabelChips labels={card.labels} />
+
+      {/* 学生 + 元数据 */}
+      <div className="mt-1.5 flex items-center gap-2 text-xs text-[#B4BCC8]">
+        <span>{card.studentName}</span>
+        {card.questionCount > 0 && <span>📝{card.questionCount}题</span>}
+        {card.attachmentCount > 0 && <span>📎{card.attachmentCount}</span>}
+        {card.commentCount > 0 && <span>💬{card.commentCount}</span>}
+      </div>
 
       {/* 成绩 */}
       {card.testResults.length > 0 && (

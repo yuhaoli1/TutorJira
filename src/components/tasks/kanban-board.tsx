@@ -18,6 +18,7 @@ import { TaskCard, type TaskCardData } from "./task-card";
 import { TaskDetailPanel } from "./task-detail-panel";
 import { TaskCreatePanel } from "./task-create-panel";
 import type { TaskPriority } from "@/lib/supabase/types";
+import type { Label } from "./label-picker";
 
 const COLUMNS = [
   { status: "pending", label: TASK_STATUS.pending },
@@ -83,18 +84,67 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
 
     if (!assignments) return;
 
-    // Fetch test results for all assignments
+    // Fetch test results, comment counts, attachment counts in parallel
     const assignmentIds = assignments.map((a) => a.id);
-    const { data: testResults } = await supabase
-      .from("test_results")
-      .select("*")
-      .in("task_assignment_id", assignmentIds.length > 0 ? assignmentIds : ["__none__"]);
+    const safeIds = assignmentIds.length > 0 ? assignmentIds : ["__none__"];
 
-    const resultsMap = new Map<string, typeof testResults>();
-    testResults?.forEach((r) => {
+    const [testResultsRes, commentsRes, attachmentsRes] = await Promise.all([
+      supabase.from("test_results").select("*").in("task_assignment_id", safeIds),
+      supabase.from("task_comments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
+      supabase.from("task_attachments").select("id, task_assignment_id").in("task_assignment_id", safeIds),
+    ]);
+
+    const resultsMap = new Map<string, NonNullable<typeof testResultsRes.data>>();
+    testResultsRes.data?.forEach((r) => {
       const existing = resultsMap.get(r.task_assignment_id) ?? [];
       existing.push(r);
       resultsMap.set(r.task_assignment_id, existing);
+    });
+
+    const commentCountMap = new Map<string, number>();
+    commentsRes.data?.forEach((c) => {
+      commentCountMap.set(c.task_assignment_id, (commentCountMap.get(c.task_assignment_id) ?? 0) + 1);
+    });
+
+    const attachCountMap = new Map<string, number>();
+    attachmentsRes.data?.forEach((a) => {
+      attachCountMap.set(a.task_assignment_id, (attachCountMap.get(a.task_assignment_id) ?? 0) + 1);
+    });
+
+    // Fetch task IDs for label and question lookups
+    const taskIds = [...new Set(
+      assignments
+        .filter((a) => a.task)
+        .map((a) => (a.task as unknown as { id: string }).id)
+    )];
+    const safeTaskIds = taskIds.length > 0 ? taskIds : ["__none__"];
+
+    const [labelsRes, questionsCountRes] = await Promise.all([
+      supabase
+        .from("task_label_map")
+        .select("task_id, label:task_labels(id, name, color)")
+        .in("task_id", safeTaskIds),
+      supabase
+        .from("task_questions")
+        .select("task_id")
+        .in("task_id", safeTaskIds),
+    ]);
+
+    // Build label map: taskId -> Label[]
+    const labelMap = new Map<string, Label[]>();
+    labelsRes.data?.forEach((row) => {
+      const r = row as unknown as { task_id: string; label: Label };
+      if (r.label) {
+        const existing = labelMap.get(r.task_id) ?? [];
+        existing.push(r.label);
+        labelMap.set(r.task_id, existing);
+      }
+    });
+
+    // Build question count map: taskId -> count
+    const qCountMap = new Map<string, number>();
+    questionsCountRes.data?.forEach((q) => {
+      qCountMap.set(q.task_id, (qCountMap.get(q.task_id) ?? 0) + 1);
     });
 
     const cardData: TaskCardData[] = assignments
@@ -125,6 +175,10 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
           }),
           dueDateRaw: task.due_date,
           note: a.note,
+          labels: labelMap.get(task.id) ?? [],
+          questionCount: qCountMap.get(task.id) ?? 0,
+          attachmentCount: attachCountMap.get(a.id) ?? 0,
+          commentCount: commentCountMap.get(a.id) ?? 0,
           testResults: results.map((r) => ({
             subject: r.subject,
             total_questions: r.total_questions,
