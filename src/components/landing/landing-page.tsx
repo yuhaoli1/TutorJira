@@ -197,26 +197,25 @@ export function LandingPage() {
   return (
     <div className="min-h-screen overflow-hidden" style={{ background: LIGHT_BG }}>
       {/* ────── Nav ────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b-[3px] border-[#E8F5D6]">
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-white/10" style={{ background: "rgba(10, 22, 40, 0.85)" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2.5">
           <Link href="/" className="flex items-center gap-2">
             <LogoIcon size={36} />
-            <span className="text-xl font-black tracking-tight" style={{ color: DARK }}>
+            <span className="text-xl font-black tracking-tight text-white">
               拾萤
             </span>
           </Link>
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-4 py-2 text-sm font-bold rounded-xl transition-colors hover:bg-gray-100"
-              style={{ color: DARK }}
+              className="px-4 py-2 text-sm font-bold rounded-xl transition-colors text-white/80 hover:text-white hover:bg-white/10"
             >
               登录
             </Link>
             <Link
               href="/login"
-              className="px-5 py-2.5 text-sm font-bold text-white rounded-xl border-b-[3px] hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150"
-              style={{ background: GREEN, borderBottomColor: GREEN_DARK }}
+              className="px-5 py-2.5 text-sm font-bold rounded-xl border-b-[3px] hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150"
+              style={{ background: "#CCFF44", borderBottomColor: "#9ABF33", color: "#0A1628" }}
             >
               免费开始
             </Link>
