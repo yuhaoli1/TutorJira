@@ -20,7 +20,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-white">
       <Sidebar
-        title="优培科技辅导学习平台"
+        title="拾萤"
         navItems={navItems}
         userName={user.name}
         role={ROLES[user.role]}

@@ -29,7 +29,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "总览", href: "/admin/dashboard" },
   { label: "任务管理", href: "/teacher/tasks" },
   { label: "题库管理", href: "/teacher/questions" },
-  { label: "学生管理", href: "/admin/students" },
+  { label: "学生管理", href: "/teacher/students" },
   { label: "家长视角", href: "/parent/dashboard" },
   { label: "设置", href: "/admin/settings" },
 ];

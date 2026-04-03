@@ -6,7 +6,7 @@ const navItems = [
   { label: "总览", href: "/teacher/dashboard" },
   { label: "任务管理", href: "/teacher/tasks" },
   { label: "题库管理", href: "/teacher/questions" },
-  { label: "学生管理", href: "/admin/students" },
+  { label: "学生管理", href: "/teacher/students" },
 ];
 
 export default async function TeacherLayout({
@@ -19,7 +19,7 @@ export default async function TeacherLayout({
   return (
     <div className="min-h-screen bg-white">
       <Sidebar
-        title="优培科技辅导学习平台"
+        title="拾萤"
         navItems={navItems}
         userName={user.name}
         role={ROLES[user.role]}
