@@ -281,17 +281,21 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ────── Trusted By (social proof strip) ────── */}
-      <section className="py-8 border-y-[3px]" style={{ borderColor: GREEN_LIGHT, background: "white" }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-center gap-8 md:gap-16 px-6">
+      {/* ────── Social proof ────── */}
+      <section className="py-10 px-6">
+        <div className="max-w-2xl mx-auto flex items-center justify-center gap-6 md:gap-10">
           {[
             { num: "AI", label: "智能驱动" },
             { num: "4角色", label: "学生·家长·老师·管理" },
             { num: "∞", label: "题库无限扩展" },
           ].map((s, i) => (
-            <div key={i} className="text-center">
-              <div className="text-xl md:text-2xl font-black" style={{ color: DARK }}>{s.num}</div>
-              <div className="text-xs md:text-sm mt-0.5" style={{ color: GRAY }}>{s.label}</div>
+            <div
+              key={i}
+              className="text-center px-5 py-3 rounded-2xl border-2 border-b-4"
+              style={{ borderColor: "#C8E6A0", background: "white" }}
+            >
+              <div className="text-lg md:text-xl font-black" style={{ color: DARK }}>{s.num}</div>
+              <div className="text-xs mt-0.5" style={{ color: GRAY }}>{s.label}</div>
             </div>
           ))}
         </div>
