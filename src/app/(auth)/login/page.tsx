@@ -120,7 +120,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "#F9FDF4" }}>
+    <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: "#F9FDF4" }}>
+      {/* Top-left logo link */}
+      <a href="/" className="absolute top-5 left-6 flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/logo.png" alt="拾萤" className="w-8 h-8 object-contain" />
+        <span className="text-base font-black text-[#2D2D2D] tracking-tight">拾萤</span>
+      </a>
+
       <div className="w-full max-w-sm space-y-8 rounded-3xl bg-white p-8 border-2 border-b-4 border-[#E8F5D6]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
