@@ -124,9 +124,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8 rounded-3xl bg-white p-8 border-2 border-b-4 border-[#E8F5D6]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="relative w-12 h-12 overflow-hidden flex-shrink-0 inline-block">
-              <img src="/logo.png" alt="拾萤" className="absolute top-0 left-1/2 -translate-x-1/2" style={{ width: '160%', height: '160%' }} />
-            </span>
+            <img src="/logo.png" alt="拾萤" className="w-12 h-12 object-contain" />
             <h1 className="text-2xl font-black text-[#2D2D2D] tracking-tight">拾萤</h1>
           </div>
           <p className="mt-1 text-sm text-[#6B7280]">AI智能学习平台 · 请登录或注册</p>
