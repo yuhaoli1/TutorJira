@@ -611,8 +611,11 @@ export function TaskDetailPanel({
           onClose={() => setShowCloseConfirm(false)}
           onConfirm={async (results) => {
             setSaving(true);
-            // 如果有成绩，先保存
-            if (results && results.length > 0) {
+            if (results === "na") {
+              // 标记为无需成绩
+              await logActivity("task_closed", card.status, "closed (无需成绩)");
+            } else if (results && results.length > 0) {
+              // 保存成绩
               await supabase
                 .from("test_results")
                 .delete()
@@ -630,13 +633,15 @@ export function TaskDetailPanel({
                 null,
                 results.map((r) => `${r.subject}:${r.total_questions}题错${r.wrong_count}`).join(", ")
               );
+              await logActivity("task_closed", card.status, "closed");
+            } else {
+              await logActivity("task_closed", card.status, "closed");
             }
             // 关闭任务
             await supabase
               .from("task_assignments")
               .update({ status: "closed" })
               .eq("id", card.id);
-            await logActivity("task_closed", card.status, "closed");
             setSaving(false);
             setShowCloseConfirm(false);
             onUpdate();
@@ -871,10 +876,11 @@ function CloseTaskDialog({
   card: TaskCardData;
   saving: boolean;
   onClose: () => void;
-  onConfirm: (results: { subject: string; total_questions: number; wrong_count: number }[] | null) => void;
+  onConfirm: (results: { subject: string; total_questions: number; wrong_count: number }[] | "na" | null) => void;
 }) {
   const hasResults = card.testResults.length > 0;
-  const [wantRecord, setWantRecord] = useState(true); // 始终默认展开成绩录入
+  // "record" = 录入/修改成绩, "na" = 无需成绩, "skip" = 不录入直接关闭
+  const [closeMode, setCloseMode] = useState<"record" | "na" | "skip">("record");
   const [rows, setRows] = useState(
     hasResults
       ? card.testResults.map((r) => ({ ...r }))
@@ -895,20 +901,41 @@ function CloseTaskDialog({
           关闭后任务将从看板中隐藏。
         </p>
 
-        {/* 成绩录入区 */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-[13px] text-[#2E3338]">
+        {/* 成绩选项 */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-[13px] text-[#2E3338] cursor-pointer">
             <input
-              type="checkbox"
-              checked={wantRecord}
-              onChange={(e) => setWantRecord(e.target.checked)}
-              className="rounded border-[#B4BCC8]"
+              type="radio"
+              name="closeMode"
+              checked={closeMode === "record"}
+              onChange={() => setCloseMode("record")}
+              className="accent-[#163300]"
             />
             {hasResults ? "修改成绩后再关闭" : "录入成绩后再关闭"}
           </label>
+          <label className="flex items-center gap-2 text-[13px] text-[#2E3338] cursor-pointer">
+            <input
+              type="radio"
+              name="closeMode"
+              checked={closeMode === "skip"}
+              onChange={() => setCloseMode("skip")}
+              className="accent-[#163300]"
+            />
+            不录入，直接关闭
+          </label>
+          <label className="flex items-center gap-2 text-[13px] text-[#B4BCC8] cursor-pointer">
+            <input
+              type="radio"
+              name="closeMode"
+              checked={closeMode === "na"}
+              onChange={() => setCloseMode("na")}
+              className="accent-[#B4BCC8]"
+            />
+            此任务无需成绩
+          </label>
         </div>
 
-        {wantRecord && (
+        {closeMode === "record" && (
           <div className="space-y-2 border-t pt-3">
             <p className="text-[12px] font-medium text-[#4D5766]">
               {hasResults ? "当前成绩（可修改）" : "成绩录入"}
@@ -959,16 +986,22 @@ function CloseTaskDialog({
         {/* 按钮 */}
         <div className="flex flex-col gap-2 pt-2">
           <Button
-            onClick={() => onConfirm(wantRecord ? validRows : null)}
-            disabled={saving || (wantRecord && !hasResults && validRows.length === 0)}
+            onClick={() => onConfirm(
+              closeMode === "record" ? validRows
+                : closeMode === "na" ? "na"
+                : null
+            )}
+            disabled={saving || (closeMode === "record" && validRows.length === 0)}
             size="sm"
             className="w-full"
           >
             {saving
               ? "处理中..."
-              : wantRecord && validRows.length > 0
+              : closeMode === "record" && validRows.length > 0
                 ? "保存成绩并关闭"
-                : "确认关闭"}
+                : closeMode === "na"
+                  ? "标记无需成绩并关闭"
+                  : "确认关闭"}
           </Button>
           <button
             onClick={onClose}
