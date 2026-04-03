@@ -10,7 +10,7 @@ export default async function TasksPage() {
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">
         管理学生任务和录入抽测成绩
       </p>
-      <KanbanBoard isTeacher={true} />
+      <KanbanBoard isTeacher={true} basePath="/teacher/tasks" />
     </div>
   );
 }

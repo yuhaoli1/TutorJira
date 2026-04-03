@@ -12,10 +12,10 @@ import {
 } from "@dnd-kit/core";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_STATUS } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard, type TaskCardData } from "./task-card";
-import { TaskDetailPanel } from "./task-detail-panel";
 import { TaskCreatePanel } from "./task-create-panel";
 import type { TaskPriority } from "@/lib/supabase/types";
 import type { Label } from "./label-picker";
@@ -40,13 +40,13 @@ interface Student {
   name: string;
 }
 
-export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }: { isTeacher: boolean; allowedStudentIds?: string[]; hideStudentFilter?: boolean }) {
+export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, basePath }: { isTeacher: boolean; allowedStudentIds?: string[]; hideStudentFilter?: boolean; basePath: string }) {
   const [cards, setCards] = useState<TaskCardData[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
-  const [selectedCard, setSelectedCard] = useState<TaskCardData | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [activeCard, setActiveCard] = useState<TaskCardData | null>(null);
+  const router = useRouter();
   const supabase = createClient();
 
   const sensors = useSensors(
@@ -64,7 +64,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
       .from("task_assignments")
       .select(
         `
-        id, status, note, created_at,
+        id, status, note, ticket_number, created_at,
         task:tasks(id, title, description, type, due_date, priority),
         student:students(id, name)
       `
@@ -163,6 +163,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
         return {
           id: a.id,
           taskId: task.id,
+          ticketNumber: (a as unknown as { ticket_number: number }).ticket_number || 0,
           status: a.status,
           taskTitle: task.title,
           taskDescription: task.description,
@@ -308,7 +309,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
               status={col.status}
               label={col.label}
               cards={getColumnCards(col.status)}
-              onCardClick={(card) => setSelectedCard(card)}
+              onCardClick={(card) => router.push(`${basePath}/${card.id}`)}
             />
           ))}
         </div>
@@ -321,19 +322,6 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter }:
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      {/* Panels */}
-      {selectedCard && (
-        <TaskDetailPanel
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)}
-          onUpdate={() => {
-            setSelectedCard(null);
-            fetchBoard();
-          }}
-          isTeacher={isTeacher}
-        />
-      )}
 
       {showCreate && (
         <TaskCreatePanel

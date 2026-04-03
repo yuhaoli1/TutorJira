@@ -9,6 +9,7 @@ import { LabelChips, type Label } from "./label-picker";
 export interface TaskCardData {
   id: string;          // assignment id
   taskId: string;      // task id (for editing task info)
+  ticketNumber: number;
   status: string;
   taskTitle: string;
   taskDescription: string | null;
@@ -94,7 +95,15 @@ export function TaskCard({
         isDragging ? "opacity-50" : ""
       }`}
     >
-      {/* 第一行：类型 + 优先级 + 日期 */}
+      {/* Ticket number */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-mono font-semibold text-[#B4BCC8]">
+          SY-{card.ticketNumber}
+        </span>
+        <span className="text-xs text-[#B4BCC8] flex-shrink-0">{card.dueDate}</span>
+      </div>
+
+      {/* 标签行：类型 + 优先级 + 截止 */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span
           className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColors[card.taskType]}`}
@@ -113,7 +122,6 @@ export function TaskCard({
             {dueBadge.label}
           </span>
         )}
-        <span className="ml-auto text-xs text-[#B4BCC8] flex-shrink-0">{card.dueDate}</span>
       </div>
 
       {/* 标题 */}
