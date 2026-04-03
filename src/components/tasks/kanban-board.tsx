@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard, type TaskCardData } from "./task-card";
 import { TaskCreatePanel } from "./task-create-panel";
+import { TaskDetailPanel } from "./task-detail-panel";
 import type { TaskPriority } from "@/lib/supabase/types";
 import type { Label } from "./label-picker";
 
@@ -44,6 +45,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<TaskCardData | null>(null);
   const [activeCard, setActiveCard] = useState<TaskCardData | null>(null);
   const supabase = createClient();
 
@@ -308,6 +310,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
               label={col.label}
               cards={getColumnCards(col.status)}
               basePath={basePath}
+              onCardClick={(card) => setSelectedCard(card)}
             />
           ))}
         </div>
@@ -328,6 +331,18 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
             setShowCreate(false);
             fetchBoard();
           }}
+        />
+      )}
+
+      {selectedCard && (
+        <TaskDetailPanel
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)}
+          onUpdate={() => {
+            setSelectedCard(null);
+            fetchBoard();
+          }}
+          isTeacher={isTeacher}
         />
       )}
     </div>

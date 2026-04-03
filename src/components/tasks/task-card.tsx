@@ -63,9 +63,11 @@ function getDueDateBadge(dueDateRaw: string, status: string) {
 export function TaskCard({
   card,
   detailUrl,
+  onClick,
 }: {
   card: TaskCardData;
   detailUrl?: string;
+  onClick?: () => void;
 }) {
   const {
     attributes,
@@ -90,7 +92,8 @@ export function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`rounded-2xl border border-[#E8EAED] bg-white p-4 transition-all duration-150 hover:border-[#B4BCC8] border-l-[3px] ${priorityColor.border} ${
+      onClick={onClick}
+      className={`cursor-pointer rounded-2xl border border-[#E8EAED] bg-white p-4 transition-all duration-150 hover:border-[#B4BCC8] border-l-[3px] ${priorityColor.border} ${
         isDragging ? "opacity-50" : ""
       }`}
     >
