@@ -603,57 +603,45 @@ export function TaskDetailPanel({
         </div>
       )}
 
-      {/* 关闭确认弹窗 */}
+      {/* 关闭确认弹窗 — 内嵌成绩录入 */}
       {showCloseConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm mx-4 bg-white rounded-2xl p-6 space-y-4 shadow-xl">
-            <h4 className="text-base font-bold text-[#2E3338]">关闭任务</h4>
-            <p className="text-[13px] text-[#4D5766]">
-              关闭后任务将从看板中隐藏。
-              {card.testResults.length === 0 && "当前尚未录入成绩，是否先录入？"}
-            </p>
-            <div className="flex flex-col gap-2 pt-2">
-              {card.testResults.length === 0 && (
-                <Button
-                  onClick={() => {
-                    setShowCloseConfirm(false);
-                    // 滚动到成绩录入区域
-                    setEditing(false);
-                  }}
-                  size="sm"
-                  className="w-full"
-                >
-                  先录入成绩
-                </Button>
-              )}
-              <Button
-                onClick={async () => {
-                  setSaving(true);
-                  await supabase
-                    .from("task_assignments")
-                    .update({ status: "closed" })
-                    .eq("id", card.id);
-                  await logActivity("task_closed", card.status, "closed");
-                  setSaving(false);
-                  setShowCloseConfirm(false);
-                  onUpdate();
-                }}
-                disabled={saving}
-                variant={card.testResults.length === 0 ? "outline" : "default"}
-                size="sm"
-                className="w-full"
-              >
-                {saving ? "关闭中..." : card.testResults.length === 0 ? "不录入，直接关闭" : "确认关闭"}
-              </Button>
-              <button
-                onClick={() => setShowCloseConfirm(false)}
-                className="w-full py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] transition-colors"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
+        <CloseTaskDialog
+          card={card}
+          saving={saving}
+          onClose={() => setShowCloseConfirm(false)}
+          onConfirm={async (results) => {
+            setSaving(true);
+            // 如果有成绩，先保存
+            if (results && results.length > 0) {
+              await supabase
+                .from("test_results")
+                .delete()
+                .eq("task_assignment_id", card.id);
+              await supabase.from("test_results").insert(
+                results.map((r) => ({
+                  task_assignment_id: card.id,
+                  subject: r.subject,
+                  total_questions: r.total_questions,
+                  wrong_count: r.wrong_count,
+                }))
+              );
+              await logActivity(
+                "result_recorded",
+                null,
+                results.map((r) => `${r.subject}:${r.total_questions}题错${r.wrong_count}`).join(", ")
+              );
+            }
+            // 关闭任务
+            await supabase
+              .from("task_assignments")
+              .update({ status: "closed" })
+              .eq("id", card.id);
+            await logActivity("task_closed", card.status, "closed");
+            setSaving(false);
+            setShowCloseConfirm(false);
+            onUpdate();
+          }}
+        />
       )}
 
       {/* Practice overlay for students */}
@@ -869,6 +857,129 @@ function TaskPracticeConsole({
           {current + 1 >= questions.length ? "查看结果" : "下一题 →"}
         </button>
       )}
+    </div>
+  );
+}
+
+/* ─── 关闭任务弹窗（内嵌成绩录入） ─── */
+function CloseTaskDialog({
+  card,
+  saving,
+  onClose,
+  onConfirm,
+}: {
+  card: TaskCardData;
+  saving: boolean;
+  onClose: () => void;
+  onConfirm: (results: { subject: string; total_questions: number; wrong_count: number }[] | null) => void;
+}) {
+  const hasResults = card.testResults.length > 0;
+  const [wantRecord, setWantRecord] = useState(!hasResults); // 默认展开录入（如果没成绩）
+  const [rows, setRows] = useState(
+    hasResults
+      ? card.testResults.map((r) => ({ ...r }))
+      : [{ subject: "", total_questions: 0, wrong_count: 0 }]
+  );
+
+  const updateRow = (i: number, field: string, value: string | number) => {
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
+  };
+
+  const validRows = rows.filter((r) => r.subject && r.total_questions > 0);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-md mx-4 bg-white rounded-2xl p-6 space-y-4 shadow-xl">
+        <h4 className="text-base font-bold text-[#2E3338]">关闭任务</h4>
+        <p className="text-[13px] text-[#4D5766]">
+          关闭后任务将从看板中隐藏。
+        </p>
+
+        {/* 成绩录入区 */}
+        {!hasResults && (
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-[13px] text-[#2E3338]">
+              <input
+                type="checkbox"
+                checked={wantRecord}
+                onChange={(e) => setWantRecord(e.target.checked)}
+                className="rounded border-[#B4BCC8]"
+              />
+              录入成绩后再关闭
+            </label>
+          </div>
+        )}
+
+        {(wantRecord || hasResults) && (
+          <div className="space-y-2 border-t pt-3">
+            <p className="text-[12px] font-medium text-[#4D5766]">
+              {hasResults ? "已有成绩（可修改）" : "成绩录入"}
+            </p>
+            {rows.map((row, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="科目"
+                  value={row.subject}
+                  onChange={(e) => updateRow(i, "subject", e.target.value)}
+                  className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-1.5 text-[13px] outline-none focus:border-[#163300]"
+                />
+                <input
+                  type="number"
+                  placeholder="总题"
+                  value={row.total_questions || ""}
+                  onChange={(e) => updateRow(i, "total_questions", parseInt(e.target.value) || 0)}
+                  className="w-14 rounded-lg border-[1.5px] border-[#B4BCC8] px-2 py-1.5 text-[13px] outline-none focus:border-[#163300]"
+                />
+                <span className="text-xs text-[#B4BCC8]">错</span>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={row.wrong_count || ""}
+                  onChange={(e) => updateRow(i, "wrong_count", parseInt(e.target.value) || 0)}
+                  className="w-14 rounded-lg border-[1.5px] border-[#B4BCC8] px-2 py-1.5 text-[13px] outline-none focus:border-[#163300]"
+                />
+                {rows.length > 1 && (
+                  <button
+                    onClick={() => setRows((p) => p.filter((_, idx) => idx !== i))}
+                    className="text-[#B4BCC8] hover:text-red-500"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={() => setRows((p) => [...p, { subject: "", total_questions: 0, wrong_count: 0 }])}
+              className="text-[12px] text-[#163300] font-medium hover:underline"
+            >
+              + 添加科目
+            </button>
+          </div>
+        )}
+
+        {/* 按钮 */}
+        <div className="flex flex-col gap-2 pt-2">
+          <Button
+            onClick={() => onConfirm(wantRecord ? validRows : null)}
+            disabled={saving || (wantRecord && !hasResults && validRows.length === 0)}
+            size="sm"
+            className="w-full"
+          >
+            {saving
+              ? "处理中..."
+              : wantRecord && validRows.length > 0
+                ? "保存成绩并关闭"
+                : "确认关闭"}
+          </Button>
+          <button
+            onClick={onClose}
+            className="w-full py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] transition-colors"
+          >
+            取消
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
