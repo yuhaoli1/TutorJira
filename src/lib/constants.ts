@@ -19,6 +19,7 @@ export const TASK_STATUS = {
   submitted: "已提交",
   confirmed: "已确认",
   rejected: "已打回",
+  closed: "已关闭",
 } as const;
 
 export const TASK_PRIORITIES = {
@@ -41,6 +42,7 @@ export const ACTIVITY_ACTIONS = {
   note_added: "添加了备注",
   result_recorded: "录入了成绩",
   priority_changed: "更改了优先级",
+  task_closed: "关闭了任务",
 } as const;
 
 export const CHECKIN_FREQUENCY = {

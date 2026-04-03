@@ -30,6 +30,7 @@ export async function fetchBoardData(
       student:students(id, name)
     `
     )
+    .neq("status", "closed")
     .order("created_at", { ascending: false })
     .limit(200);
 

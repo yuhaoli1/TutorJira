@@ -49,6 +49,7 @@ export function TaskDetailPanel({
   // Labels state
   const [labelIds, setLabelIds] = useState<string[]>(card.labels.map((l) => l.id));
   const [practiceQuestionIds, setPracticeQuestionIds] = useState<string[] | null>(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const supabase = createClient();
 
@@ -556,29 +557,38 @@ export function TaskDetailPanel({
       {!editing && (
         <div className="border-t border-[#E8EAED] p-5 space-y-2">
           {isTeacher && (
-            <div className="flex gap-2">
-              {card.status !== "confirmed" && (
-                <Button
-                  onClick={() => updateStatus("confirmed")}
-                  disabled={saving}
-                  className="flex-1"
-                  size="sm"
-                >
-                  确认
-                </Button>
-              )}
-              {card.status !== "rejected" && (
-                <Button
-                  onClick={() => updateStatus("rejected")}
-                  disabled={saving}
-                  variant="destructive"
-                  className="flex-1"
-                  size="sm"
-                >
-                  打回
-                </Button>
-              )}
-            </div>
+            <>
+              <div className="flex gap-2">
+                {card.status !== "confirmed" && (
+                  <Button
+                    onClick={() => updateStatus("confirmed")}
+                    disabled={saving}
+                    className="flex-1"
+                    size="sm"
+                  >
+                    确认
+                  </Button>
+                )}
+                {card.status !== "rejected" && (
+                  <Button
+                    onClick={() => updateStatus("rejected")}
+                    disabled={saving}
+                    variant="destructive"
+                    className="flex-1"
+                    size="sm"
+                  >
+                    打回
+                  </Button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCloseConfirm(true)}
+                disabled={saving}
+                className="w-full rounded-lg py-2 text-[13px] font-medium text-[#B4BCC8] hover:text-[#4D5766] hover:bg-[#F4F5F6] transition-colors duration-150"
+              >
+                关闭任务
+              </button>
+            </>
           )}
           {!isTeacher && (card.status === "pending" || card.status === "rejected") && (
             <Button
@@ -590,6 +600,59 @@ export function TaskDetailPanel({
               提交
             </Button>
           )}
+        </div>
+      )}
+
+      {/* 关闭确认弹窗 */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm mx-4 bg-white rounded-2xl p-6 space-y-4 shadow-xl">
+            <h4 className="text-base font-bold text-[#2E3338]">关闭任务</h4>
+            <p className="text-[13px] text-[#4D5766]">
+              关闭后任务将从看板中隐藏。
+              {card.testResults.length === 0 && "当前尚未录入成绩，是否先录入？"}
+            </p>
+            <div className="flex flex-col gap-2 pt-2">
+              {card.testResults.length === 0 && (
+                <Button
+                  onClick={() => {
+                    setShowCloseConfirm(false);
+                    // 滚动到成绩录入区域
+                    setEditing(false);
+                  }}
+                  size="sm"
+                  className="w-full"
+                >
+                  先录入成绩
+                </Button>
+              )}
+              <Button
+                onClick={async () => {
+                  setSaving(true);
+                  await supabase
+                    .from("task_assignments")
+                    .update({ status: "closed" })
+                    .eq("id", card.id);
+                  await logActivity("task_closed", card.status, "closed");
+                  setSaving(false);
+                  setShowCloseConfirm(false);
+                  onUpdate();
+                }}
+                disabled={saving}
+                variant={card.testResults.length === 0 ? "outline" : "default"}
+                size="sm"
+                className="w-full"
+              >
+                {saving ? "关闭中..." : card.testResults.length === 0 ? "不录入，直接关闭" : "确认关闭"}
+              </Button>
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                className="w-full py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
