@@ -18,12 +18,12 @@ export function KanbanColumn({
   status,
   label,
   cards,
-  onCardClick,
+  basePath,
 }: {
   status: string;
   label: string;
   cards: TaskCardData[];
-  onCardClick: (card: TaskCardData) => void;
+  basePath?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -51,7 +51,7 @@ export function KanbanColumn({
             <TaskCard
               key={card.id}
               card={card}
-              onClick={() => onCardClick(card)}
+              detailUrl={basePath ? `${basePath}/${card.id}` : undefined}
             />
           ))}
         </SortableContext>

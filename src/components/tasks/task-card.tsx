@@ -62,10 +62,10 @@ function getDueDateBadge(dueDateRaw: string, status: string) {
 
 export function TaskCard({
   card,
-  onClick,
+  detailUrl,
 }: {
   card: TaskCardData;
-  onClick: () => void;
+  detailUrl?: string;
 }) {
   const {
     attributes,
@@ -90,16 +90,27 @@ export function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      onClick={onClick}
-      className={`cursor-pointer rounded-2xl border border-[#E8EAED] bg-white p-4 transition-all duration-150 hover:border-[#B4BCC8] border-l-[3px] ${priorityColor.border} ${
+      className={`rounded-2xl border border-[#E8EAED] bg-white p-4 transition-all duration-150 hover:border-[#B4BCC8] border-l-[3px] ${priorityColor.border} ${
         isDragging ? "opacity-50" : ""
       }`}
     >
       {/* Ticket number */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-mono font-semibold text-[#B4BCC8]">
-          SY-{card.ticketNumber}
-        </span>
+        {detailUrl ? (
+          <a
+            href={detailUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[11px] font-mono font-semibold text-[#B4BCC8] hover:text-[#163300] hover:underline transition-colors duration-150"
+          >
+            SY-{card.ticketNumber}
+          </a>
+        ) : (
+          <span className="text-[11px] font-mono font-semibold text-[#B4BCC8]">
+            SY-{card.ticketNumber}
+          </span>
+        )}
         <span className="text-xs text-[#B4BCC8] flex-shrink-0">{card.dueDate}</span>
       </div>
 

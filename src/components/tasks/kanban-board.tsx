@@ -12,7 +12,6 @@ import {
 } from "@dnd-kit/core";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_STATUS } from "@/lib/constants";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard, type TaskCardData } from "./task-card";
@@ -46,7 +45,6 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [activeCard, setActiveCard] = useState<TaskCardData | null>(null);
-  const router = useRouter();
   const supabase = createClient();
 
   const sensors = useSensors(
@@ -309,7 +307,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
               status={col.status}
               label={col.label}
               cards={getColumnCards(col.status)}
-              onCardClick={(card) => router.push(`${basePath}/${card.id}`)}
+              basePath={basePath}
             />
           ))}
         </div>
@@ -317,7 +315,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
         <DragOverlay>
           {activeCard ? (
             <div className="rotate-2 opacity-90">
-              <TaskCard card={activeCard} onClick={() => {}} />
+              <TaskCard card={activeCard} />
             </div>
           ) : null}
         </DragOverlay>
