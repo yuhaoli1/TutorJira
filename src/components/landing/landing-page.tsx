@@ -37,64 +37,60 @@ const Icons = {
   ),
   book: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <path d="M8 8h12c4 0 4 2 4 4v28c0-3-2-4-4-4H8V8z" fill="#FFD6D6" stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
-      <path d="M40 8H28c-4 0-4 2-4 4v28c0-3 2-4 4-4h12V8z" fill="#FFD6D6" stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
-      <line x1="14" y1="16" x2="20" y2="16" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="14" y1="22" x2="19" y2="22" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="28" y1="16" x2="34" y2="16" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="28" y1="22" x2="33" y2="22" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M8 8h12c4 0 4 2 4 4v28c0-3-2-4-4-4H8V8z" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
+      <path d="M40 8H28c-4 0-4 2-4 4v28c0-3 2-4 4-4h12V8z" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
+      <line x1="14" y1="16" x2="20" y2="16" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="14" y1="22" x2="19" y2="22" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="28" y1="16" x2="34" y2="16" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="28" y1="22" x2="33" y2="22" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   ),
   chart: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <rect x="4" y="4" width="40" height="40" rx="8" fill="#E8E0FF" stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
+      <rect x="4" y="4" width="40" height="40" rx="8" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
       <rect x="12" y="24" width="6" height="14" rx="2" fill={GREEN} stroke={STROKE} strokeWidth="2" />
-      <rect x="21" y="16" width="6" height="22" rx="2" fill="#8B7FD4" stroke={STROKE} strokeWidth="2" />
+      <rect x="21" y="16" width="6" height="22" rx="2" fill={GREEN_DARK} stroke={STROKE} strokeWidth="2" />
       <rect x="30" y="20" width="6" height="18" rx="2" fill={GREEN} stroke={STROKE} strokeWidth="2" />
     </svg>
   ),
   family: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <circle cx="16" cy="14" r="6" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" />
-      <circle cx="34" cy="14" r="5" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" />
-      <path d="M6 38c0-8 4-12 10-12s10 4 10 12" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
-      <path d="M26 36c0-7 3-10 8-10s8 3 8 10" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="16" cy="14" r="6" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" />
+      <circle cx="34" cy="14" r="5" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" />
+      <path d="M6 38c0-8 4-12 10-12s10 4 10 12" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <path d="M26 36c0-7 3-10 8-10s8 3 8 10" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
       <circle cx="16" cy="14" r="2" fill={STROKE} />
       <circle cx="34" cy="14" r="1.5" fill={STROKE} />
     </svg>
   ),
   clipboard: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <rect x="8" y="8" width="32" height="36" rx="6" fill="#D6F5F0" stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
+      <rect x="8" y="8" width="32" height="36" rx="6" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
       <rect x="16" y="4" width="16" height="8" rx="3" fill={GREEN} stroke={STROKE} strokeWidth="3" />
-      <line x1="16" y1="22" x2="32" y2="22" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="16" y1="29" x2="28" y2="29" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="16" y1="36" x2="24" y2="36" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="16" y1="22" x2="32" y2="22" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="16" y1="29" x2="28" y2="29" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="16" y1="36" x2="24" y2="36" stroke={GREEN_DARK} strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   ),
   student: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      {/* Face */}
-      <circle cx="24" cy="22" r="10" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" />
-      <path d="M8 46c0-10 6-16 16-16s16 6 16 16" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="24" cy="22" r="10" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" />
+      <path d="M8 46c0-10 6-16 16-16s16 6 16 16" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
       <circle cx="20" cy="21" r="2" fill={STROKE} />
       <circle cx="28" cy="21" r="2" fill={STROKE} />
       <path d="M21 26c1 1.5 5 1.5 6 0" stroke={STROKE} strokeWidth="2" strokeLinecap="round" fill="none" />
-      {/* Graduation cap - diamond top */}
       <polygon points="24,2 38,10 24,14 10,10" fill={GREEN} stroke={STROKE} strokeWidth="2.5" strokeLinejoin="round" />
-      {/* Cap band */}
       <path d="M14 10v4c0 2 4.5 4 10 4s10-2 10-4v-4" fill={GREEN_DARK} stroke={STROKE} strokeWidth="2" strokeLinejoin="round" />
-      {/* Tassel */}
       <line x1="38" y1="10" x2="38" y2="18" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="38" cy="19" r="2" fill="#FFE566" stroke={STROKE} strokeWidth="1.5" />
+      <circle cx="38" cy="19" r="2" fill={GREEN} stroke={STROKE} strokeWidth="1.5" />
     </svg>
   ),
   parents: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <circle cx="17" cy="14" r="7" fill="#D6F0FF" stroke={STROKE} strokeWidth="3" />
-      <circle cx="33" cy="16" r="6" fill="#D6F0FF" stroke={STROKE} strokeWidth="3" />
-      <path d="M4 42c0-10 5-14 13-14s13 4 13 14" fill="#D6F0FF" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
-      <path d="M28 40c0-8 3-11 7-11s7 3 7 11" fill="#D6F0FF" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="17" cy="14" r="7" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" />
+      <circle cx="33" cy="16" r="6" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" />
+      <path d="M4 42c0-10 5-14 13-14s13 4 13 14" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <path d="M28 40c0-8 3-11 7-11s7 3 7 11" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
       <circle cx="14" cy="13" r="1.5" fill={STROKE} />
       <circle cx="20" cy="13" r="1.5" fill={STROKE} />
       <path d="M15 17c0.5 1.5 3.5 1.5 4 0" stroke={STROKE} strokeWidth="1.5" strokeLinecap="round" fill="none" />
@@ -110,22 +106,22 @@ const Icons = {
   ),
   sparkle: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <path d="M24 4l4 14h14l-11 8 4 14-11-8-11 8 4-14L6 18h14z" fill="#FFE566" stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
+      <path d="M24 4l4 14h14l-11 8 4 14-11-8-11 8 4-14L6 18h14z" fill={GREEN} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
     </svg>
   ),
   upload: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
       <rect x="6" y="6" width="36" height="36" rx="8" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
-      <path d="M24 32V16" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
-      <path d="M17 22l7-7 7 7" stroke={STROKE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="14" y1="36" x2="34" y2="36" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <path d="M24 32V16" stroke={GREEN_DARK} strokeWidth="3" strokeLinecap="round" />
+      <path d="M17 22l7-7 7 7" stroke={GREEN_DARK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="14" y1="36" x2="34" y2="36" stroke={GREEN_DARK} strokeWidth="3" strokeLinecap="round" />
     </svg>
   ),
   trending: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
       <rect x="4" y="4" width="40" height="40" rx="8" fill={GREEN_LIGHT} stroke={STROKE} strokeWidth="3" strokeLinejoin="round" />
-      <path d="M10 34l10-10 6 6 12-14" stroke={GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <path d="M32 16h8v8" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M10 34l10-10 6 6 12-14" stroke={GREEN_DARK} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M32 16h8v8" stroke={GREEN_DARK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   ),
 };
@@ -141,43 +137,31 @@ const FEATURES = [
     icon: Icons.camera,
     title: "拍照建题库",
     desc: "拍一张试卷，AI自动识别题目、分类知识点，秒速入库",
-    border: "border-green-200",
-    bg: "bg-green-50",
   },
   {
     icon: Icons.target,
     title: "精准练习",
     desc: "按知识点、难度自由组卷，哪里不会练哪里",
-    border: "border-blue-200",
-    bg: "bg-blue-50",
   },
   {
     icon: Icons.book,
     title: "智能错题本",
     desc: "错题自动收集，一键重做，直到彻底掌握",
-    border: "border-red-200",
-    bg: "bg-red-50",
   },
   {
     icon: Icons.chart,
     title: "数据看板",
     desc: "学习进度、正确率、薄弱环节，数据说话",
-    border: "border-purple-200",
-    bg: "bg-purple-50",
   },
   {
     icon: Icons.family,
     title: "家长实时看",
     desc: "孩子做了多少题、对了几道，手机随时看",
-    border: "border-amber-200",
-    bg: "bg-amber-50",
   },
   {
     icon: Icons.clipboard,
     title: "老师布任务",
     desc: "一键布置练习任务，进度自动追踪，省心省力",
-    border: "border-teal-200",
-    bg: "bg-teal-50",
   },
 ];
 
@@ -194,24 +178,18 @@ const AUDIENCES = [
     label: "学生",
     tagline: "做题像闯关，越学越上瘾",
     points: ["趣味做题界面", "错题自动收集", "知识点闯关"],
-    color: "bg-[#FFE8CC]",
-    borderColor: "border-orange-300",
   },
   {
     icon: Icons.parents,
     label: "家长",
     tagline: "孩子学了什么，一眼就知道",
     points: ["实时成绩报告", "学习趋势分析", "薄弱点提醒"],
-    color: "bg-[#D6F0FF]",
-    borderColor: "border-blue-300",
   },
   {
     icon: Icons.school,
     label: "机构 / 老师",
     tagline: "轻松管理，专注教学",
     points: ["AI题库建设", "任务一键布置", "学生数据看板"],
-    color: "bg-[#E8F5D6]",
-    borderColor: "border-green-300",
   },
 ];
 
@@ -333,7 +311,8 @@ export function LandingPage() {
             {AUDIENCES.map((a, i) => (
               <div
                 key={i}
-                className={`${a.color} rounded-3xl p-7 border-2 ${a.borderColor} border-b-4 hover:-translate-y-2 transition-all duration-300`}
+                className="rounded-3xl p-7 border-2 border-b-4 hover:-translate-y-2 transition-all duration-300"
+                style={{ background: GREEN_LIGHT, borderColor: GREEN }}
               >
                 <Icon size={56}>{a.icon}</Icon>
                 <h3 className="text-xl font-black mb-1 mt-3" style={{ color: DARK }}>{a.label}</h3>
@@ -371,7 +350,8 @@ export function LandingPage() {
             {FEATURES.map((f, i) => (
               <div
                 key={i}
-                className={`${f.bg} rounded-2xl p-6 border-2 ${f.border} border-b-4 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group`}
+                className="rounded-2xl p-6 border-2 border-b-4 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group"
+                style={{ background: GREEN_BG, borderColor: "#C8E6A0" }}
               >
                 <div className="mb-3 group-hover:scale-110 transition-transform origin-left">
                   <Icon size={44}>{f.icon}</Icon>
