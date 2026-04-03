@@ -74,12 +74,19 @@ const Icons = {
   ),
   student: (
     <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
-      <circle cx="24" cy="18" r="10" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" />
-      <path d="M8 44c0-10 6-16 16-16s16 6 16 16" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
-      <circle cx="20" cy="17" r="2" fill={STROKE} />
-      <circle cx="28" cy="17" r="2" fill={STROKE} />
-      <path d="M21 22c1 2 5 2 6 0" stroke={STROKE} strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M14 10l10-6 10 6" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill={GREEN_LIGHT} />
+      {/* Face */}
+      <circle cx="24" cy="22" r="10" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" />
+      <path d="M8 46c0-10 6-16 16-16s16 6 16 16" fill="#FFE8CC" stroke={STROKE} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="20" cy="21" r="2" fill={STROKE} />
+      <circle cx="28" cy="21" r="2" fill={STROKE} />
+      <path d="M21 26c1 1.5 5 1.5 6 0" stroke={STROKE} strokeWidth="2" strokeLinecap="round" fill="none" />
+      {/* Graduation cap - diamond top */}
+      <polygon points="24,2 38,10 24,14 10,10" fill={GREEN} stroke={STROKE} strokeWidth="2.5" strokeLinejoin="round" />
+      {/* Cap band */}
+      <path d="M14 10v4c0 2 4.5 4 10 4s10-2 10-4v-4" fill={GREEN_DARK} stroke={STROKE} strokeWidth="2" strokeLinejoin="round" />
+      {/* Tassel */}
+      <line x1="38" y1="10" x2="38" y2="18" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="38" cy="19" r="2" fill="#FFE566" stroke={STROKE} strokeWidth="1.5" />
     </svg>
   ),
   parents: (
