@@ -911,7 +911,7 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("record")}
               className="accent-[#163300]"
             />
-            {hasResults ? "修改成绩后再关闭" : "录入成绩后再关闭"}
+            {hasResults ? "修改成绩" : "录入成绩"}
           </label>
           <label className="flex items-center gap-2 text-[13px] text-[#2E3338] cursor-pointer">
             <input
@@ -921,7 +921,7 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("skip")}
               className="accent-[#163300]"
             />
-            不录入，直接关闭
+            {hasResults ? "保留现有成绩，直接关闭" : "暂不录入，直接关闭"}
           </label>
           <label className="flex items-center gap-2 text-[13px] text-[#B4BCC8] cursor-pointer">
             <input
@@ -931,7 +931,7 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("na")}
               className="accent-[#B4BCC8]"
             />
-            此任务无需成绩
+            此任务无需成绩（N/A）
           </label>
         </div>
 
