@@ -874,7 +874,7 @@ function CloseTaskDialog({
   onConfirm: (results: { subject: string; total_questions: number; wrong_count: number }[] | null) => void;
 }) {
   const hasResults = card.testResults.length > 0;
-  const [wantRecord, setWantRecord] = useState(!hasResults); // 默认展开录入（如果没成绩）
+  const [wantRecord, setWantRecord] = useState(true); // 始终默认展开成绩录入
   const [rows, setRows] = useState(
     hasResults
       ? card.testResults.map((r) => ({ ...r }))
@@ -896,24 +896,22 @@ function CloseTaskDialog({
         </p>
 
         {/* 成绩录入区 */}
-        {!hasResults && (
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-[13px] text-[#2E3338]">
-              <input
-                type="checkbox"
-                checked={wantRecord}
-                onChange={(e) => setWantRecord(e.target.checked)}
-                className="rounded border-[#B4BCC8]"
-              />
-              录入成绩后再关闭
-            </label>
-          </div>
-        )}
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-[13px] text-[#2E3338]">
+            <input
+              type="checkbox"
+              checked={wantRecord}
+              onChange={(e) => setWantRecord(e.target.checked)}
+              className="rounded border-[#B4BCC8]"
+            />
+            {hasResults ? "修改成绩后再关闭" : "录入成绩后再关闭"}
+          </label>
+        </div>
 
-        {(wantRecord || hasResults) && (
+        {wantRecord && (
           <div className="space-y-2 border-t pt-3">
             <p className="text-[12px] font-medium text-[#4D5766]">
-              {hasResults ? "已有成绩（可修改）" : "成绩录入"}
+              {hasResults ? "当前成绩（可修改）" : "成绩录入"}
             </p>
             {rows.map((row, i) => (
               <div key={i} className="flex items-center gap-2">
