@@ -120,14 +120,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#FFFDF7] px-4">
-      <div className="w-full max-w-sm space-y-8 rounded-2xl bg-white p-8 border border-[#E8EAED]">
+    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "#F9FDF4" }}>
+      <div className="w-full max-w-sm space-y-8 rounded-3xl bg-white p-8 border-2 border-b-4 border-[#E8F5D6]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.png" alt="拾萤" className="w-10 h-10 object-contain" />
-            <h1 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">拾萤</h1>
+            <img src="/logo.png" alt="拾萤" className="w-12 h-12 object-contain" />
+            <h1 className="text-2xl font-black text-[#2D2D2D] tracking-tight">拾萤</h1>
           </div>
-          <p className="mt-1 text-sm text-[#B4BCC8]">AI智能学习平台 · 请登录或注册</p>
+          <p className="mt-1 text-sm text-[#6B7280]">AI智能学习平台 · 请登录或注册</p>
         </div>
 
         {/* 切换登录方式 */}
