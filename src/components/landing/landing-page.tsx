@@ -285,9 +285,9 @@ export function LandingPage() {
       <section className="py-10 px-6">
         <div className="max-w-2xl mx-auto flex items-center justify-center gap-6 md:gap-10">
           {[
-            { num: "AI", label: "智能驱动" },
-            { num: "4角色", label: "学生·家长·老师·管理" },
-            { num: "∞", label: "题库无限扩展" },
+            { num: "AI", label: "Claude · GPT · DeepSeek · Gemini", sub: "自由切换，不绑定任何模型" },
+            { num: "4角色", label: "学生·家长·老师·管理", sub: "多角色协同" },
+            { num: "∞", label: "题库无限扩展", sub: "拍照即入库" },
           ].map((s, i) => (
             <div
               key={i}
@@ -295,7 +295,8 @@ export function LandingPage() {
               style={{ borderColor: "#C8E6A0", background: "white" }}
             >
               <div className="text-lg md:text-xl font-black" style={{ color: DARK }}>{s.num}</div>
-              <div className="text-xs mt-0.5" style={{ color: GRAY }}>{s.label}</div>
+              <div className="text-xs font-bold mt-0.5" style={{ color: GREEN_DARK }}>{s.label}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: GRAY }}>{s.sub}</div>
             </div>
           ))}
         </div>
