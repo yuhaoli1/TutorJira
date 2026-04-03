@@ -224,31 +224,67 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* ────── Hero ────── */}
-      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 px-6">
-        {/* Background blobs */}
-        <div className="absolute top-10 left-0 w-72 h-72 rounded-full blur-3xl opacity-30" style={{ background: GREEN_LIGHT }} />
-        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20" style={{ background: "#D6F0FF" }} />
+      {/* ────── Hero (Night Forest) ────── */}
+      <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 px-6 overflow-hidden" style={{ background: "linear-gradient(180deg, #0B1D0E 0%, #132A17 40%, #1A3520 70%, #1F4028 100%)" }}>
+        {/* Stars */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[
+            { x: 10, y: 15, s: 2, d: 3 }, { x: 25, y: 8, s: 1.5, d: 5 }, { x: 45, y: 20, s: 2, d: 2 },
+            { x: 65, y: 12, s: 1, d: 4 }, { x: 80, y: 18, s: 2.5, d: 3.5 }, { x: 90, y: 8, s: 1.5, d: 6 },
+            { x: 15, y: 30, s: 1, d: 4.5 }, { x: 55, y: 5, s: 2, d: 2.5 }, { x: 35, y: 25, s: 1.5, d: 5.5 },
+            { x: 72, y: 28, s: 1, d: 3.2 },
+          ].map((star, i) => (
+            <div
+              key={`star-${i}`}
+              className="absolute rounded-full bg-white animate-twinkle"
+              style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.s, height: star.s, animationDelay: `${star.d}s` }}
+            />
+          ))}
+        </div>
 
+        {/* Firefly glow particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[
+            { x: 8, y: 40, d: 0 }, { x: 20, y: 60, d: 1.5 }, { x: 35, y: 35, d: 3 },
+            { x: 50, y: 55, d: 0.8 }, { x: 65, y: 45, d: 2.2 }, { x: 78, y: 65, d: 4 },
+            { x: 88, y: 35, d: 1 }, { x: 42, y: 70, d: 3.5 }, { x: 15, y: 75, d: 2.8 },
+            { x: 72, y: 25, d: 4.5 }, { x: 58, y: 80, d: 1.2 }, { x: 30, y: 50, d: 5 },
+          ].map((f, i) => (
+            <div
+              key={`fly-${i}`}
+              className="absolute animate-firefly-glow"
+              style={{ left: `${f.x}%`, top: `${f.y}%`, animationDelay: `${f.d}s` }}
+            >
+              <div className="w-2 h-2 rounded-full" style={{ background: "#CCFF44", boxShadow: "0 0 8px 4px rgba(200,255,50,0.4), 0 0 20px 8px rgba(200,255,50,0.15)" }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Tree silhouettes (SVG) */}
+        <svg className="absolute bottom-0 left-0 right-0 w-full" viewBox="0 0 1440 200" fill="none" preserveAspectRatio="none" style={{ height: "180px" }}>
+          {/* Back layer - lighter */}
+          <path d="M0,200 L0,120 Q30,80 60,120 Q80,60 100,100 Q120,50 140,90 Q160,40 180,80 Q200,30 220,70 Q240,20 260,60 Q280,30 300,70 Q320,40 340,80 Q360,50 380,90 Q400,60 420,100 Q440,50 460,90 Q480,40 500,80 Q520,30 540,70 Q560,40 580,80 Q600,50 620,90 Q640,60 660,100 Q680,50 700,90 Q720,40 740,80 Q760,30 780,70 Q800,20 820,60 Q840,30 860,70 Q880,40 900,80 Q920,50 940,90 Q960,60 980,100 Q1000,50 1020,90 Q1040,40 1060,80 Q1080,30 1100,70 Q1120,40 1140,80 Q1160,50 1180,90 Q1200,60 1220,100 Q1240,50 1260,90 Q1280,40 1300,80 Q1320,30 1340,70 Q1360,20 1380,60 Q1400,40 1420,80 L1440,120 L1440,200 Z" fill="#0F2513" fillOpacity="0.5" />
+          {/* Front layer - darker */}
+          <path d="M0,200 L0,150 Q40,110 80,140 Q110,90 140,130 Q170,80 200,120 Q230,70 260,110 Q290,80 320,120 Q350,90 380,130 Q410,100 440,140 Q470,90 500,130 Q530,80 560,120 Q590,70 620,110 Q650,80 680,120 Q710,90 740,130 Q770,100 800,140 Q830,90 860,130 Q890,80 920,120 Q950,70 980,110 Q1010,80 1040,120 Q1070,90 1100,130 Q1130,100 1160,140 Q1190,90 1220,130 Q1250,80 1280,120 Q1310,70 1340,110 Q1370,80 1400,120 L1440,150 L1440,200 Z" fill="#0F2513" fillOpacity="0.8" />
+        </svg>
+
+        {/* Content */}
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
             {/* Left: Text */}
             <div className="flex-1 text-center md:text-left">
-              <div
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold mb-6 border-2"
-                style={{ background: GREEN_LIGHT, color: GREEN_DARK, borderColor: GREEN }}
-              >
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold mb-6 border border-white/20 bg-white/10 text-green-300 backdrop-blur-sm">
                 <Icon size={20}>{Icons.sparkle}</Icon>
                 AI驱动的智能学习平台
               </div>
 
-              <h1 className="text-4xl md:text-[3.5rem] font-black leading-[1.15] tracking-tight" style={{ color: DARK }}>
+              <h1 className="text-4xl md:text-[3.5rem] font-black leading-[1.15] tracking-tight text-white">
                 让每个孩子
                 <br />
-                <span style={{ color: GREEN }}>爱上学习</span>
+                <span style={{ color: "#CCFF44" }}>爱上学习</span>
               </h1>
 
-              <p className="mt-5 text-base md:text-lg leading-relaxed max-w-lg" style={{ color: GRAY }}>
+              <p className="mt-5 text-base md:text-lg leading-relaxed max-w-lg text-green-100/80">
                 源自「囊萤映雪」—— 拾起萤火，照亮求知之路。
                 <br />
                 AI建题库、智能练习、错题追踪，让学习更高效。
@@ -257,25 +293,25 @@ export function LandingPage() {
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 md:justify-start justify-center">
                 <Link
                   href="/login"
-                  className="group px-8 py-4 text-base font-bold text-white rounded-2xl border-b-4 hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150 shadow-lg"
-                  style={{ background: GREEN, borderBottomColor: GREEN_DARK, boxShadow: `0 8px 24px ${GREEN}40` }}
+                  className="group px-8 py-4 text-base font-bold text-[#0B1D0E] rounded-2xl border-b-4 hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150 shadow-lg"
+                  style={{ background: "#CCFF44", borderBottomColor: "#9ABF33", boxShadow: "0 8px 24px rgba(200,255,50,0.3)" }}
                 >
                   免费开始使用
                   <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
                 <a
                   href="#features"
-                  className="px-8 py-4 text-base font-bold rounded-2xl border-2 border-gray-200 hover:border-green-300 transition-colors"
-                  style={{ color: GRAY }}
+                  className="px-8 py-4 text-base font-bold rounded-2xl border-2 border-white/20 text-white/80 hover:border-green-400/50 hover:text-white transition-colors backdrop-blur-sm"
                 >
                   了解更多
                 </a>
               </div>
             </div>
 
-            {/* Right: Mascot */}
-            <div className="flex-shrink-0">
-              <LogoIcon size={360} className="drop-shadow-2xl" />
+            {/* Right: Mascot with glow */}
+            <div className="flex-shrink-0 relative">
+              <div className="absolute inset-0 rounded-full blur-3xl opacity-20" style={{ background: "#CCFF44" }} />
+              <LogoIcon size={360} className="relative z-10 drop-shadow-[0_0_40px_rgba(200,255,50,0.3)]" />
             </div>
           </div>
         </div>
@@ -467,6 +503,26 @@ export function LandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* ────── Animations ────── */}
+      <style jsx>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 1; }
+        }
+        @keyframes firefly-glow {
+          0%, 100% { opacity: 0; transform: translateY(0) translateX(0); }
+          20% { opacity: 0.8; }
+          50% { opacity: 1; transform: translateY(-15px) translateX(8px); }
+          80% { opacity: 0.6; }
+        }
+        .animate-twinkle {
+          animation: twinkle 3s ease-in-out infinite;
+        }
+        .animate-firefly-glow {
+          animation: firefly-glow 4s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
