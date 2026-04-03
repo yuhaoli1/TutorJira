@@ -30,7 +30,7 @@ export async function fetchBoardData(
       student:students(id, name)
     `
     )
-    .neq("status", "closed")
+    .not("status", "eq", "closed")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -38,7 +38,11 @@ export async function fetchBoardData(
     query = query.in("student_id", allowedStudentIds);
   }
 
-  const { data: assignments } = await query;
+  const { data: assignments, error } = await query;
+
+  if (error) {
+    console.error("[fetchBoardData] query error:", error.message);
+  }
 
   if (!assignments) return { cards: [], students: [] };
 
