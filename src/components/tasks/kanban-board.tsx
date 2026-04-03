@@ -78,7 +78,8 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
         student:students(id, name)
       `
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(200);
 
     if (allowedStudentIds && allowedStudentIds.length > 0) {
       query = query.in("student_id", allowedStudentIds);
@@ -205,19 +206,27 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
     fetchBoard();
   }, [fetchBoard]);
 
-  const filteredCards =
-    selectedStudent === "all"
-      ? cards
-      : cards.filter((c) => {
-          const student = students.find((s) => s.name === c.studentName);
-          return student?.id === selectedStudent;
-        });
+  // ✅ useMemo: 只在 cards/students/selectedStudent 变化时重算
+  const filteredCards = useMemo(() => {
+    if (selectedStudent === "all") return cards;
+    // 用 Map 快速查找，避免 O(n*m)
+    const studentIdByName = new Map(students.map((s) => [s.name, s.id]));
+    return cards.filter((c) => studentIdByName.get(c.studentName) === selectedStudent);
+  }, [cards, students, selectedStudent]);
 
-  // Sort cards within columns by priority
-  const getColumnCards = (status: string) =>
-    filteredCards
-      .filter((c) => c.status === status)
-      .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
+  // ✅ useMemo: 按列预分组+排序，避免每次渲染重算
+  const columnCardsMap = useMemo(() => {
+    const map = new Map<string, TaskCardData[]>();
+    for (const col of COLUMNS) {
+      map.set(
+        col.status,
+        filteredCards
+          .filter((c) => c.status === col.status)
+          .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2))
+      );
+    }
+    return map;
+  }, [filteredCards]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const card = cards.find((c) => c.id === event.active.id);
@@ -308,7 +317,7 @@ export function KanbanBoard({ isTeacher, allowedStudentIds, hideStudentFilter, b
               key={col.status}
               status={col.status}
               label={col.label}
-              cards={getColumnCards(col.status)}
+              cards={columnCardsMap.get(col.status) ?? []}
               basePath={basePath}
               onCardClick={(card) => setSelectedCard(card)}
             />

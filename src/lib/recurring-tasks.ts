@@ -89,52 +89,82 @@ export async function generateRecurringTasks(): Promise<number> {
 
   let totalGenerated = 0;
 
+  // ✅ 收集所有待创建的任务，最后批量插入
+  const allTaskInserts: {
+    title: string;
+    type: TaskType;
+    priority: TaskPriority;
+    due_date: string;
+    created_by: string;
+    recurring_template_id: string;
+    recurring_date: string;
+  }[] = [];
+
+  const templateDateMap = new Map<string, string>(); // templateId -> lastDate
+
   for (const template of templates as RecurringTemplate[]) {
     const dates = getDatesToGenerate(template, today);
     if (dates.length === 0) continue;
 
-    let lastDate = template.last_generated_date;
-
     for (const date of dates) {
-      // Create task with recurring_template_id and recurring_date for uniqueness
-      const { data: task, error: taskError } = await supabase
-        .from("tasks")
-        .insert({
-          title: template.title,
-          type: template.type,
-          priority: template.priority || "medium",
-          due_date: `${date}T23:59:00+08:00`, // CST end of day
-          created_by: template.created_by,
-          recurring_template_id: template.id,
-          recurring_date: date,
-        })
-        .select("id")
-        .single();
-
-      if (taskError || !task) {
-        // Likely a duplicate (unique constraint), skip
-        continue;
-      }
-
-      // Create assignments for each student
-      const assignments = template.student_ids.map((studentId) => ({
-        task_id: task.id,
-        student_id: studentId,
-      }));
-
-      await supabase.from("task_assignments").insert(assignments);
-
-      lastDate = date;
-      totalGenerated++;
+      allTaskInserts.push({
+        title: template.title,
+        type: template.type,
+        priority: template.priority || "medium",
+        due_date: `${date}T23:59:00+08:00`,
+        created_by: template.created_by,
+        recurring_template_id: template.id,
+        recurring_date: date,
+      });
     }
 
-    // Update last_generated_date
-    if (lastDate && lastDate !== template.last_generated_date) {
-      await supabase
+    // 记录每个模板最后的日期
+    templateDateMap.set(template.id, dates[dates.length - 1]);
+  }
+
+  if (allTaskInserts.length === 0) return 0;
+
+  // ✅ 批量插入所有任务（重复的会被 unique constraint 跳过）
+  const { data: createdTasks } = await supabase
+    .from("tasks")
+    .upsert(allTaskInserts, {
+      onConflict: "recurring_template_id,recurring_date",
+      ignoreDuplicates: true,
+    })
+    .select("id, recurring_template_id");
+
+  if (!createdTasks || createdTasks.length === 0) return 0;
+
+  // ✅ 批量创建所有 assignments
+  const allAssignments: { task_id: string; student_id: string }[] = [];
+  const templateStudentMap = new Map<string, string[]>();
+  for (const t of templates as RecurringTemplate[]) {
+    templateStudentMap.set(t.id, t.student_ids);
+  }
+
+  for (const task of createdTasks) {
+    const studentIds = templateStudentMap.get(task.recurring_template_id) ?? [];
+    for (const studentId of studentIds) {
+      allAssignments.push({ task_id: task.id, student_id: studentId });
+    }
+  }
+
+  if (allAssignments.length > 0) {
+    await supabase.from("task_assignments").insert(allAssignments);
+  }
+
+  totalGenerated = createdTasks.length;
+
+  // ✅ 批量更新 last_generated_date
+  const updatePromises = Array.from(templateDateMap.entries()).map(
+    ([templateId, lastDate]) =>
+      supabase
         .from("recurring_task_templates")
         .update({ last_generated_date: lastDate })
-        .eq("id", template.id);
-    }
+        .eq("id", templateId)
+  );
+  if (updatePromises.length > 0) {
+    await Promise.all(updatePromises);
   }
 
   return totalGenerated;
