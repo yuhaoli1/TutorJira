@@ -30,7 +30,7 @@ export async function fetchBoardData(
       student:students(id, name)
     `
     )
-    .not("status", "eq", "closed")
+    .in("status", ["pending", "submitted", "confirmed", "rejected"])
     .order("created_at", { ascending: false })
     .limit(200);
 
