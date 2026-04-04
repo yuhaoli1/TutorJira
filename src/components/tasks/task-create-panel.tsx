@@ -39,6 +39,7 @@ export function TaskCreatePanel({
   const [selectedTopic, setSelectedTopic] = useState("all");
   const [availableQuestions, setAvailableQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string }[]>([]);
   const [searchingQ, setSearchingQ] = useState(false);
+  const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
 
   // 附件上传
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string }[]>([]);
@@ -160,6 +161,7 @@ export function TaskCreatePanel({
           type,
           priority,
           due_date: new Date(dueDate).toISOString(),
+          show_answers_after_submit: showAnswersAfterSubmit,
           created_by: user.id,
         })
         .select("id")
@@ -379,6 +381,26 @@ export function TaskCreatePanel({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* 提交后展示答案开关 */}
+          {selectedQuestions.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg bg-[#F4F5F6] px-3 py-2">
+              <span className="text-[12px] text-[#4D5766]">学生提交后展示答案/讲解</span>
+              <button
+                type="button"
+                onClick={() => setShowAnswersAfterSubmit(!showAnswersAfterSubmit)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ${
+                  showAnswersAfterSubmit ? "bg-[#163300]" : "bg-[#B4BCC8]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                    showAnswersAfterSubmit ? "translate-x-[18px]" : "translate-x-[3px]"
+                  }`}
+                />
+              </button>
             </div>
           )}
 

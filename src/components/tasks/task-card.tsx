@@ -23,6 +23,7 @@ export interface TaskCardData {
   questionCount: number;
   attachmentCount: number;
   commentCount: number;
+  showAnswersAfterSubmit: boolean;
   testResults: {
     subject: string;
     total_questions: number;

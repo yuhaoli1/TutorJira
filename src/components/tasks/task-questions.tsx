@@ -24,9 +24,11 @@ interface TaskQuestion {
 export function TaskQuestionPicker({
   taskId,
   onUpdate,
+  initialShowAnswers = true,
 }: {
   taskId: string;
   onUpdate: () => void;
+  initialShowAnswers?: boolean;
 }) {
   const [linked, setLinked] = useState<TaskQuestion[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
@@ -34,7 +36,13 @@ export function TaskQuestionPicker({
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
   const [available, setAvailable] = useState<TaskQuestion["question"][]>([]);
   const [searching, setSearching] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(initialShowAnswers);
   const supabase = createClient();
+
+  const toggleShowAnswers = async (value: boolean) => {
+    setShowAnswers(value);
+    await supabase.from("tasks").update({ show_answers_after_submit: value }).eq("id", taskId);
+  };
 
   const fetchLinked = async () => {
     const { data } = await supabase
@@ -123,6 +131,26 @@ export function TaskQuestionPicker({
           {showBrowser ? "收起" : "+ 添加题目"}
         </button>
       </div>
+
+      {/* 提交后展示答案开关 */}
+      {linked.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg bg-[#F4F5F6] px-3 py-2">
+          <span className="text-[12px] text-[#4D5766]">学生提交后展示答案/讲解</span>
+          <button
+            type="button"
+            onClick={() => toggleShowAnswers(!showAnswers)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ${
+              showAnswers ? "bg-[#163300]" : "bg-[#B4BCC8]"
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${
+                showAnswers ? "translate-x-[18px]" : "translate-x-[3px]"
+              }`}
+            />
+          </button>
+        </div>
+      )}
 
       {/* Linked questions */}
       {linked.length > 0 && (

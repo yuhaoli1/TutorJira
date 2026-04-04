@@ -26,7 +26,7 @@ export async function fetchBoardData(
     .select(
       `
       id, status, note, ticket_number, created_at,
-      task:tasks(id, title, description, type, due_date, priority),
+      task:tasks(id, title, description, type, due_date, priority, show_answers_after_submit),
       student:students(id, name)
     `
     )
@@ -122,6 +122,7 @@ export async function fetchBoardData(
         type: string;
         due_date: string;
         priority: TaskPriority;
+        show_answers_after_submit: boolean;
       };
       const student = a.student as unknown as { id: string; name: string };
       const results = resultsMap.get(a.id) ?? [];
@@ -145,6 +146,7 @@ export async function fetchBoardData(
         questionCount: qCountMap.get(task.id) ?? 0,
         attachmentCount: attachCountMap.get(a.id) ?? 0,
         commentCount: commentCountMap.get(a.id) ?? 0,
+        showAnswersAfterSubmit: task.show_answers_after_submit ?? true,
         testResults: results.map((r) => ({
           subject: r.subject,
           total_questions: r.total_questions,
