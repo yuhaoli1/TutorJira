@@ -708,6 +708,7 @@ function TaskPracticeConsole({
   const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [correctResults, setCorrectResults] = useState<Map<string, boolean>>(new Map());
   const supabaseClient = createClient();
 
   useEffect(() => {
@@ -750,23 +751,48 @@ function TaskPracticeConsole({
   if (loading) return <p className="text-center text-[#B4BCC8] py-8">加载中...</p>;
   if (questions.length === 0) return <p className="text-center text-[#B4BCC8] py-8">没有题目</p>;
 
-  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "").replace(/[，。！？、；：""''（）【】]/g, "");
   const typeLabel: Record<string, string> = { choice: "选择题", fill_blank: "填空题", solution: "解答题" };
   const typeColor: Record<string, string> = { choice: "bg-blue-50 text-blue-600", fill_blank: "bg-amber-50 text-amber-600", solution: "bg-green-50 text-green-600" };
 
-  // 提交全部答案 — upsert 到 task_submission_answers（可覆盖）
+  // 提交全部答案 — 用 AI 判断对错，再 upsert 到 task_submission_answers
   const handleSubmitAll = async (finalAnswers?: Map<number, string>) => {
     setSubmitting(true);
     const answersToSubmit = finalAnswers ?? answers;
 
+    // 调用 AI 检查答案
+    const answersToCheck = questions.map((q, i) => ({
+      question_id: q.id,
+      student_answer: answersToSubmit.get(i) ?? "",
+      correct_answer: q.content.answer || "",
+      stem: q.content.stem || "",
+      type: q.type,
+    }));
+
+    let correctMap = new Map<string, boolean>();
+    try {
+      const res = await fetch("/api/tasks/check-answers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: answersToCheck }),
+      });
+      if (res.ok) {
+        const { results } = await res.json();
+        for (const r of results) {
+          correctMap.set(r.question_id, r.is_correct);
+        }
+      }
+    } catch (e) {
+      console.error("AI 答案检查失败，使用简单比较:", e);
+    }
+
     const rows = questions.map((q, i) => {
       const userAnswer = answersToSubmit.get(i) ?? "";
-      const correct = normalize(userAnswer) === normalize(q.content.answer);
+      const isCorrect = correctMap.get(q.id) ?? false;
       return {
         task_assignment_id: assignmentId,
         question_id: q.id,
         answer: userAnswer,
-        is_correct: correct,
+        is_correct: isCorrect,
         submitted_at: new Date().toISOString(),
       };
     });
@@ -789,6 +815,13 @@ function TaskPracticeConsole({
         }),
       });
     }
+
+    // 保存判题结果用于展示
+    const resultMap = new Map<string, boolean>();
+    for (const row of rows) {
+      resultMap.set(row.question_id, row.is_correct);
+    }
+    setCorrectResults(resultMap);
 
     if (finalAnswers) setAnswers(finalAnswers);
     setSubmitting(false);
@@ -819,7 +852,7 @@ function TaskPracticeConsole({
   if (submitted) {
     const results = questions.map((q, i) => {
       const userAnswer = answers.get(i) ?? "";
-      return { ...q, userAnswer, correct: normalize(userAnswer) === normalize(q.content.answer) };
+      return { ...q, userAnswer, correct: correctResults.get(q.id) ?? false };
     });
     const correctCount = results.filter((r) => r.correct).length;
     const rate = Math.round((correctCount / questions.length) * 100);

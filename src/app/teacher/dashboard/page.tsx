@@ -97,7 +97,7 @@ export default async function TeacherDashboard() {
           </p>
         </Link>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">已确认任务</p>
+          <p className="text-sm text-[#B4BCC8]">已批阅通过任务</p>
           <p className="mt-1 text-3xl font-bold text-green-600">
             {totalConfirmed}
           </p>
@@ -124,7 +124,7 @@ export default async function TeacherDashboard() {
                 <th className="px-5 py-3.5 font-medium">学生</th>
                 <th className="px-5 py-3.5 font-medium">年级</th>
                 <th className="px-5 py-3.5 font-medium text-center">待完成</th>
-                <th className="px-5 py-3.5 font-medium text-center">已确认</th>
+                <th className="px-5 py-3.5 font-medium text-center">已批阅通过</th>
                 <th className="px-5 py-3.5 font-medium text-center">已打回</th>
                 <th className="px-5 py-3.5 font-medium text-center">完成率</th>
                 <th className="px-5 py-3.5 font-medium text-center">

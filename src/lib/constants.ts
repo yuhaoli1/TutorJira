@@ -17,7 +17,7 @@ export const TASK_TYPES = {
 export const TASK_STATUS = {
   pending: "待完成",
   submitted: "已提交",
-  confirmed: "已确认",
+  confirmed: "已批阅通过",
   rejected: "已打回",
   closed: "已关闭",
 } as const;

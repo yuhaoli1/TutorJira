@@ -99,7 +99,7 @@ export function ParentDashboardClient({
           </p>
         </Link>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">已确认任务</p>
+          <p className="text-[13px] text-[#B4BCC8]">已批阅通过</p>
           <p className="mt-1 text-2xl font-bold text-green-600">
             {totalConfirmed}
           </p>
