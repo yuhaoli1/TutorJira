@@ -79,12 +79,51 @@ export class DeepSeekProvider implements AIProvider {
   }
 
   /**
-   * 用 OpenAI 兼容的 vision 模型做 OCR（如果可用），
-   * 否则用 DeepSeek 的 janus 模型，
-   * 最后 fallback 到简单提示
+   * 用视觉模型做 OCR：优先豆包（国内可用），其次 OpenAI
    */
   private async ocrImage(base64: string, mimeType: string): Promise<string> {
-    // 尝试用 OpenAI GPT-4o-mini 做 OCR（便宜且支持图片）
+    // 优先用豆包视觉模型（国内可用）
+    const doubaoKey = process.env.DOUBAO_API_KEY;
+    if (doubaoKey) {
+      try {
+        const doubaoBase = process.env.DOUBAO_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
+        const doubaoModel = process.env.DOUBAO_MODEL || "doubao-1.5-vision-pro-250328";
+        const res = await fetch(`${doubaoBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${doubaoKey}`,
+          },
+          body: JSON.stringify({
+            model: doubaoModel,
+            max_tokens: 4096,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image_url",
+                    image_url: { url: `data:${mimeType};base64,${base64}` },
+                  },
+                  {
+                    type: "text",
+                    text: "请将图片中的所有文字内容完整地转录出来，保持原始格式和排版。包括题号、题目内容、选项、答案和解析。",
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.choices?.[0]?.message?.content || "";
+        }
+      } catch (e) {
+        console.warn("豆包 OCR fallback failed:", e);
+      }
+    }
+
+    // 其次用 OpenAI
     const openaiKey = process.env.OPENAI_API_KEY;
     if (openaiKey) {
       try {
@@ -92,7 +131,7 @@ export class DeepSeekProvider implements AIProvider {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${openaiKey}`,
+            Authorization: `Bearer ${openaiKey}`,
           },
           body: JSON.stringify({
             model: "gpt-4o-mini",
@@ -123,7 +162,7 @@ export class DeepSeekProvider implements AIProvider {
       }
     }
 
-    throw new Error("DeepSeek 不支持直接处理图片，请配置 OPENAI_API_KEY 用于图片 OCR，或上传 PDF/文本文件");
+    throw new Error("DeepSeek 不支持直接处理图片，请配置 DOUBAO_API_KEY 或 OPENAI_API_KEY 用于图片 OCR，或上传 PDF/文本文件");
   }
 
   private parseQuestions(rawText: string): ExtractedQuestion[] {
