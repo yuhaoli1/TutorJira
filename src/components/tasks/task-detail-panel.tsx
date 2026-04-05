@@ -687,7 +687,7 @@ export function TaskDetailPanel({
 }
 
 // Inline mini practice console — 全部做完后统一提交
-function TaskPracticeConsole({
+export function TaskPracticeConsole({
   assignmentId,
   questionIds,
   showAnswers = true,
