@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TASK_TYPES, TASK_STATUS, TASK_PRIORITIES, TASK_PRIORITY_COLORS, ACTIVITY_ACTIONS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -709,6 +709,16 @@ function TaskPracticeConsole({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [correctResults, setCorrectResults] = useState<Map<string, boolean>>(new Map());
+  // 拍照提交模式
+  type SubmitMode = "per-question" | "photo-all";
+  const [submitMode, setSubmitMode] = useState<SubmitMode>("per-question");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractedAnswers, setExtractedAnswers] = useState<Map<number, string> | null>(null);
+  const [perQuestionExtracting, setPerQuestionExtracting] = useState<number | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const perQPhotoRef = useRef<HTMLInputElement>(null);
   const supabaseClient = createClient();
 
   useEffect(() => {
@@ -848,6 +858,70 @@ function TaskPracticeConsole({
     }
   };
 
+  // 拍照上传处理
+  const handlePhotoSelect = (file: File) => {
+    if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setExtractedAnswers(null);
+  };
+
+  // 调用 AI 识别照片中的答案
+  const handleExtractAnswers = async () => {
+    if (!photoFile) return;
+    setExtracting(true);
+    try {
+      const questionsInfo = questions.map((q, i) => ({
+        index: i,
+        stem: q.content.stem,
+        type: q.type,
+        options: q.content.options,
+      }));
+      const formData = new FormData();
+      formData.append("image", photoFile);
+      formData.append("questions", JSON.stringify(questionsInfo));
+      const res = await fetch("/api/tasks/extract-answers", { method: "POST", body: formData });
+      if (res.ok) {
+        const { answers: extracted } = await res.json();
+        const map = new Map<number, string>();
+        for (const item of extracted) {
+          map.set(item.index, item.answer);
+        }
+        setExtractedAnswers(map);
+      }
+    } catch (e) {
+      console.error("答案识别失败:", e);
+    }
+    setExtracting(false);
+  };
+
+  // 单题拍照识别
+  const handlePerQuestionPhoto = async (questionIndex: number, file: File) => {
+    if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
+    setPerQuestionExtracting(questionIndex);
+    try {
+      const q = questions[questionIndex];
+      const questionsInfo = [{ index: 0, stem: q.content.stem, type: q.type, options: q.content.options }];
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("questions", JSON.stringify(questionsInfo));
+      const res = await fetch("/api/tasks/extract-answers", { method: "POST", body: formData });
+      if (res.ok) {
+        const { answers: extracted } = await res.json();
+        const extractedAnswer = extracted[0]?.answer || "";
+        if (extractedAnswer) {
+          if (q.type === "choice") setSelected(extractedAnswer);
+          else setAnswer(extractedAnswer);
+          setAnswers((prev) => new Map(prev).set(questionIndex, extractedAnswer));
+        }
+      }
+    } catch (e) {
+      console.error("单题答案识别失败:", e);
+    }
+    setPerQuestionExtracting(null);
+  };
+
   // ============= 已提交页面 =============
   if (submitted) {
     const results = questions.map((q, i) => {
@@ -922,129 +996,278 @@ function TaskPracticeConsole({
   const isChoice = q.type === "choice";
   const hasAnswer = isChoice ? !!selected : !!answer.trim();
   const answeredCount = answers.size + (hasAnswer && !answers.has(current) ? 1 : 0);
-  const allAnswered = answeredCount >= questions.length;
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Progress */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-2 rounded-full bg-[#F4F5F6] overflow-hidden">
-          <div className="h-full bg-[#163300] rounded-full transition-all" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
-        </div>
-        <span className="text-xs text-[#B4BCC8]">{current + 1}/{questions.length}</span>
+      {/* 模式切换 */}
+      <div className="flex rounded-full bg-[#F4F5F6] p-1">
+        <button
+          onClick={() => setSubmitMode("per-question")}
+          className={`flex-1 rounded-full py-2 text-xs font-medium transition-colors ${
+            submitMode === "per-question" ? "bg-[#163300] text-white" : "text-[#4D5766]"
+          }`}
+        >
+          逐题作答
+        </button>
+        <button
+          onClick={() => setSubmitMode("photo-all")}
+          className={`flex-1 rounded-full py-2 text-xs font-medium transition-colors ${
+            submitMode === "photo-all" ? "bg-[#163300] text-white" : "text-[#4D5766]"
+          }`}
+        >
+          拍照提交
+        </button>
       </div>
 
-      {/* 题号导航 */}
-      <div className="flex flex-wrap gap-1.5">
-        {questions.map((_, i) => {
-          const answered = answers.has(i) || (i === current && hasAnswer);
-          return (
+      {/* ===== 拍照提交模式 ===== */}
+      {submitMode === "photo-all" && (
+        <div className="space-y-4">
+          {/* 上传区域 */}
+          {!photoPreview ? (
             <button
-              key={i}
-              onClick={() => saveAndGo(i)}
-              className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
-                i === current
-                  ? "bg-[#163300] text-white"
-                  : answered
-                    ? "bg-[#163300]/10 text-[#163300]"
-                    : "bg-[#F4F5F6] text-[#B4BCC8]"
-              }`}
+              onClick={() => photoInputRef.current?.click()}
+              className="w-full border-2 border-dashed border-[#B4BCC8] rounded-2xl py-12 flex flex-col items-center gap-3 text-[#B4BCC8] hover:border-[#163300] hover:text-[#163300] transition-colors"
             >
-              {i + 1}
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
+              <span className="text-sm font-medium">拍照或上传答题纸</span>
+              <span className="text-xs">支持 JPG、PNG，最大 10MB</span>
             </button>
-          );
-        })}
-      </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="relative rounded-2xl overflow-hidden border border-[#E8EAED]">
+                <img src={photoPreview} alt="答题纸" className="w-full max-h-80 object-contain bg-[#F4F5F6]" />
+                <button
+                  onClick={() => {
+                    if (photoPreview) URL.revokeObjectURL(photoPreview);
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                    setExtractedAnswers(null);
+                  }}
+                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs hover:bg-black/70"
+                >
+                  ✕
+                </button>
+              </div>
 
-      {/* Question */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColor[q.type] || ""}`}>
-            {typeLabel[q.type] || q.type}
-          </span>
+              {!extractedAnswers && (
+                <button
+                  onClick={handleExtractAnswers}
+                  disabled={extracting}
+                  className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
+                >
+                  {extracting ? "识别中..." : "识别答案"}
+                </button>
+              )}
+            </div>
+          )}
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handlePhotoSelect(file);
+              e.target.value = "";
+            }}
+          />
+
+          {/* 识别结果编辑 */}
+          {extractedAnswers && (
+            <div className="space-y-3">
+              <h4 className="text-[13px] font-medium text-[#2E3338]">识别结果（可编辑后提交）</h4>
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {questions.map((q, i) => (
+                  <div key={q.id} className="flex items-center gap-2 rounded-xl border border-[#E8EAED] px-3 py-2">
+                    <span className="text-xs text-[#B4BCC8] w-6 shrink-0">{i + 1}.</span>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${typeColor[q.type] || ""}`}>
+                      {typeLabel[q.type] || q.type}
+                    </span>
+                    <input
+                      type="text"
+                      value={extractedAnswers.get(i) ?? ""}
+                      onChange={(e) => {
+                        setExtractedAnswers((prev) => {
+                          const next = new Map(prev);
+                          next.set(i, e.target.value);
+                          return next;
+                        });
+                      }}
+                      placeholder="未识别到"
+                      className="flex-1 min-w-0 border-0 bg-transparent text-[13px] text-[#2E3338] outline-none placeholder:text-[#B4BCC8]"
+                    />
+                    {extractedAnswers.get(i) ? (
+                      <span className="text-green-500 text-xs">✓</span>
+                    ) : (
+                      <span className="text-amber-500 text-xs">?</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => handleSubmitAll(extractedAnswers)}
+                disabled={submitting}
+                className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
+              >
+                {submitting ? "提交中..." : "确认提交"}
+              </button>
+            </div>
+          )}
         </div>
-        <p className="text-base text-[#2E3338] leading-relaxed whitespace-pre-wrap">{q.content.stem}</p>
+      )}
 
-        {/* Options for choice */}
-        {isChoice && q.content.options && (
-          <div className="space-y-2">
-            {q.content.options.map((opt, i) => {
-              const letter = String.fromCharCode(65 + i);
-              const isSelected = selected === letter;
+      {/* ===== 逐题作答模式 ===== */}
+      {submitMode === "per-question" && (
+        <>
+          {/* Progress */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-2 rounded-full bg-[#F4F5F6] overflow-hidden">
+              <div className="h-full bg-[#163300] rounded-full transition-all" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
+            </div>
+            <span className="text-xs text-[#B4BCC8]">{current + 1}/{questions.length}</span>
+          </div>
+
+          {/* 题号导航 */}
+          <div className="flex flex-wrap gap-1.5">
+            {questions.map((_, i) => {
+              const answered = answers.has(i) || (i === current && hasAnswer);
               return (
                 <button
                   key={i}
-                  onClick={() => setSelected(letter)}
-                  className={`w-full text-left rounded-xl border-[1.5px] px-4 py-3 text-[13px] text-[#2E3338] transition-colors ${
-                    isSelected ? "border-[#163300] bg-[#163300]/5" : "border-[#E8EAED] hover:border-[#B4BCC8]"
+                  onClick={() => saveAndGo(i)}
+                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                    i === current
+                      ? "bg-[#163300] text-white"
+                      : answered
+                        ? "bg-[#163300]/10 text-[#163300]"
+                        : "bg-[#F4F5F6] text-[#B4BCC8]"
                   }`}
                 >
-                  <span className="font-medium mr-2">{letter}.</span>{opt}
+                  {i + 1}
                 </button>
               );
             })}
           </div>
-        )}
 
-        {/* Input for fill/solution */}
-        {!isChoice && (
-          <input
-            type="text"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="输入答案..."
-            className="w-full rounded-xl border-[1.5px] border-[#B4BCC8] px-4 py-3 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15"
-          />
-        )}
-      </div>
+          {/* Question */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColor[q.type] || ""}`}>
+                {typeLabel[q.type] || q.type}
+              </span>
+            </div>
+            <p className="text-base text-[#2E3338] leading-relaxed whitespace-pre-wrap">{q.content.stem}</p>
 
-      {/* Navigation + submit */}
-      <div className="flex gap-2">
-        {current > 0 && (
-          <button
-            onClick={() => saveAndGo(current - 1)}
-            className="flex-1 rounded-full border border-[#E8EAED] py-3 text-sm font-medium text-[#4D5766] hover:bg-[#F4F5F6] transition-colors"
-          >
-            上一题
-          </button>
-        )}
-        {current < questions.length - 1 ? (
-          <button
-            onClick={() => saveAndGo(current + 1)}
-            className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
-          >
-            下一题
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              const userAnswer = isChoice ? selected : answer;
-              const merged = new Map(answers);
-              if (userAnswer) merged.set(current, userAnswer);
-              handleSubmitAll(merged);
-            }}
-            disabled={submitting}
-            className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
-          >
-            {submitting ? "提交中..." : `提交全部 (${answeredCount}/${questions.length})`}
-          </button>
-        )}
-      </div>
+            {/* Options for choice */}
+            {isChoice && q.content.options && (
+              <div className="space-y-2">
+                {q.content.options.map((opt, i) => {
+                  const letter = String.fromCharCode(65 + i);
+                  const isSelected = selected === letter;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelected(letter)}
+                      className={`w-full text-left rounded-xl border-[1.5px] px-4 py-3 text-[13px] text-[#2E3338] transition-colors ${
+                        isSelected ? "border-[#163300] bg-[#163300]/5" : "border-[#E8EAED] hover:border-[#B4BCC8]"
+                      }`}
+                    >
+                      <span className="font-medium mr-2">{letter}.</span>{opt}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-      {/* 随时可提交 */}
-      {current < questions.length - 1 && (
-        <button
-          onClick={() => {
-            const userAnswer = isChoice ? selected : answer;
-            const merged = new Map(answers);
-            if (userAnswer) merged.set(current, userAnswer);
-            handleSubmitAll(merged);
-          }}
-          disabled={submitting || answers.size === 0}
-          className="w-full text-center py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] disabled:opacity-40 transition-colors"
-        >
-          提交已作答的 {answeredCount} 题
-        </button>
+            {/* Input for fill/solution + camera */}
+            {!isChoice && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="输入答案..."
+                  className="flex-1 rounded-xl border-[1.5px] border-[#B4BCC8] px-4 py-3 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15"
+                />
+                <button
+                  onClick={() => perQPhotoRef.current?.click()}
+                  disabled={perQuestionExtracting === current}
+                  className="shrink-0 w-11 h-11 rounded-xl border-[1.5px] border-[#B4BCC8] flex items-center justify-center text-[#B4BCC8] hover:border-[#163300] hover:text-[#163300] disabled:opacity-40 transition-colors"
+                  title="拍照识别答案"
+                >
+                  {perQuestionExtracting === current ? (
+                    <span className="text-xs">...</span>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
+                  )}
+                </button>
+                <input
+                  ref={perQPhotoRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handlePerQuestionPhoto(current, file);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Navigation + submit */}
+          <div className="flex gap-2">
+            {current > 0 && (
+              <button
+                onClick={() => saveAndGo(current - 1)}
+                className="flex-1 rounded-full border border-[#E8EAED] py-3 text-sm font-medium text-[#4D5766] hover:bg-[#F4F5F6] transition-colors"
+              >
+                上一题
+              </button>
+            )}
+            {current < questions.length - 1 ? (
+              <button
+                onClick={() => saveAndGo(current + 1)}
+                className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
+              >
+                下一题
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const userAnswer = isChoice ? selected : answer;
+                  const merged = new Map(answers);
+                  if (userAnswer) merged.set(current, userAnswer);
+                  handleSubmitAll(merged);
+                }}
+                disabled={submitting}
+                className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
+              >
+                {submitting ? "提交中..." : `提交全部 (${answeredCount}/${questions.length})`}
+              </button>
+            )}
+          </div>
+
+          {/* 随时可提交 */}
+          {current < questions.length - 1 && (
+            <button
+              onClick={() => {
+                const userAnswer = isChoice ? selected : answer;
+                const merged = new Map(answers);
+                if (userAnswer) merged.set(current, userAnswer);
+                handleSubmitAll(merged);
+              }}
+              disabled={submitting || answers.size === 0}
+              className="w-full text-center py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] disabled:opacity-40 transition-colors"
+            >
+              提交已作答的 {answeredCount} 题
+            </button>
+          )}
+        </>
       )}
     </div>
   );
