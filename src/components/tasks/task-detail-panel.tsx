@@ -479,6 +479,13 @@ export function TaskDetailPanel({
           </div>
         )}
 
+        {/* 学生作答记录（老师查看） */}
+        {!editing && isTeacher && card.questionCount > 0 && (
+          <div className="border-t border-[#E8EAED] pt-4">
+            <StudentSubmissionView assignmentId={card.id} taskId={card.taskId} />
+          </div>
+        )}
+
         {/* 附件 */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
@@ -664,6 +671,7 @@ export function TaskDetailPanel({
             </div>
             <div className="flex-1 overflow-y-auto p-4">
               <TaskPracticeConsole
+                assignmentId={card.id}
                 questionIds={practiceQuestionIds}
                 showAnswers={card.showAnswersAfterSubmit}
                 onFinish={() => setPracticeQuestionIds(null)}
@@ -678,10 +686,12 @@ export function TaskDetailPanel({
 
 // Inline mini practice console — 全部做完后统一提交
 function TaskPracticeConsole({
+  assignmentId,
   questionIds,
   showAnswers = true,
   onFinish,
 }: {
+  assignmentId: string;
   questionIds: string[];
   showAnswers?: boolean;
   onFinish: () => void;
@@ -696,6 +706,7 @@ function TaskPracticeConsole({
   const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const supabaseClient = createClient();
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -706,12 +717,33 @@ function TaskPracticeConsole({
       const res = await fetch(`/api/questions?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setQuestions(data.questions || []);
+        const qs = data.questions || [];
+        setQuestions(qs);
+
+        // 加载之前的提交记录（如果有）
+        const { data: prevAnswers } = await supabaseClient
+          .from("task_submission_answers")
+          .select("question_id, answer")
+          .eq("task_assignment_id", assignmentId);
+        if (prevAnswers && prevAnswers.length > 0) {
+          const prevMap = new Map<number, string>();
+          prevAnswers.forEach((pa) => {
+            const idx = qs.findIndex((q: Question) => q.id === pa.question_id);
+            if (idx >= 0) prevMap.set(idx, pa.answer);
+          });
+          setAnswers(prevMap);
+          // 设置第一题的已保存答案
+          const firstAnswer = prevMap.get(0);
+          if (firstAnswer && qs.length > 0) {
+            if (qs[0].type === "choice") setSelected(firstAnswer);
+            else setAnswer(firstAnswer);
+          }
+        }
       }
       setLoading(false);
     };
     fetchQuestions();
-  }, [questionIds]);
+  }, [questionIds, assignmentId, supabaseClient]);
 
   if (loading) return <p className="text-center text-[#B4BCC8] py-8">加载中...</p>;
   if (questions.length === 0) return <p className="text-center text-[#B4BCC8] py-8">没有题目</p>;
@@ -720,25 +752,41 @@ function TaskPracticeConsole({
   const typeLabel: Record<string, string> = { choice: "选择题", fill_blank: "填空题", solution: "解答题" };
   const typeColor: Record<string, string> = { choice: "bg-blue-50 text-blue-600", fill_blank: "bg-amber-50 text-amber-600", solution: "bg-green-50 text-green-600" };
 
-  // 提交全部答案
+  // 提交全部答案 — upsert 到 task_submission_answers（可覆盖）
   const handleSubmitAll = async () => {
     setSubmitting(true);
-    // 提交每题的作答记录
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
+
+    const rows = questions.map((q, i) => {
       const userAnswer = answers.get(i) ?? "";
       const correct = normalize(userAnswer) === normalize(q.content.answer);
+      return {
+        task_assignment_id: assignmentId,
+        question_id: q.id,
+        answer: userAnswer,
+        is_correct: correct,
+        submitted_at: new Date().toISOString(),
+      };
+    });
+
+    // Upsert — 根据 (task_assignment_id, question_id) 唯一约束覆盖旧答案
+    await supabaseClient
+      .from("task_submission_answers")
+      .upsert(rows, { onConflict: "task_assignment_id,question_id" });
+
+    // 也记录到 question_attempts（兼容已有的做题统计）
+    for (const row of rows) {
       fetch("/api/questions/attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question_id: q.id,
-          answer: userAnswer,
-          is_correct: correct,
+          question_id: row.question_id,
+          answer: row.answer,
+          is_correct: row.is_correct,
           time_spent_seconds: 0,
         }),
       });
     }
+
     setSubmitting(false);
     setSubmitted(true);
   };
@@ -963,6 +1011,105 @@ function TaskPracticeConsole({
         >
           提交已作答的 {answeredCount} 题
         </button>
+      )}
+    </div>
+  );
+}
+
+/* ─── 老师查看学生作答记录 ─── */
+function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string; taskId: string }) {
+  const [submissions, setSubmissions] = useState<{
+    question_id: string;
+    answer: string;
+    is_correct: boolean;
+    submitted_at: string;
+    question?: { stem: string; answer: string; explanation?: string; type: string };
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("task_submission_answers")
+        .select("question_id, answer, is_correct, submitted_at")
+        .eq("task_assignment_id", assignmentId)
+        .order("submitted_at");
+
+      if (data && data.length > 0) {
+        // 获取题目信息
+        const qIds = data.map((d) => d.question_id);
+        const { data: questions } = await supabase
+          .from("questions")
+          .select("id, type, content")
+          .in("id", qIds);
+
+        const qMap = new Map(
+          questions?.map((q) => [q.id, { stem: (q.content as any).stem, answer: (q.content as any).answer, explanation: (q.content as any).explanation, type: q.type }]) ?? []
+        );
+
+        setSubmissions(data.map((d) => ({ ...d, question: qMap.get(d.question_id) })));
+      }
+      setLoading(false);
+    };
+    fetch();
+  }, [assignmentId, supabase]);
+
+  if (loading) return null;
+  if (submissions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <h4 className="text-[13px] font-medium text-[#2E3338]">学生作答</h4>
+        <p className="text-xs text-[#B4BCC8]">学生尚未提交</p>
+      </div>
+    );
+  }
+
+  const correctCount = submissions.filter((s) => s.is_correct).length;
+  const rate = Math.round((correctCount / submissions.length) * 100);
+  const lastSubmitted = new Date(submissions[submissions.length - 1].submitted_at);
+
+  return (
+    <div className="space-y-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 text-[13px] font-medium text-[#2E3338] hover:text-[#163300] transition-colors w-full"
+      >
+        <span className="text-sm">{expanded ? "▾" : "▸"}</span>
+        学生作答
+        <span className={`ml-1 text-xs font-medium ${rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}`}>
+          {correctCount}/{submissions.length} ({rate}%)
+        </span>
+        <span className="ml-auto text-[11px] text-[#B4BCC8]">
+          {lastSubmitted.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="space-y-2">
+          {submissions.map((s, i) => (
+            <div key={s.question_id} className={`rounded-xl p-3 border ${s.is_correct ? "border-green-200 bg-green-50/30" : "border-red-200 bg-red-50/30"}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-[#B4BCC8]">{i + 1}.</span>
+                <span className={`text-xs font-medium ${s.is_correct ? "text-green-600" : "text-red-600"}`}>
+                  {s.is_correct ? "正确" : "错误"}
+                </span>
+              </div>
+              {s.question && (
+                <>
+                  <p className="text-[13px] text-[#2E3338] line-clamp-2 mb-1">{s.question.stem}</p>
+                  <div className="text-xs space-y-0.5">
+                    <p className="text-[#4D5766]">学生答案：<span className="font-medium">{s.answer || "（未作答）"}</span></p>
+                    {!s.is_correct && (
+                      <p className="text-green-700">正确答案：<span className="font-medium">{s.question.answer}</span></p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
