@@ -403,11 +403,16 @@ export function TaskDetailPanel({
             </div>
 
             {/* 描述 */}
-            {card.taskDescription && (
-              <div className="rounded-xl bg-[#FAFAFA] p-4">
-                <p className="text-[13px] text-[#4D5766] whitespace-pre-wrap leading-relaxed">{card.taskDescription}</p>
-              </div>
-            )}
+            <div>
+              <span className="text-xs text-[#B4BCC8]">描述</span>
+              {card.taskDescription ? (
+                <div className="mt-1.5 rounded-xl bg-[#FAFAFA] p-4">
+                  <p className="text-[13px] text-[#4D5766] whitespace-pre-wrap leading-relaxed">{card.taskDescription}</p>
+                </div>
+              ) : (
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无描述</p>
+              )}
+            </div>
 
             {/* 信息栏 */}
             <div className="grid grid-cols-2 gap-4">
@@ -421,13 +426,11 @@ export function TaskDetailPanel({
               </div>
             </div>
 
-            <div className="border-t border-[#E8EAED]" />
-
-            {/* 成绩（只读） */}
-            {card.testResults.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
-                {card.testResults.map((r, i) => {
+            {/* 成绩 */}
+            <div className="border-t border-[#E8EAED] pt-4 space-y-2">
+              <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
+              {card.testResults.length > 0 ? (
+                card.testResults.map((r, i) => {
                   const rate = Math.round(
                     ((r.total_questions - r.wrong_count) / r.total_questions) * 100
                   );
@@ -453,17 +456,21 @@ export function TaskDetailPanel({
                       </span>
                     </div>
                   );
-                })}
-              </div>
-            )}
+                })
+              ) : (
+                <p className="text-[13px] text-[#B4BCC8]">暂无成绩</p>
+              )}
+            </div>
 
-            {/* 备注（只读） */}
-            {card.note && (
-              <div>
-                <span className="text-xs text-[#B4BCC8]">{isTeacher ? "备注" : "老师备注"}</span>
+            {/* 备注 */}
+            <div className="border-t border-[#E8EAED] pt-4">
+              <span className="text-xs text-[#B4BCC8]">{isTeacher ? "备注" : "老师备注"}</span>
+              {card.note ? (
                 <p className="mt-1 text-[13px] text-[#4D5766] whitespace-pre-wrap">{card.note}</p>
-              </div>
-            )}
+              ) : (
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无备注</p>
+              )}
+            </div>
           </>
         )}
 
@@ -472,7 +479,14 @@ export function TaskDetailPanel({
         {/* 标签 */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
-            <LabelChips labels={card.labels} />
+            {card.labels && card.labels.length > 0 ? (
+              <LabelChips labels={card.labels} />
+            ) : (
+              <div>
+                <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无标签</p>
+              </div>
+            )}
           </div>
         )}
 
