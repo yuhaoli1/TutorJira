@@ -753,11 +753,12 @@ function TaskPracticeConsole({
   const typeColor: Record<string, string> = { choice: "bg-blue-50 text-blue-600", fill_blank: "bg-amber-50 text-amber-600", solution: "bg-green-50 text-green-600" };
 
   // 提交全部答案 — upsert 到 task_submission_answers（可覆盖）
-  const handleSubmitAll = async () => {
+  const handleSubmitAll = async (finalAnswers?: Map<number, string>) => {
     setSubmitting(true);
+    const answersToSubmit = finalAnswers ?? answers;
 
     const rows = questions.map((q, i) => {
-      const userAnswer = answers.get(i) ?? "";
+      const userAnswer = answersToSubmit.get(i) ?? "";
       const correct = normalize(userAnswer) === normalize(q.content.answer);
       return {
         task_assignment_id: assignmentId,
@@ -787,6 +788,7 @@ function TaskPracticeConsole({
       });
     }
 
+    if (finalAnswers) setAnswers(finalAnswers);
     setSubmitting(false);
     setSubmitted(true);
   };
@@ -981,12 +983,10 @@ function TaskPracticeConsole({
         ) : (
           <button
             onClick={() => {
-              // 保存当前题答案
               const userAnswer = isChoice ? selected : answer;
-              if (userAnswer) {
-                setAnswers((prev) => new Map(prev).set(current, userAnswer));
-              }
-              handleSubmitAll();
+              const merged = new Map(answers);
+              if (userAnswer) merged.set(current, userAnswer);
+              handleSubmitAll(merged);
             }}
             disabled={submitting}
             className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
@@ -1001,10 +1001,9 @@ function TaskPracticeConsole({
         <button
           onClick={() => {
             const userAnswer = isChoice ? selected : answer;
-            if (userAnswer) {
-              setAnswers((prev) => new Map(prev).set(current, userAnswer));
-            }
-            handleSubmitAll();
+            const merged = new Map(answers);
+            if (userAnswer) merged.set(current, userAnswer);
+            handleSubmitAll(merged);
           }}
           disabled={submitting || answers.size === 0}
           className="w-full text-center py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] disabled:opacity-40 transition-colors"
