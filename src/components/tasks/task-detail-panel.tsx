@@ -868,9 +868,11 @@ function TaskPracticeConsole({
   };
 
   // 调用 AI 识别照片中的答案
+  const [extractError, setExtractError] = useState<string | null>(null);
   const handleExtractAnswers = async () => {
     if (!photoFile) return;
     setExtracting(true);
+    setExtractError(null);
     try {
       const questionsInfo = questions.map((q, i) => ({
         index: i,
@@ -889,9 +891,13 @@ function TaskPracticeConsole({
           map.set(item.index, item.answer);
         }
         setExtractedAnswers(map);
+      } else {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        setExtractError(err.error || "识别失败");
       }
     } catch (e) {
       console.error("答案识别失败:", e);
+      setExtractError("网络错误，请重试");
     }
     setExtracting(false);
   };
@@ -1057,6 +1063,9 @@ function TaskPracticeConsole({
                 >
                   {extracting ? "识别中..." : "识别答案"}
                 </button>
+              )}
+              {extractError && (
+                <p className="text-xs text-red-500 text-center">{extractError}</p>
               )}
             </div>
           )}
