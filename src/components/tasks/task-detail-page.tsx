@@ -26,6 +26,7 @@ interface TaskData {
   dueDateRaw: string;
   note: string | null;
   labels: Label[];
+  showAnswersAfterSubmit: boolean;
   testResults: { subject: string; total_questions: number; wrong_count: number }[];
 }
 
@@ -69,7 +70,7 @@ export function TaskDetailPage({
       .from("task_assignments")
       .select(`
         id, status, note, ticket_number, created_at,
-        task:tasks(id, title, description, type, due_date, priority),
+        task:tasks(id, title, description, type, due_date, priority, show_answers_after_submit),
         student:students(id, name)
       `)
       .eq("id", assignmentId)
@@ -80,7 +81,7 @@ export function TaskDetailPage({
       return;
     }
 
-    const taskData = a.task as unknown as { id: string; title: string; description: string | null; type: string; due_date: string; priority: TaskPriority };
+    const taskData = a.task as unknown as { id: string; title: string; description: string | null; type: string; due_date: string; priority: TaskPriority; show_answers_after_submit: boolean };
     const student = a.student as unknown as { id: string; name: string };
 
     // Fetch test results
@@ -113,6 +114,7 @@ export function TaskDetailPage({
       dueDateRaw: taskData.due_date,
       note: a.note,
       labels,
+      showAnswersAfterSubmit: taskData.show_answers_after_submit ?? true,
       testResults: (results ?? []).map((r) => ({
         subject: r.subject,
         total_questions: r.total_questions,
@@ -433,7 +435,7 @@ export function TaskDetailPage({
             {isTeacher ? (
               <TaskQuestionPicker taskId={task.taskId} onUpdate={fetchTask} />
             ) : (
-              <TaskQuestionList taskId={task.taskId} onStartPractice={(ids) => setPracticeQuestionIds(ids)} />
+              <TaskQuestionList taskId={task.taskId} assignmentId={task.id} onStartPractice={(ids) => setPracticeQuestionIds(ids)} showAnswers={task.showAnswersAfterSubmit ?? true} />
             )}
           </div>
 

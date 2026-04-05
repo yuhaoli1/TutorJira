@@ -242,16 +242,23 @@ export function TaskQuestionPicker({
 // ============================================
 export function TaskQuestionList({
   taskId,
+  assignmentId,
   onStartPractice,
+  showAnswers = true,
 }: {
   taskId: string;
+  assignmentId: string;
   onStartPractice: (questionIds: string[]) => void;
+  showAnswers?: boolean;
 }) {
   const [linked, setLinked] = useState<TaskQuestion[]>([]);
+  const [submissions, setSubmissions] = useState<Map<string, { answer: string; is_correct: boolean; submitted_at: string }>>(new Map());
+  const [showHistory, setShowHistory] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
+      // 获取关联题目
       const { data } = await supabase
         .from("task_questions")
         .select(`
@@ -262,9 +269,21 @@ export function TaskQuestionList({
         .order("sort_order");
 
       if (data) setLinked(data as unknown as TaskQuestion[]);
+
+      // 获取提交记录
+      const { data: subs } = await supabase
+        .from("task_submission_answers")
+        .select("question_id, answer, is_correct, submitted_at")
+        .eq("task_assignment_id", assignmentId);
+
+      if (subs) {
+        const map = new Map<string, { answer: string; is_correct: boolean; submitted_at: string }>();
+        subs.forEach((s) => map.set(s.question_id, { answer: s.answer, is_correct: s.is_correct, submitted_at: s.submitted_at }));
+        setSubmissions(map);
+      }
     };
-    fetch();
-  }, [taskId]);
+    fetchData();
+  }, [taskId, assignmentId]);
 
   if (linked.length === 0) return null;
 
@@ -273,6 +292,12 @@ export function TaskQuestionList({
     fill_blank: "bg-amber-50 text-amber-600",
     solution: "bg-purple-50 text-purple-600",
   };
+
+  const hasSubmissions = submissions.size > 0;
+  const correctCount = Array.from(submissions.values()).filter((s) => s.is_correct).length;
+  const lastTime = hasSubmissions
+    ? new Date(Math.max(...Array.from(submissions.values()).map((s) => new Date(s.submitted_at).getTime())))
+    : null;
 
   return (
     <div className="space-y-3">
@@ -285,28 +310,104 @@ export function TaskQuestionList({
           onClick={() => onStartPractice(linked.map((l) => l.question_id))}
           className="rounded-full bg-[#163300] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#1e4400] transition-colors duration-150"
         >
-          开始做题
+          {hasSubmissions ? "重新做题" : "开始做题"}
         </button>
       </div>
 
-      <div className="space-y-1.5">
-        {linked.map((tq, i) => (
-          <div key={tq.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
-            <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
-                  {QUESTION_TYPES[tq.question.type]}
+      {/* 提交摘要 */}
+      {hasSubmissions && (
+        <div className="rounded-xl bg-[#F4F5F6] p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[13px] text-[#2E3338]">
+              <span className="font-medium">已提交</span>
+              {showAnswers && (
+                <span className={`ml-2 text-xs font-medium ${
+                  correctCount / submissions.size >= 0.8 ? "text-green-600"
+                    : correctCount / submissions.size >= 0.6 ? "text-amber-600"
+                    : "text-red-600"
+                }`}>
+                  {correctCount}/{submissions.size} 正确
                 </span>
-                <span className="text-[10px] text-[#B4BCC8]">
-                  {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {lastTime && (
+                <span className="text-[11px] text-[#B4BCC8]">
+                  {lastTime.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </span>
-              </div>
-              <p className="text-[13px] text-[#2E3338] line-clamp-2">{tq.question.content.stem}</p>
+              )}
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-[12px] font-medium text-[#163300] hover:underline"
+              >
+                {showHistory ? "收起" : "查看详情"}
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* 展开详情 */}
+          {showHistory && (
+            <div className="mt-3 space-y-2 border-t border-[#E8EAED] pt-3">
+              {linked.map((tq, i) => {
+                const sub = submissions.get(tq.question_id);
+                return (
+                  <div key={tq.id} className={`rounded-lg p-2.5 ${
+                    !sub ? "bg-white border border-[#E8EAED]"
+                      : sub.is_correct ? "bg-green-50/50 border border-green-200"
+                      : "bg-red-50/50 border border-red-200"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-[#B4BCC8]">{i + 1}.</span>
+                      {sub ? (
+                        <span className={`text-[11px] font-medium ${sub.is_correct ? "text-green-600" : "text-red-600"}`}>
+                          {sub.is_correct ? "正确" : "错误"}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-[#B4BCC8]">未作答</span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-[#2E3338] line-clamp-1">{tq.question.content.stem}</p>
+                    {sub && (
+                      <div className="mt-1 text-[11px]">
+                        <span className="text-[#4D5766]">我的答案：</span>
+                        <span className="font-medium text-[#2E3338]">{sub.answer || "（空）"}</span>
+                        {!sub.is_correct && showAnswers && (
+                          <>
+                            <span className="mx-1 text-[#B4BCC8]">|</span>
+                            <span className="text-green-700">正确：{tq.question.content.answer}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 题目列表（未提交时显示） */}
+      {!hasSubmissions && (
+        <div className="space-y-1.5">
+          {linked.map((tq, i) => (
+            <div key={tq.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
+              <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
+                    {QUESTION_TYPES[tq.question.type]}
+                  </span>
+                  <span className="text-[10px] text-[#B4BCC8]">
+                    {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
+                  </span>
+                </div>
+                <p className="text-[13px] text-[#2E3338] line-clamp-2">{tq.question.content.stem}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

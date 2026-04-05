@@ -473,7 +473,9 @@ export function TaskDetailPanel({
             ) : (
               <TaskQuestionList
                 taskId={card.taskId}
+                assignmentId={card.id}
                 onStartPractice={(ids) => setPracticeQuestionIds(ids)}
+                showAnswers={card.showAnswersAfterSubmit}
               />
             )}
           </div>
