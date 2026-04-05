@@ -870,10 +870,12 @@ export function TaskPracticeConsole({
   // 拍照上传处理
   const handlePhotoSelect = (file: File) => {
     if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
-    if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
     setExtractedAnswers(null);
+    // 用 FileReader 生成 data URL，兼容性更好
+    const reader = new FileReader();
+    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
   };
 
   // 调用 AI 识别照片中的答案
@@ -1054,14 +1056,15 @@ export function TaskPracticeConsole({
             </button>
           ) : (
             <div className="space-y-3">
-              <div className="relative rounded-2xl overflow-hidden border border-[#E8EAED]">
-                <img src={photoPreview} alt="答题纸" className="w-full max-h-80 object-contain bg-[#F4F5F6]" />
+              <div className="relative rounded-2xl overflow-hidden border border-[#E8EAED] shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoPreview} alt="答题纸" className="w-full max-h-96 object-contain bg-[#F4F5F6] p-2" />
                 <button
                   onClick={() => {
-                    if (photoPreview) URL.revokeObjectURL(photoPreview);
                     setPhotoFile(null);
                     setPhotoPreview(null);
                     setExtractedAnswers(null);
+                    setPhotoCorrectResults(null);
                   }}
                   className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs hover:bg-black/70"
                 >
