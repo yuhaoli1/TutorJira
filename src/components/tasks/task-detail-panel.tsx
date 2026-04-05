@@ -1441,6 +1441,23 @@ function CloseTaskDialog({
       : [{ subject: "", total_questions: 0, wrong_count: 0 }]
   );
 
+  // 如果没有手动成绩，尝试从 AI 批改结果预填
+  useEffect(() => {
+    if (hasResults || card.questionCount === 0) return;
+    const supabase = createClient();
+    supabase
+      .from("task_submission_answers")
+      .select("is_correct")
+      .eq("task_assignment_id", card.id)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const total = data.length;
+          const wrong = data.filter((d) => !d.is_correct).length;
+          setRows([{ subject: card.taskTitle || "作业", total_questions: total, wrong_count: wrong }]);
+        }
+      });
+  }, [hasResults, card.id, card.questionCount, card.taskTitle]);
+
   const updateRow = (i: number, field: string, value: string | number) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
   };
