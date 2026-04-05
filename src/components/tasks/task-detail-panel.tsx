@@ -437,6 +437,24 @@ export function TaskDetailPanel({
                   rows={2}
                   placeholder="添加备注..."
                 />
+                {note !== (card.note || "") && (
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      await supabase
+                        .from("task_assignments")
+                        .update({ note })
+                        .eq("id", card.id);
+                      await logActivity("note_added", card.note || null, note);
+                      setSaving(false);
+                      onUpdate();
+                    }}
+                    disabled={saving}
+                    className="mt-2 w-full rounded-lg bg-[#F4F5F6] py-2 text-[13px] font-medium text-[#163300] hover:bg-[#E8EAED] disabled:opacity-40 transition-colors"
+                  >
+                    {saving ? "保存中..." : "保存备注"}
+                  </button>
+                )}
               </div>
             ) : (
               card.note && (
@@ -575,7 +593,7 @@ export function TaskDetailPanel({
                     className="flex-1"
                     size="sm"
                   >
-                    确认
+                    ✅ 批阅通过
                   </Button>
                 )}
                 {card.status !== "rejected" && (
@@ -586,7 +604,7 @@ export function TaskDetailPanel({
                     className="flex-1"
                     size="sm"
                   >
-                    打回
+                    ↩️ 打回重做
                   </Button>
                 )}
               </div>
