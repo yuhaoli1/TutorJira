@@ -717,6 +717,7 @@ export function TaskPracticeConsole({
   const [extracting, setExtracting] = useState(false);
   const [extractedAnswers, setExtractedAnswers] = useState<Map<number, string> | null>(null);
   const [perQuestionExtracting, setPerQuestionExtracting] = useState<number | null>(null);
+  const [extractError, setExtractError] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const perQPhotoRef = useRef<HTMLInputElement>(null);
   const supabaseClient = createClient();
@@ -868,7 +869,6 @@ export function TaskPracticeConsole({
   };
 
   // 调用 AI 识别照片中的答案
-  const [extractError, setExtractError] = useState<string | null>(null);
   const handleExtractAnswers = async () => {
     if (!photoFile) return;
     setExtracting(true);
