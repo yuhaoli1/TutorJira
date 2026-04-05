@@ -872,10 +872,7 @@ export function TaskPracticeConsole({
     if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
     setPhotoFile(file);
     setExtractedAnswers(null);
-    // 用 FileReader 生成 data URL，兼容性更好
-    const reader = new FileReader();
-    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
+    setPhotoPreview("selected"); // 标记已选择，不加载图片数据
   };
 
   // 调用 AI 识别照片中的答案
@@ -1056,9 +1053,9 @@ export function TaskPracticeConsole({
             </button>
           ) : (
             <div className="space-y-3">
-              <div className="relative rounded-2xl overflow-hidden border border-[#E8EAED] shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoPreview} alt="答题纸" className="w-full max-h-96 object-contain bg-[#F4F5F6] p-2" />
+              <div className="flex items-center gap-3 rounded-2xl border border-[#E8EAED] bg-[#F4F5F6] px-4 py-3">
+                <span className="text-2xl">☑️</span>
+                <span className="flex-1 text-sm text-[#333] truncate">{photoFile?.name || "已选择图片"}</span>
                 <button
                   onClick={() => {
                     setPhotoFile(null);
@@ -1066,7 +1063,7 @@ export function TaskPracticeConsole({
                     setExtractedAnswers(null);
                     setPhotoCorrectResults(null);
                   }}
-                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs hover:bg-black/70"
+                  className="text-[#B4BCC8] hover:text-red-500 transition-colors text-lg"
                 >
                   ✕
                 </button>
