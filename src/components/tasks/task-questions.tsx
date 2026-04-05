@@ -25,10 +25,12 @@ export function TaskQuestionPicker({
   taskId,
   onUpdate,
   initialShowAnswers = true,
+  readOnly = false,
 }: {
   taskId: string;
   onUpdate: () => void;
   initialShowAnswers?: boolean;
+  readOnly?: boolean;
 }) {
   const [linked, setLinked] = useState<TaskQuestion[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
@@ -124,16 +126,18 @@ export function TaskQuestionPicker({
             <span className="ml-1.5 text-xs text-[#B4BCC8]">{linked.length}</span>
           )}
         </h4>
-        <button
-          onClick={() => { setShowBrowser(!showBrowser); if (!showBrowser) searchQuestions(); }}
-          className="rounded-full px-3 py-1 text-xs font-medium text-[#163300] hover:bg-[#F4F5F6] transition-colors duration-150"
-        >
-          {showBrowser ? "收起" : "+ 添加题目"}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => { setShowBrowser(!showBrowser); if (!showBrowser) searchQuestions(); }}
+            className="rounded-full px-3 py-1 text-xs font-medium text-[#163300] hover:bg-[#F4F5F6] transition-colors duration-150"
+          >
+            {showBrowser ? "收起" : "+ 添加题目"}
+          </button>
+        )}
       </div>
 
       {/* 提交后展示答案开关 */}
-      {linked.length > 0 && (
+      {!readOnly && linked.length > 0 && (
         <div className="flex items-center justify-between rounded-lg bg-[#F4F5F6] px-3 py-2">
           <span className="text-[12px] text-[#4D5766]">学生提交后展示答案/讲解</span>
           <button
@@ -169,19 +173,21 @@ export function TaskQuestionPicker({
                 </div>
                 <p className="text-[13px] text-[#2E3338] line-clamp-2">{tq.question.content.stem}</p>
               </div>
-              <button
-                onClick={() => removeQuestion(tq.id)}
-                className="text-xs text-[#B4BCC8] hover:text-red-500 flex-shrink-0 mt-0.5"
-              >
-                ✕
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => removeQuestion(tq.id)}
+                  className="text-xs text-[#B4BCC8] hover:text-red-500 flex-shrink-0 mt-0.5"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>
       )}
 
       {/* Question browser */}
-      {showBrowser && (
+      {!readOnly && showBrowser && (
         <div className="rounded-xl border border-[#E8EAED] p-3 space-y-3 bg-[#FAFAFA]">
           <div className="flex gap-2">
             <select

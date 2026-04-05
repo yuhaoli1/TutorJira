@@ -180,6 +180,15 @@ export function TaskDetailPanel({
       await logActivity("task_edited", null, changes.join("; "));
     }
 
+    // 同时保存备注（如果有变更）
+    if (note !== (card.note || "")) {
+      await supabase
+        .from("task_assignments")
+        .update({ note })
+        .eq("id", card.id);
+      await logActivity("note_added", card.note || null, note);
+    }
+
     setSaving(false);
     setEditing(false);
     onUpdate();
@@ -322,6 +331,36 @@ export function TaskDetailPanel({
               />
             </div>
 
+            <div className="border-t border-[#E8EAED] pt-4" />
+
+            {/* 成绩录入 */}
+            <TestResultForm
+              initialResults={card.testResults}
+              onSave={saveResults}
+              saving={saving}
+            />
+
+            {/* 备注 */}
+            <div>
+              <label className="text-xs text-[#B4BCC8]">备注</label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
+                rows={2}
+                placeholder="添加备注..."
+              />
+            </div>
+
+            {/* 标签 */}
+            <div className="space-y-2">
+              <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
+              <LabelPicker selectedIds={labelIds} onChange={syncLabels} />
+            </div>
+
+            {/* 关联题目 */}
+            <TaskQuestionPicker taskId={card.taskId} onUpdate={onUpdate} initialShowAnswers={card.showAnswersAfterSubmit} />
+
             {/* 保存/取消 */}
             <div className="flex gap-2 pt-2">
               <Button
@@ -330,7 +369,7 @@ export function TaskDetailPanel({
                 className="flex-1"
                 size="sm"
               >
-                {saving ? "保存中..." : "保存修改"}
+                {saving ? "保存中..." : "确认编辑"}
               </Button>
               <Button
                 onClick={cancelEdit}
@@ -384,85 +423,46 @@ export function TaskDetailPanel({
 
             <div className="border-t border-[#E8EAED]" />
 
-            {/* 成绩显示/录入 */}
-            {isTeacher ? (
-              <TestResultForm
-                initialResults={card.testResults}
-                onSave={saveResults}
-                saving={saving}
-              />
-            ) : (
-              card.testResults.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
-                  {card.testResults.map((r, i) => {
-                    const rate = Math.round(
-                      ((r.total_questions - r.wrong_count) / r.total_questions) * 100
-                    );
-                    return (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between rounded-xl bg-[#F4F5F6] px-4 py-3 text-[13px]"
-                      >
-                        <span className="text-[#2E3338]">{r.subject}</span>
-                        <span className="text-[#4D5766]">
-                          {r.total_questions}题 错{r.wrong_count}{" "}
-                          <span
-                            className={
-                              rate >= 80
-                                ? "text-green-600"
-                                : rate >= 60
-                                  ? "text-amber-600"
-                                  : "text-red-600"
-                            }
-                          >
-                            ({rate}%)
-                          </span>
+            {/* 成绩（只读） */}
+            {card.testResults.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
+                {card.testResults.map((r, i) => {
+                  const rate = Math.round(
+                    ((r.total_questions - r.wrong_count) / r.total_questions) * 100
+                  );
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-xl bg-[#F4F5F6] px-4 py-3 text-[13px]"
+                    >
+                      <span className="text-[#2E3338]">{r.subject}</span>
+                      <span className="text-[#4D5766]">
+                        {r.total_questions}题 错{r.wrong_count}{" "}
+                        <span
+                          className={
+                            rate >= 80
+                              ? "text-green-600"
+                              : rate >= 60
+                                ? "text-amber-600"
+                                : "text-red-600"
+                          }
+                        >
+                          ({rate}%)
                         </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
-            {/* 备注 */}
-            {isTeacher ? (
+            {/* 备注（只读） */}
+            {card.note && (
               <div>
-                <label className="text-xs text-[#B4BCC8]">备注</label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
-                  rows={2}
-                  placeholder="添加备注..."
-                />
-                {note !== (card.note || "") && (
-                  <button
-                    onClick={async () => {
-                      setSaving(true);
-                      await supabase
-                        .from("task_assignments")
-                        .update({ note })
-                        .eq("id", card.id);
-                      await logActivity("note_added", card.note || null, note);
-                      setSaving(false);
-                      onUpdate();
-                    }}
-                    disabled={saving}
-                    className="mt-2 w-full rounded-lg bg-[#F4F5F6] py-2 text-[13px] font-medium text-[#163300] hover:bg-[#E8EAED] disabled:opacity-40 transition-colors"
-                  >
-                    {saving ? "保存中..." : "保存备注"}
-                  </button>
-                )}
+                <span className="text-xs text-[#B4BCC8]">{isTeacher ? "备注" : "老师备注"}</span>
+                <p className="mt-1 text-[13px] text-[#4D5766] whitespace-pre-wrap">{card.note}</p>
               </div>
-            ) : (
-              card.note && (
-                <div>
-                  <span className="text-xs text-[#B4BCC8]">老师备注</span>
-                  <p className="mt-1 text-[13px] text-[#4D5766]">{card.note}</p>
-                </div>
-              )
             )}
           </>
         )}
@@ -472,14 +472,7 @@ export function TaskDetailPanel({
         {/* 标签 */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
-            {isTeacher ? (
-              <div className="space-y-2">
-                <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
-                <LabelPicker selectedIds={labelIds} onChange={syncLabels} />
-              </div>
-            ) : (
-              <LabelChips labels={card.labels} />
-            )}
+            <LabelChips labels={card.labels} />
           </div>
         )}
 
@@ -487,7 +480,7 @@ export function TaskDetailPanel({
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
             {isTeacher ? (
-              <TaskQuestionPicker taskId={card.taskId} onUpdate={onUpdate} initialShowAnswers={card.showAnswersAfterSubmit} />
+              <TaskQuestionPicker taskId={card.taskId} onUpdate={onUpdate} initialShowAnswers={card.showAnswersAfterSubmit} readOnly />
             ) : (
               <TaskQuestionList
                 taskId={card.taskId}
