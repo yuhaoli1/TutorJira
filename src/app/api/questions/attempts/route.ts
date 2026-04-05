@@ -101,6 +101,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // 为错题查找来源任务（ticket_number + 任务标题）
+    if (wrongOnly && attempts && attempts.length > 0) {
+      const questionIds = [...new Set(attempts.map((a: { question_id: string }) => a.question_id))];
+      const { data: sources } = await supabase
+        .from("task_submission_answers")
+        .select("question_id, task_assignments(ticket_number, tasks(title))")
+        .in("question_id", questionIds)
+        .eq("is_correct", false)
+        .order("submitted_at", { ascending: false });
+
+      if (sources) {
+        // 每个 question_id 取第一个（最近的）来源
+        const sourceMap = new Map<string, { ticket_number: string; task_title: string }>();
+        for (const s of sources) {
+          if (!sourceMap.has(s.question_id) && s.task_assignments) {
+            const ta = s.task_assignments as unknown as { ticket_number: string; tasks: { title: string } | null };
+            if (ta.ticket_number) {
+              sourceMap.set(s.question_id, {
+                ticket_number: ta.ticket_number,
+                task_title: ta.tasks?.title || "",
+              });
+            }
+          }
+        }
+        // 注入来源信息到每条 attempt
+        for (const a of attempts) {
+          const src = sourceMap.get(a.question_id);
+          if (src) (a as Record<string, unknown>).source = src;
+        }
+      }
+    }
+
     return NextResponse.json({ attempts });
   } catch (error) {
     console.error("获取做题记录失败:", error);

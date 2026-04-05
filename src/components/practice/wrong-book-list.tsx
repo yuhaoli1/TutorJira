@@ -10,6 +10,7 @@ interface WrongAttempt {
   answer: string;
   is_correct: boolean;
   attempted_at: string;
+  source?: { ticket_number: string; task_title: string };
   questions: {
     id: string;
     type: QuestionType;
@@ -165,6 +166,11 @@ export function WrongBookList({ studentId }: WrongBookListProps) {
               </span>
               {q.knowledge_topics && (
                 <span className="text-xs text-[#B4BCC8]">{q.knowledge_topics.title}</span>
+              )}
+              {attempt.source && (
+                <span className="ml-auto text-xs text-[#B4BCC8]">
+                  来自：{attempt.source.ticket_number} {attempt.source.task_title}
+                </span>
               )}
             </div>
 
