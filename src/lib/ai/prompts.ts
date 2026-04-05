@@ -45,20 +45,21 @@ ${text}`;
 
 // ===== 答案识别 prompts =====
 
-export const ANSWER_EXTRACTION_SYSTEM_PROMPT = `你是一个小学数学答案识别助手。学生拍了一张答题纸的照片，请根据提供的题目列表，从照片中识别出每道题的答案。
+export const ANSWER_EXTRACTION_SYSTEM_PROMPT = `你是一个小学数学答案识别和判题助手。学生拍了一张答题纸的照片，请根据提供的题目列表和标准答案，从照片中识别出每道题的答案，并判断是否正确。
 
 规则：
 1. 对于选择题，只返回选项字母（如 A、B、C、D）
 2. 对于填空题，返回填写的数字或文字
 3. 对于解答题，返回学生写的完整解答过程
-4. 如果某道题在照片中找不到答案，answer 填 ""
-5. 严格按照 JSON 数组格式返回，不要输出任何其他内容
+4. 如果某道题在照片中找不到答案，answer 填 ""，is_correct 填 false
+5. 判断正确时要考虑：答案顺序不同但内容完整算正确、数学表达式等价算正确、单位省略但数值正确算正确
+6. 严格按照 JSON 数组格式返回，不要输出任何其他内容
 
 返回格式：
-[{"index": 0, "answer": "..."}, {"index": 1, "answer": "..."}, ...]`;
+[{"index": 0, "answer": "...", "is_correct": true}, {"index": 1, "answer": "...", "is_correct": false}, ...]`;
 
 export const ANSWER_EXTRACTION_USER_PROMPT = (
-  questions: { index: number; stem: string; type: string; options?: string[] }[],
+  questions: { index: number; stem: string; type: string; options?: string[]; correct_answer?: string }[],
 ) => {
   const list = questions
     .map((q) => {
@@ -66,8 +67,11 @@ export const ANSWER_EXTRACTION_USER_PROMPT = (
       if (q.options && q.options.length > 0) {
         desc += `\n  选项: ${q.options.join(" | ")}`;
       }
+      if (q.correct_answer) {
+        desc += `\n  标准答案: ${q.correct_answer}`;
+      }
       return desc;
     })
     .join("\n");
-  return `请从照片中识别以下每道题的学生答案：\n\n${list}`;
+  return `请从照片中识别以下每道题的学生答案，并对比标准答案判断是否正确：\n\n${list}`;
 };
