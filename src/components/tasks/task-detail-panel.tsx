@@ -718,6 +718,7 @@ export function TaskPracticeConsole({
   const [extractedAnswers, setExtractedAnswers] = useState<Map<number, string> | null>(null);
   const [perQuestionExtracting, setPerQuestionExtracting] = useState<number | null>(null);
   const [extractError, setExtractError] = useState<string | null>(null);
+  const [photoCorrectResults, setPhotoCorrectResults] = useState<Map<string, boolean> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const perQPhotoRef = useRef<HTMLInputElement>(null);
   const supabaseClient = createClient();
@@ -770,30 +771,37 @@ export function TaskPracticeConsole({
     setSubmitting(true);
     const answersToSubmit = finalAnswers ?? answers;
 
-    // 调用 AI 检查答案
-    const answersToCheck = questions.map((q, i) => ({
-      question_id: q.id,
-      student_answer: answersToSubmit.get(i) ?? "",
-      correct_answer: q.content.answer || "",
-      stem: q.content.stem || "",
-      type: q.type,
-    }));
-
     let correctMap = new Map<string, boolean>();
-    try {
-      const res = await fetch("/api/tasks/check-answers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: answersToCheck }),
-      });
-      if (res.ok) {
-        const { results } = await res.json();
-        for (const r of results) {
-          correctMap.set(r.question_id, r.is_correct);
+
+    // 如果拍照模式已经有判题结果，直接复用，跳过 check-answers 调用
+    if (photoCorrectResults && photoCorrectResults.size > 0) {
+      correctMap = photoCorrectResults;
+      setPhotoCorrectResults(null); // 用完清除
+    } else {
+      // 调用 AI 检查答案
+      const answersToCheck = questions.map((q, i) => ({
+        question_id: q.id,
+        student_answer: answersToSubmit.get(i) ?? "",
+        correct_answer: q.content.answer || "",
+        stem: q.content.stem || "",
+        type: q.type,
+      }));
+
+      try {
+        const res = await fetch("/api/tasks/check-answers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers: answersToCheck }),
+        });
+        if (res.ok) {
+          const { results } = await res.json();
+          for (const r of results) {
+            correctMap.set(r.question_id, r.is_correct);
+          }
         }
+      } catch (e) {
+        console.error("AI 答案检查失败，使用简单比较:", e);
       }
-    } catch (e) {
-      console.error("AI 答案检查失败，使用简单比较:", e);
     }
 
     const rows = questions.map((q, i) => {
@@ -879,6 +887,7 @@ export function TaskPracticeConsole({
         stem: q.content.stem,
         type: q.type,
         options: q.content.options,
+        correct_answer: q.content.answer || "",
       }));
       const formData = new FormData();
       formData.append("image", photoFile);
@@ -887,10 +896,15 @@ export function TaskPracticeConsole({
       if (res.ok) {
         const { answers: extracted } = await res.json();
         const map = new Map<number, string>();
+        const cMap = new Map<string, boolean>();
         for (const item of extracted) {
           map.set(item.index, item.answer);
+          // 保存 AI 一起返回的判题结果
+          const qId = questions[item.index]?.id;
+          if (qId) cMap.set(qId, item.is_correct ?? false);
         }
         setExtractedAnswers(map);
+        setPhotoCorrectResults(cMap);
       } else {
         const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
         setExtractError(err.error || "识别失败");

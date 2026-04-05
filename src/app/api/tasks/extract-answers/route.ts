@@ -12,6 +12,7 @@ interface QuestionInfo {
   stem: string;
   type: string;
   options?: string[];
+  correct_answer?: string;
 }
 
 // POST /api/tasks/extract-answers — 从照片中识别学生答案
@@ -112,22 +113,26 @@ export async function POST(request: NextRequest) {
 function parseExtractedAnswers(
   rawText: string,
   questions: QuestionInfo[],
-): { index: number; answer: string }[] {
+): { index: number; answer: string; is_correct: boolean }[] {
   try {
     const jsonMatch = rawText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.error("无法从AI响应中提取JSON:", rawText);
-      return questions.map((q) => ({ index: q.index, answer: "" }));
+      return questions.map((q) => ({ index: q.index, answer: "", is_correct: false }));
     }
-    const parsed = JSON.parse(jsonMatch[0]) as { index: number; answer: string }[];
+    const parsed = JSON.parse(jsonMatch[0]) as { index: number; answer: string; is_correct?: boolean }[];
 
     // 确保每道题都有结果
     return questions.map((q) => {
       const found = parsed.find((r) => r.index === q.index);
-      return { index: q.index, answer: found?.answer ? String(found.answer) : "" };
+      return {
+        index: q.index,
+        answer: found?.answer ? String(found.answer) : "",
+        is_correct: found?.is_correct ?? false,
+      };
     });
   } catch (e) {
     console.error("解析答案识别结果失败:", e);
-    return questions.map((q) => ({ index: q.index, answer: "" }));
+    return questions.map((q) => ({ index: q.index, answer: "", is_correct: false }));
   }
 }
