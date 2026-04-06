@@ -25,7 +25,7 @@ CREATE TABLE question_tags (
   sort_order INT NOT NULL DEFAULT 0,
   metadata JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE UNIQUE INDEX idx_question_tags_unique ON question_tags(category_id, name, COALESCE(parent_id, '00000000-0000-0000-0000-000000000000'));
