@@ -166,19 +166,30 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
         <p className="text-sm font-medium text-[#2E3338]">
           共识别 {questions.length} 道题目，请审核后保存
         </p>
-        <Button onClick={handleSaveAll} disabled={saving}>
-          {saving ? (
-            <>
-              <Loader2 className="size-4 animate-spin mr-1" />
-              保存中...
-            </>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (confirm("确定放弃所有识别结果？")) onSaved();
+            }}
+            disabled={saving}
+          >
+            放弃全部
+          </Button>
+          <Button onClick={handleSaveAll} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-1" />
+                保存中...
+              </>
           ) : (
             <>
               <Save className="size-4 mr-1" />
               保存全部
             </>
           )}
-        </Button>
+          </Button>
+        </div>
       </div>
 
       {questions.map((q, index) => {
