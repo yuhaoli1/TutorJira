@@ -18,5 +18,6 @@ jobs:
             cd ~/TutorJira
             git pull origin main
             export SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            docker compose down
+            docker compose down --remove-orphans || true
+            docker rm -f tutorjira-nextjs-1 tutorjira-nginx-1 2>/dev/null || true
             docker compose up -d --build
