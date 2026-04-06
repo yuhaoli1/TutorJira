@@ -56,32 +56,31 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* 标签行 */}
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                TYPE_COLORS[question.type] || "bg-gray-50 text-gray-600"
-              }`}
-            >
-              {QUESTION_TYPES[question.type as keyof typeof QUESTION_TYPES] || question.type}
-            </span>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                DIFFICULTY_COLORS[question.difficulty] || "bg-gray-50 text-gray-600"
-              }`}
-            >
-              {DIFFICULTY_LABELS[question.difficulty as keyof typeof DIFFICULTY_LABELS] || `难度${question.difficulty}`}
-            </span>
-            {!question.tags?.length && question.knowledge_topics && (
-              <span className="text-xs text-[#B4BCC8] truncate">
-                {question.knowledge_topics.title}
-              </span>
-            )}
-          </div>
-
-          {/* 标签 */}
-          {question.tags && question.tags.length > 0 && (
+          {question.tags && question.tags.length > 0 ? (
             <div className="mb-2">
               <TagBadges tags={question.tags} />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  TYPE_COLORS[question.type] || "bg-gray-50 text-gray-600"
+                }`}
+              >
+                {QUESTION_TYPES[question.type as keyof typeof QUESTION_TYPES] || question.type}
+              </span>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  DIFFICULTY_COLORS[question.difficulty] || "bg-gray-50 text-gray-600"
+                }`}
+              >
+                {DIFFICULTY_LABELS[question.difficulty as keyof typeof DIFFICULTY_LABELS] || `难度${question.difficulty}`}
+              </span>
+              {question.knowledge_topics && (
+                <span className="text-xs text-[#B4BCC8] truncate">
+                  {question.knowledge_topics.title}
+                </span>
+              )}
             </div>
           )}
 
