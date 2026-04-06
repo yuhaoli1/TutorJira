@@ -33,7 +33,7 @@ export class QwenProvider implements AIProvider {
         model: this.model,
         max_tokens: 4096,
         messages: [
-          { role: "system", content: QUESTION_EXTRACTION_SYSTEM_PROMPT },
+          { role: "system", content: QUESTION_EXTRACTION_SYSTEM_PROMPT(request.topicNames) },
           ...messages,
         ],
       }),
