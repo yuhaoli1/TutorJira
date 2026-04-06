@@ -56,7 +56,6 @@ export async function POST(
       difficulty: number;
       tag_ids?: string[];
     }) => ({
-      topic_id: q.topic_id || null,
       type: q.type as "choice" | "fill_blank" | "solution",
       content: {
         stem: q.stem,

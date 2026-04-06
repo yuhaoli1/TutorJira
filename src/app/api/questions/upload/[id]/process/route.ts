@@ -176,14 +176,8 @@ export async function POST(
           if (tagId) autoTagIds.push(tagId);
         }
 
-        // backward compat: topic_id
-        const knowledgeTagId = q.suggested_topic
-          ? tagMapsByCategory.get("knowledge_point")?.get(q.suggested_topic)
-          : undefined;
-
         return {
           ...q,
-          topic_id: knowledgeTagId || undefined,
           auto_tag_ids: autoTagIds,
         };
       });
