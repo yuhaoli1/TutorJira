@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
 import { TAG_CATEGORY_UI } from "@/lib/constants";
+import { OCR_CORRECTION_PROMPT } from "@/lib/ai/prompts";
+import type { ExtractedQuestion } from "@/lib/ai/types";
 
 // POST /api/questions/upload/[id]/process - AI 处理
 export async function POST(
@@ -151,9 +153,13 @@ export async function POST(
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
 
+      // ====== 第二轮：OCR 纠错 ======
+      // 用文字模型检查提取结果，修复乱码/错字
+      const correctedQuestions = await correctOCRErrors(result.questions);
+
       // 自动将 AI 返回的字段映射到标签 ID（动态遍历所有维度）
       // AI 返回的字段 → 维度匹配，由 TAG_CATEGORY_UI.aiFieldKey 驱动
-      const questionsWithTopics = result.questions.map((q) => {
+      const questionsWithTopics = correctedQuestions.map((q) => {
         const autoTagIds: string[] = [];
         const qRecord = q as unknown as Record<string, unknown>;
 
@@ -211,5 +217,61 @@ export async function POST(
   } catch (error) {
     console.error("AI处理失败:", error);
     return NextResponse.json({ error: "AI处理失败" }, { status: 500 });
+  }
+}
+
+/**
+ * 第二轮 OCR 纠错：用 DeepSeek 文字模型检查并修复提取结果中的乱码/错字
+ * 如果 DeepSeek 不可用，跳过纠错直接返回原数据
+ */
+async function correctOCRErrors(questions: ExtractedQuestion[]): Promise<ExtractedQuestion[]> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey || questions.length === 0) return questions;
+
+  try {
+    const baseUrl = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+    const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 4096,
+        messages: [
+          { role: "system", content: OCR_CORRECTION_PROMPT },
+          { role: "user", content: JSON.stringify(questions, null, 2) },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("OCR 纠错 API 失败:", response.status);
+      return questions; // 纠错失败不影响主流程
+    }
+
+    const data = await response.json();
+    const rawText = data.choices?.[0]?.message?.content || "";
+
+    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return questions;
+
+    const corrected = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(corrected) || corrected.length !== questions.length) return questions;
+
+    // 合并纠错结果，保留原始的 suggested_topic 等字段
+    return questions.map((original, i) => ({
+      ...original,
+      stem: String(corrected[i].stem || original.stem),
+      options: Array.isArray(corrected[i].options) ? corrected[i].options.map(String) : original.options,
+      answer: String(corrected[i].answer || original.answer),
+      explanation: corrected[i].explanation ? String(corrected[i].explanation) : original.explanation,
+    }));
+  } catch (e) {
+    console.error("OCR 纠错失败:", e);
+    return questions; // 纠错失败不影响主流程
   }
 }
