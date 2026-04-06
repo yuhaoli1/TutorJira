@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { QUESTION_TYPES } from "@/lib/constants";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, Plus, Trash2 } from "lucide-react";
+import { TagSelector } from "./tag-selector";
+import { TAG_CATEGORIES } from "@/lib/constants";
 
 interface QuestionFormProps {
   question?: {
@@ -17,6 +18,7 @@ interface QuestionFormProps {
       explanation?: string;
     };
     difficulty: number;
+    tag_ids?: string[];
   } | null;
   topics: { id: string; title: string }[];
   onClose: () => void;
@@ -27,19 +29,47 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
   const isEditing = !!question;
   const [saving, setSaving] = useState(false);
 
+  // Legacy fields (still used for backward compat)
   const [topicId, setTopicId] = useState(question?.topic_id || "");
   const [type, setType] = useState<"choice" | "fill_blank" | "solution">(question?.type || "solution");
+  const [difficulty, setDifficulty] = useState(question?.difficulty || 3);
+
+  // Content fields
   const [stem, setStem] = useState(question?.content.stem || "");
   const [options, setOptions] = useState<string[]>(question?.content.options || ["A. ", "B. ", "C. ", "D. "]);
   const [answer, setAnswer] = useState(question?.content.answer || "");
   const [explanation, setExplanation] = useState(question?.content.explanation || "");
-  const [difficulty, setDifficulty] = useState(question?.difficulty || 3);
+
+  // Tag-based fields
+  const [knowledgeTags, setKnowledgeTags] = useState<string[]>([]);
+  const [typeTags, setTypeTags] = useState<string[]>([]);
+  const [difficultyTags, setDifficultyTags] = useState<string[]>([]);
+  const [approachTags, setApproachTags] = useState<string[]>([]);
+  const [gradeTags, setGradeTags] = useState<string[]>([]);
+
+  // Load existing tags when editing
+  useEffect(() => {
+    if (!question?.id) return;
+    fetch(`/api/questions/${question.id}/tags`)
+      .then((res) => res.json())
+      .then((data) => {
+        const tags = data.tags || [];
+        const byCategory: Record<string, string[]> = {};
+        for (const tag of tags) {
+          const slug = tag.question_tag_categories?.slug || "";
+          if (!byCategory[slug]) byCategory[slug] = [];
+          byCategory[slug].push(tag.id);
+        }
+        setKnowledgeTags(byCategory[TAG_CATEGORIES.KNOWLEDGE_POINT] || []);
+        setTypeTags(byCategory[TAG_CATEGORIES.QUESTION_TYPE] || []);
+        setDifficultyTags(byCategory[TAG_CATEGORIES.DIFFICULTY] || []);
+        setApproachTags(byCategory[TAG_CATEGORIES.SOLUTION_APPROACH] || []);
+        setGradeTags(byCategory[TAG_CATEGORIES.GRADE] || []);
+      })
+      .catch(() => {});
+  }, [question?.id]);
 
   const handleSave = async () => {
-    if (!topicId) {
-      alert("请选择知识点");
-      return;
-    }
     if (!stem.trim()) {
       alert("请输入题干");
       return;
@@ -49,10 +79,18 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
       return;
     }
 
+    // Require at least one knowledge tag or legacy topic
+    if (knowledgeTags.length === 0 && !topicId) {
+      alert("请选择至少一个知识点");
+      return;
+    }
+
     setSaving(true);
     try {
+      const allTagIds = [...knowledgeTags, ...typeTags, ...difficultyTags, ...approachTags, ...gradeTags];
+
       const body = {
-        topic_id: topicId,
+        topic_id: topicId || undefined,
         type,
         content: {
           stem: stem.trim(),
@@ -61,6 +99,7 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
           explanation: explanation.trim() || undefined,
         },
         difficulty,
+        tag_ids: allTagIds,
       };
 
       const res = isEditing
@@ -76,6 +115,14 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
           });
 
       if (res.ok) {
+        // Save tags via the tag link API
+        if (isEditing && allTagIds.length > 0) {
+          await fetch(`/api/questions/${question.id}/tags`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tag_ids: allTagIds }),
+          });
+        }
         onSaved();
       } else {
         const data = await res.json();
@@ -102,42 +149,63 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
         </div>
 
         <div className="p-5 space-y-4">
-          {/* 知识点选择 */}
-          <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">知识点 *</label>
-            <select
-              value={topicId}
-              onChange={(e) => setTopicId(e.target.value)}
-              className="w-full h-9 rounded-lg border border-[#E8EAED] bg-white px-3 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
-            >
-              <option value="">请选择知识点</option>
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* 知识点（标签） */}
+          <TagSelector
+            categorySlug={TAG_CATEGORIES.KNOWLEDGE_POINT}
+            selectedTagIds={knowledgeTags}
+            onChange={setKnowledgeTags}
+            label="知识点 *"
+            placeholder="选择知识点..."
+          />
 
-          {/* 题型选择 */}
-          <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">题型 *</label>
-            <div className="flex gap-2">
-              {Object.entries(QUESTION_TYPES).map(([k, v]) => (
-                <button
-                  key={k}
-                  onClick={() => setType(k as typeof type)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    type === k
-                      ? "bg-[#163300] text-white"
-                      : "bg-[#F4F5F6] text-[#4D5766] hover:bg-[#E8EAED]"
-                  }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* 题型（标签） */}
+          <TagSelector
+            categorySlug={TAG_CATEGORIES.QUESTION_TYPE}
+            selectedTagIds={typeTags}
+            onChange={(ids) => {
+              setTypeTags(ids);
+              // Sync legacy type field from tag slug
+              if (ids.length > 0) {
+                fetch(`/api/tags?category_slug=${TAG_CATEGORIES.QUESTION_TYPE}`)
+                  .then((r) => r.json())
+                  .then((d) => {
+                    const tag = (d.tags || []).find((t: { id: string }) => t.id === ids[0]);
+                    if (tag?.slug && ["choice", "fill_blank", "solution"].includes(tag.slug)) {
+                      setType(tag.slug as typeof type);
+                    }
+                  })
+                  .catch(() => {});
+              }
+            }}
+            allowMultiple={false}
+            label="题型 *"
+          />
+
+          {/* 难度（标签） */}
+          <TagSelector
+            categorySlug={TAG_CATEGORIES.DIFFICULTY}
+            selectedTagIds={difficultyTags}
+            onChange={setDifficultyTags}
+            allowMultiple={false}
+            label="难度 *"
+          />
+
+          {/* 解题思路（标签） */}
+          <TagSelector
+            categorySlug={TAG_CATEGORIES.SOLUTION_APPROACH}
+            selectedTagIds={approachTags}
+            onChange={setApproachTags}
+            label="解题思路"
+            placeholder="选择解题思路..."
+          />
+
+          {/* 年级（标签） */}
+          <TagSelector
+            categorySlug={TAG_CATEGORIES.GRADE}
+            selectedTagIds={gradeTags}
+            onChange={setGradeTags}
+            label="适用年级"
+          />
 
           {/* 题干 */}
           <div>
@@ -214,25 +282,6 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
               className="w-full rounded-lg border border-[#E8EAED] bg-white px-3 py-2 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20 resize-y"
               placeholder="解题思路..."
             />
-          </div>
-
-          {/* 难度 */}
-          <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">
-              难度：{difficulty}
-            </label>
-            <input
-              type="range"
-              min={1}
-              max={5}
-              value={difficulty}
-              onChange={(e) => setDifficulty(parseInt(e.target.value))}
-              className="w-full accent-[#163300]"
-            />
-            <div className="flex justify-between text-xs text-[#B4BCC8] mt-0.5">
-              <span>简单</span>
-              <span>困难</span>
-            </div>
           </div>
         </div>
 

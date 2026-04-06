@@ -4,6 +4,19 @@ import { QUESTION_TYPES, DIFFICULTY_LABELS } from "@/lib/constants";
 import type { QuestionType } from "@/lib/supabase/types";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TagBadges } from "./tag-badges";
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string | null;
+  category_id: string;
+  question_tag_categories?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+}
 
 interface QuestionCardProps {
   question: {
@@ -17,6 +30,7 @@ interface QuestionCardProps {
     };
     difficulty: number;
     knowledge_topics?: { id: string; title: string } | null;
+    tags?: Tag[];
   };
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -57,12 +71,19 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
             >
               {DIFFICULTY_LABELS[question.difficulty as keyof typeof DIFFICULTY_LABELS] || `难度${question.difficulty}`}
             </span>
-            {question.knowledge_topics && (
+            {!question.tags?.length && question.knowledge_topics && (
               <span className="text-xs text-[#B4BCC8] truncate">
                 {question.knowledge_topics.title}
               </span>
             )}
           </div>
+
+          {/* 标签 */}
+          {question.tags && question.tags.length > 0 && (
+            <div className="mb-2">
+              <TagBadges tags={question.tags} />
+            </div>
+          )}
 
           {/* 题干 */}
           <p className="text-sm text-[#2E3338] leading-relaxed whitespace-pre-wrap">

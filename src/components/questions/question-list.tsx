@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { QuestionCard } from "./question-card";
 import { QuestionForm } from "./question-form";
-import { QUESTION_TYPES, DIFFICULTY_LABELS } from "@/lib/constants";
+import { QUESTION_TYPES, DIFFICULTY_LABELS, TAG_CATEGORIES } from "@/lib/constants";
 import { Loader2, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,13 @@ interface Topic {
   title: string;
   parent_id: string | null;
   children?: Topic[];
+}
+
+interface TagOption {
+  id: string;
+  name: string;
+  slug: string | null;
+  parent_id: string | null;
 }
 
 interface Question {
@@ -26,6 +33,7 @@ interface Question {
   };
   difficulty: number;
   knowledge_topics?: { id: string; title: string } | null;
+  tags?: { id: string; name: string; slug: string | null; category_id: string; question_tag_categories?: { id: string; name: string; slug: string } | null }[];
 }
 
 export function QuestionList() {
@@ -40,6 +48,10 @@ export function QuestionList() {
   const [filterTopicId, setFilterTopicId] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
+  const [filterTagId, setFilterTagId] = useState("");
+
+  // Tag options for filters
+  const [knowledgeTagOptions, setKnowledgeTagOptions] = useState<TagOption[]>([]);
 
   // Edit/Create
   const [showForm, setShowForm] = useState(false);
@@ -47,6 +59,7 @@ export function QuestionList() {
 
   useEffect(() => {
     fetchTopics();
+    fetchTagOptions();
   }, []);
 
   const fetchQuestions = useCallback(async () => {
@@ -57,6 +70,7 @@ export function QuestionList() {
       if (filterTopicId) params.set("topic_id", filterTopicId);
       if (filterType) params.set("type", filterType);
       if (filterDifficulty) params.set("difficulty", filterDifficulty);
+      if (filterTagId) params.set("tag_id", filterTagId);
 
       const res = await fetch(`/api/questions?${params.toString()}`);
       const data = await res.json();
@@ -67,7 +81,7 @@ export function QuestionList() {
     } finally {
       setLoading(false);
     }
-  }, [page, filterTopicId, filterType, filterDifficulty]);
+  }, [page, filterTopicId, filterType, filterDifficulty, filterTagId]);
 
   useEffect(() => {
     fetchQuestions();
@@ -90,6 +104,16 @@ export function QuestionList() {
       setFlatTopics(flat);
     } catch (e) {
       console.error("获取知识点失败:", e);
+    }
+  };
+
+  const fetchTagOptions = async () => {
+    try {
+      const res = await fetch(`/api/tags?category_slug=${TAG_CATEGORIES.KNOWLEDGE_POINT}`);
+      const data = await res.json();
+      setKnowledgeTagOptions(data.tags || []);
+    } catch (e) {
+      console.error("获取标签失败:", e);
     }
   };
 
@@ -128,26 +152,43 @@ export function QuestionList() {
     setFilterTopicId("");
     setFilterType("");
     setFilterDifficulty("");
+    setFilterTagId("");
     setPage(1);
   };
 
-  const hasFilters = filterTopicId || filterType || filterDifficulty;
+  const hasFilters = filterTopicId || filterType || filterDifficulty || filterTagId;
 
   return (
     <div>
       {/* 筛选栏 */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* 知识点标签筛选 */}
         <select
-          value={filterTopicId}
-          onChange={(e) => { setFilterTopicId(e.target.value); setPage(1); }}
+          value={filterTagId}
+          onChange={(e) => { setFilterTagId(e.target.value); setFilterTopicId(""); setPage(1); }}
           className="h-8 rounded-lg border border-[#E8EAED] bg-white px-2.5 text-xs text-[#4D5766] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
         >
           <option value="">全部知识点</option>
-          {flatTopics.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.title}
-            </option>
-          ))}
+          {knowledgeTagOptions.filter((t) => !t.parent_id).map((root) => {
+            const children = knowledgeTagOptions.filter((t) => t.parent_id === root.id);
+            if (children.length === 0) {
+              return (
+                <option key={root.id} value={root.id}>
+                  {root.name}
+                </option>
+              );
+            }
+            return (
+              <optgroup key={root.id} label={root.name}>
+                <option value={root.id}>{root.name}（全部）</option>
+                {children.map((child) => (
+                  <option key={child.id} value={child.id}>
+                    {child.name}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
 
         <select
