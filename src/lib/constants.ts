@@ -104,3 +104,12 @@ export const SUBJECTS = [
   "完型",
   "默写",
 ] as const;
+
+// 标签系统 — 维度 slug 常量
+export const TAG_CATEGORIES = {
+  KNOWLEDGE_POINT: "knowledge_point",
+  QUESTION_TYPE: "question_type",
+  DIFFICULTY: "difficulty",
+  SOLUTION_APPROACH: "solution_approach",
+  GRADE: "grade",
+} as const;

@@ -497,6 +497,82 @@ export interface Database {
         };
       };
     };
+      question_tag_categories: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          sort_order: number;
+          allow_multiple: boolean;
+          is_system: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          sort_order?: number;
+          allow_multiple?: boolean;
+          is_system?: boolean;
+        };
+        Update: {
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          sort_order?: number;
+          allow_multiple?: boolean;
+        };
+      };
+      question_tags: {
+        Row: {
+          id: string;
+          category_id: string;
+          name: string;
+          slug: string | null;
+          parent_id: string | null;
+          sort_order: number;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category_id: string;
+          name: string;
+          slug?: string | null;
+          parent_id?: string | null;
+          sort_order?: number;
+          metadata?: Record<string, unknown> | null;
+        };
+        Update: {
+          category_id?: string;
+          name?: string;
+          slug?: string | null;
+          parent_id?: string | null;
+          sort_order?: number;
+          metadata?: Record<string, unknown> | null;
+        };
+      };
+      question_tag_links: {
+        Row: {
+          id: string;
+          question_id: string;
+          tag_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          tag_id: string;
+        };
+        Update: {
+          question_id?: string;
+          tag_id?: string;
+        };
+      };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: {
