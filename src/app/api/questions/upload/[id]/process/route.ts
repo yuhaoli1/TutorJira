@@ -153,9 +153,10 @@ export async function POST(
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
 
-      // ====== 第二轮：OCR 纠错 ======
-      // 用文字模型检查提取结果，修复乱码/错字
-      const correctedQuestions = await correctOCRErrors(result.questions);
+      // ====== 第二轮：OCR 纠错（默认关闭，设 ENABLE_OCR_CORRECTION=true 开启）======
+      const correctedQuestions = process.env.ENABLE_OCR_CORRECTION === "true"
+        ? await correctOCRErrors(result.questions)
+        : result.questions;
 
       // 自动将 AI 返回的字段映射到标签 ID（动态遍历所有维度）
       // AI 返回的字段 → 维度匹配，由 TAG_CATEGORY_UI.aiFieldKey 驱动
