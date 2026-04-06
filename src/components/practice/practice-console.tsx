@@ -90,11 +90,11 @@ export function PracticeConsole({
         }
         setQuestions(allQuestions);
       } else {
-        // Fetch questions for all topic IDs
+        // Fetch questions for all tag IDs (knowledge point tags)
         const allQuestions: Question[] = [];
-        for (const topicId of topicIds) {
+        for (const tagId of topicIds) {
           const params = new URLSearchParams({
-            topic_id: topicId,
+            tag_id: tagId,
             page_size: "50",
           });
           if (difficulty) params.set("difficulty", String(difficulty));

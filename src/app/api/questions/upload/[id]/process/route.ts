@@ -44,20 +44,24 @@ export async function POST(
     try {
       const provider = getAIProvider();
 
-      // 获取所有知识点，传给 AI 做自动匹配
-      const { data: allTopics } = await supabase
-        .from("knowledge_topics")
-        .select("id, title")
+      // 获取知识点标签，传给 AI 做自动匹配
+      const { data: knowledgeTags } = await supabase
+        .from("question_tags")
+        .select("id, name, slug, category_id, question_tag_categories(slug)")
         .order("sort_order");
 
+      const kpTags = (knowledgeTags || []).filter(
+        (t) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug === "knowledge_point"
+      );
+
       // 去掉 "第X讲：" 前缀，让 AI 更容易匹配
-      const stripPrefix = (title: string) => title.replace(/^第\d+讲[：:]/, "");
-      const topicNames = (allTopics || []).map((t: { title: string }) => stripPrefix(t.title));
-      // 建立两个映射：精确匹配 + 去前缀匹配
-      const topicMap = new Map<string, string>();
-      for (const t of (allTopics || []) as { id: string; title: string }[]) {
-        topicMap.set(t.title, t.id);
-        topicMap.set(stripPrefix(t.title), t.id);
+      const stripPrefix = (name: string) => name.replace(/^第\d+讲[：:]/, "");
+      const topicNames = kpTags.map((t) => stripPrefix(t.name));
+      // 建立映射：知识点名称 → tag ID
+      const tagMap = new Map<string, string>();
+      for (const t of kpTags) {
+        tagMap.set(t.name, t.id);
+        tagMap.set(stripPrefix(t.name), t.id);
       }
 
       let result;
@@ -131,12 +135,14 @@ export async function POST(
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
 
-      // 根据 AI 返回的 suggested_topic 自动匹配 topic_id
+      // 根据 AI 返回的 suggested_topic 自动匹配知识点标签
       const questionsWithTopics = result.questions.map((q) => {
-        if (q.suggested_topic && topicMap.has(q.suggested_topic)) {
-          return { ...q, topic_id: topicMap.get(q.suggested_topic) };
-        }
-        return q;
+        const matchedTagId = q.suggested_topic ? tagMap.get(q.suggested_topic) : undefined;
+        return {
+          ...q,
+          topic_id: matchedTagId || undefined, // backward compat
+          matched_knowledge_tag_id: matchedTagId || undefined,
+        };
       });
 
       // 保存提取结果

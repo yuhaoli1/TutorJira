@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { TASK_TYPES, TASK_PRIORITIES, QUESTION_TYPES, DIFFICULTY_LABELS, RECURRENCE_TYPES, WEEKDAYS, TAG_CATEGORIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { LabelPicker } from "./label-picker";
-import { TagBadges } from "@/components/questions/tag-badges";
+import { TagBadges, type Tag } from "@/components/questions/tag-badges";
 import type { TaskType, TaskPriority, RecurrenceType, QuestionType } from "@/lib/supabase/types";
 
 interface Student {
@@ -76,10 +76,17 @@ export function TaskCreatePanel({
       const res = await fetch(`/api/questions?${params}`);
       const data = await res.json();
       const selectedIds = new Set(selectedQuestions.map((q) => q.id));
+      interface APIQuestion {
+        id: string;
+        type: QuestionType;
+        content: { stem: string };
+        knowledge_topics?: { title: string } | null;
+        tags?: unknown[];
+      }
       setAvailableQuestions(
-        ((data.questions || []) as any[])
-          .filter((q: any) => !selectedIds.has(q.id))
-          .map((q: any) => ({ id: q.id, type: q.type, stem: q.content.stem, topic: q.knowledge_topics?.title, tags: q.tags }))
+        ((data.questions || []) as APIQuestion[])
+          .filter((q) => !selectedIds.has(q.id))
+          .map((q) => ({ id: q.id, type: q.type, stem: q.content.stem, topic: q.knowledge_topics?.title, tags: q.tags }))
       );
     } catch {
       setAvailableQuestions([]);
@@ -358,8 +365,8 @@ export function TaskCreatePanel({
                 <div key={q.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
                   <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
                   <div className="flex-1 min-w-0">
-                    {q.tags && (q.tags as any[]).length > 0 ? (
-                      <div className="mb-0.5"><TagBadges tags={q.tags as any} /></div>
+                    {q.tags && (q.tags as Tag[]).length > 0 ? (
+                      <div className="mb-0.5"><TagBadges tags={q.tags as Tag[]} /></div>
                     ) : (
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
@@ -452,8 +459,8 @@ export function TaskCreatePanel({
                       className="cursor-pointer flex items-start gap-2 rounded-xl bg-white p-3 border border-[#E8EAED] hover:border-[#163300] transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        {q.tags && (q.tags as any[]).length > 0 ? (
-                          <div className="mb-0.5"><TagBadges tags={q.tags as any} /></div>
+                        {q.tags && (q.tags as Tag[]).length > 0 ? (
+                          <div className="mb-0.5"><TagBadges tags={q.tags as Tag[]} /></div>
                         ) : (
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${

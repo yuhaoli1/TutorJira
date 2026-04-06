@@ -579,7 +579,7 @@ export async function POST() {
         continue;
       }
 
-      const { error: insertError } = await supabase
+      const { data: newQ, error: insertError } = await supabase
         .from("questions")
         .insert({
           topic_id: topic.id,
@@ -593,12 +593,44 @@ export async function POST() {
           difficulty: question.difficulty,
           source_type: "manual",
           created_by: admin.id,
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertError) {
         errors.push(`${topic.title}: ${insertError.message}`);
-      } else {
+      } else if (newQ) {
         inserted++;
+        // Also create tag links for the knowledge point
+        const { data: kpTag } = await supabase
+          .from("question_tags")
+          .select("id")
+          .eq("metadata->>legacy_topic_id", topic.id)
+          .limit(1)
+          .single();
+        if (kpTag) {
+          await supabase.from("question_tag_links").insert({ question_id: newQ.id, tag_id: kpTag.id });
+        }
+        // Tag for type
+        const { data: typeTag } = await supabase
+          .from("question_tags")
+          .select("id")
+          .eq("slug", question.type)
+          .limit(1)
+          .single();
+        if (typeTag) {
+          await supabase.from("question_tag_links").insert({ question_id: newQ.id, tag_id: typeTag.id });
+        }
+        // Tag for difficulty
+        const { data: diffTag } = await supabase
+          .from("question_tags")
+          .select("id")
+          .eq("slug", String(question.difficulty))
+          .limit(1)
+          .single();
+        if (diffTag) {
+          await supabase.from("question_tag_links").insert({ question_id: newQ.id, tag_id: diffTag.id });
+        }
       }
     }
 

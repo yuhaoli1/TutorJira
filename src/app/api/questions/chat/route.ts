@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "消息不能为空" }, { status: 400 });
     }
 
-    // 获取题库摘要信息（使用标签系统）
+    // 获取题库摘要信息（使用标签系统，限制数据量）
     const [questionsResult, tagLinksResult, tagsResult] = await Promise.all([
-      supabase.from("questions").select("id, content, type, difficulty"),
-      supabase.from("question_tag_links").select("question_id, tag_id"),
+      supabase.from("questions").select("id, content, type, difficulty").limit(500),
+      supabase.from("question_tag_links").select("question_id, tag_id").limit(2000),
       supabase.from("question_tags").select("id, name, slug, parent_id, category_id, question_tag_categories(slug)"),
     ]);
 
