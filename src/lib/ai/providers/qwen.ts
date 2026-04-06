@@ -21,7 +21,8 @@ export class QwenProvider implements AIProvider {
   }
 
   async extractQuestions(request: AIExtractionRequest): Promise<AIExtractionResponse> {
-    const messages = this.buildMessages(request);
+    const systemPrompt = QUESTION_EXTRACTION_SYSTEM_PROMPT(request.topicNames);
+    const messages = this.buildMessages(request, systemPrompt);
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
@@ -32,10 +33,7 @@ export class QwenProvider implements AIProvider {
       body: JSON.stringify({
         model: this.model,
         max_tokens: 4096,
-        messages: [
-          { role: "system", content: QUESTION_EXTRACTION_SYSTEM_PROMPT(request.topicNames) },
-          ...messages,
-        ],
+        messages,
       }),
     });
 
@@ -51,7 +49,9 @@ export class QwenProvider implements AIProvider {
     return { questions, rawResponse: rawText };
   }
 
-  private buildMessages(request: AIExtractionRequest) {
+  private buildMessages(request: AIExtractionRequest, systemPrompt: string) {
+    // Qwen VL models may not support system role for multimodal input,
+    // so we merge the system prompt into the user message.
     if (request.imageBase64 && request.imageMimeType) {
       return [
         {
@@ -65,7 +65,7 @@ export class QwenProvider implements AIProvider {
             },
             {
               type: "text" as const,
-              text: QUESTION_EXTRACTION_USER_PROMPT_IMAGE,
+              text: `${systemPrompt}\n\n${QUESTION_EXTRACTION_USER_PROMPT_IMAGE}`,
             },
           ],
         },
@@ -76,7 +76,7 @@ export class QwenProvider implements AIProvider {
       return [
         {
           role: "user" as const,
-          content: QUESTION_EXTRACTION_USER_PROMPT_TEXT(request.textContent),
+          content: `${systemPrompt}\n\n${QUESTION_EXTRACTION_USER_PROMPT_TEXT(request.textContent)}`,
         },
       ];
     }
