@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { TASK_TYPES, TASK_PRIORITIES, QUESTION_TYPES, DIFFICULTY_LABELS, RECURRENCE_TYPES, WEEKDAYS } from "@/lib/constants";
+import { TASK_TYPES, TASK_PRIORITIES, QUESTION_TYPES, DIFFICULTY_LABELS, RECURRENCE_TYPES, WEEKDAYS, TAG_CATEGORIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { LabelPicker } from "./label-picker";
+import { TagBadges } from "@/components/questions/tag-badges";
 import type { TaskType, TaskPriority, RecurrenceType, QuestionType } from "@/lib/supabase/types";
 
 interface Student {
@@ -33,11 +34,11 @@ export function TaskCreatePanel({
   const [labelIds, setLabelIds] = useState<string[]>([]);
 
   // 关联题目
-  const [selectedQuestions, setSelectedQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string }[]>([]);
+  const [selectedQuestions, setSelectedQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string; tags?: unknown[] }[]>([]);
   const [showQuestionBrowser, setShowQuestionBrowser] = useState(false);
-  const [topics, setTopics] = useState<{ id: string; title: string }[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState("all");
-  const [availableQuestions, setAvailableQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string }[]>([]);
+  const [knowledgeTags, setKnowledgeTags] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+  const [selectedTagId, setSelectedTagId] = useState("all");
+  const [availableQuestions, setAvailableQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string; tags?: unknown[] }[]>([]);
   const [searchingQ, setSearchingQ] = useState(false);
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
 
@@ -61,30 +62,27 @@ export function TaskCreatePanel({
       .then(({ data }) => {
         if (data) setStudents(data);
       });
-    supabase
-      .from("knowledge_topics")
-      .select("id, title")
-      .order("sort_order")
-      .then(({ data }) => {
-        if (data) setTopics(data);
-      });
+    fetch(`/api/tags?category_slug=${TAG_CATEGORIES.KNOWLEDGE_POINT}`)
+      .then((r) => r.json())
+      .then((d) => setKnowledgeTags(d.tags || []))
+      .catch(() => {});
   }, [supabase]);
 
   const searchQuestions = async () => {
     setSearchingQ(true);
-    let query = supabase
-      .from("questions")
-      .select("id, type, content, difficulty, topic:knowledge_topics(title)")
-      .limit(30);
-    if (selectedTopic !== "all") query = query.eq("topic_id", selectedTopic);
-    const { data } = await query;
-    if (data) {
+    try {
+      const params = new URLSearchParams({ page_size: "30" });
+      if (selectedTagId !== "all") params.set("tag_id", selectedTagId);
+      const res = await fetch(`/api/questions?${params}`);
+      const data = await res.json();
       const selectedIds = new Set(selectedQuestions.map((q) => q.id));
       setAvailableQuestions(
-        (data as any[])
-          .filter((q) => !selectedIds.has(q.id))
-          .map((q) => ({ id: q.id, type: q.type, stem: q.content.stem, topic: q.topic?.title }))
+        ((data.questions || []) as any[])
+          .filter((q: any) => !selectedIds.has(q.id))
+          .map((q: any) => ({ id: q.id, type: q.type, stem: q.content.stem, topic: q.knowledge_topics?.title, tags: q.tags }))
       );
+    } catch {
+      setAvailableQuestions([]);
     }
     setSearchingQ(false);
   };
@@ -360,16 +358,20 @@ export function TaskCreatePanel({
                 <div key={q.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
                   <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                        q.type === "choice" ? "bg-blue-50 text-blue-600"
-                          : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
-                          : "bg-purple-50 text-purple-600"
-                      }`}>
-                        {QUESTION_TYPES[q.type]}
-                      </span>
-                      {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
-                    </div>
+                    {q.tags && (q.tags as any[]).length > 0 ? (
+                      <div className="mb-0.5"><TagBadges tags={q.tags as any} /></div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                          q.type === "choice" ? "bg-blue-50 text-blue-600"
+                            : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
+                            : "bg-purple-50 text-purple-600"
+                        }`}>
+                          {QUESTION_TYPES[q.type]}
+                        </span>
+                        {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
+                      </div>
+                    )}
                     <p className="text-[13px] text-[#2E3338] line-clamp-1">{q.stem}</p>
                   </div>
                   <button
@@ -409,14 +411,21 @@ export function TaskCreatePanel({
             <div className="rounded-xl border border-[#E8EAED] p-3 space-y-3 bg-[#FAFAFA]">
               <div className="flex gap-2">
                 <select
-                  value={selectedTopic}
-                  onChange={(e) => setSelectedTopic(e.target.value)}
+                  value={selectedTagId}
+                  onChange={(e) => setSelectedTagId(e.target.value)}
                   className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-2.5 py-1.5 text-[13px] outline-none"
                 >
                   <option value="all">全部知识点</option>
-                  {topics.map((t) => (
-                    <option key={t.id} value={t.id}>{t.title}</option>
-                  ))}
+                  {knowledgeTags.filter((t) => !t.parent_id).map((root) => {
+                    const children = knowledgeTags.filter((t) => t.parent_id === root.id);
+                    if (children.length === 0) return <option key={root.id} value={root.id}>{root.name}</option>;
+                    return (
+                      <optgroup key={root.id} label={root.name}>
+                        <option value={root.id}>{root.name}（全部）</option>
+                        {children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </optgroup>
+                    );
+                  })}
                 </select>
                 <button
                   type="button"
@@ -443,16 +452,20 @@ export function TaskCreatePanel({
                       className="cursor-pointer flex items-start gap-2 rounded-xl bg-white p-3 border border-[#E8EAED] hover:border-[#163300] transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                            q.type === "choice" ? "bg-blue-50 text-blue-600"
-                              : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
-                              : "bg-purple-50 text-purple-600"
-                          }`}>
-                            {QUESTION_TYPES[q.type]}
-                          </span>
-                          {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
-                        </div>
+                        {q.tags && (q.tags as any[]).length > 0 ? (
+                          <div className="mb-0.5"><TagBadges tags={q.tags as any} /></div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                              q.type === "choice" ? "bg-blue-50 text-blue-600"
+                                : q.type === "fill_blank" ? "bg-amber-50 text-amber-600"
+                                : "bg-purple-50 text-purple-600"
+                            }`}>
+                              {QUESTION_TYPES[q.type]}
+                            </span>
+                            {q.topic && <span className="text-[10px] text-[#B4BCC8]">{q.topic}</span>}
+                          </div>
+                        )}
                         <p className="text-[13px] text-[#2E3338] line-clamp-2">{q.stem}</p>
                       </div>
                       <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ 添加</span>

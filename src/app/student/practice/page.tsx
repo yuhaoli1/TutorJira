@@ -13,38 +13,56 @@ export default async function PracticePage() {
     .eq("user_id", user.id)
     .single();
 
-  // Fetch knowledge topics (top-level only, with children count)
-  const { data: topics } = await supabase
-    .from("knowledge_topics")
-    .select("id, title, parent_id, sort_order, subject")
+  // Fetch knowledge point tags (replacing knowledge_topics)
+  const { data: knowledgeTags } = await supabase
+    .from("question_tags")
+    .select("id, name, slug, parent_id, sort_order, metadata, category_id, question_tag_categories(slug)")
     .order("sort_order", { ascending: true });
 
-  // Fetch question counts per topic
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("topic_id");
+  const kpTags = (knowledgeTags || []).filter(
+    (t) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug === "knowledge_point"
+  );
 
-  const topicQuestionCounts: Record<string, number> = {};
-  questions?.forEach((q) => {
-    topicQuestionCounts[q.topic_id] = (topicQuestionCounts[q.topic_id] || 0) + 1;
+  // Fetch question counts per tag
+  const { data: tagLinks } = await supabase
+    .from("question_tag_links")
+    .select("tag_id");
+
+  const tagQuestionCounts: Record<string, number> = {};
+  tagLinks?.forEach((l) => {
+    tagQuestionCounts[l.tag_id] = (tagQuestionCounts[l.tag_id] || 0) + 1;
   });
 
-  // Build topic tree
-  const topLevelTopics = topics?.filter((t) => !t.parent_id) || [];
-  const childTopics = topics?.filter((t) => t.parent_id) || [];
+  // Build topic tree from knowledge point tags
+  const topLevelTags = kpTags.filter((t) => !t.parent_id);
+  const childTags = kpTags.filter((t) => t.parent_id);
 
-  const topicTree = topLevelTopics.map((parent) => {
-    const children = childTopics.filter((c) => c.parent_id === parent.id);
+  const topicTree = topLevelTags.map((parent) => {
+    const children = childTags.filter((c) => c.parent_id === parent.id);
     const totalQuestions = children.reduce(
-      (sum, c) => sum + (topicQuestionCounts[c.id] || 0),
+      (sum, c) => sum + (tagQuestionCounts[c.id] || 0),
       0
-    ) + (topicQuestionCounts[parent.id] || 0);
+    ) + (tagQuestionCounts[parent.id] || 0);
+    const subject = (parent.metadata as { subject?: string } | null)?.subject || "";
     return {
-      ...parent,
-      children,
+      id: parent.id,
+      title: parent.name,
+      parent_id: parent.parent_id,
+      sort_order: parent.sort_order,
+      subject,
+      children: children.map((c) => ({
+        id: c.id,
+        title: c.name,
+        parent_id: c.parent_id,
+        sort_order: c.sort_order,
+        subject: (c.metadata as { subject?: string } | null)?.subject || subject,
+      })),
       totalQuestions,
     };
   });
+
+  // Build topicQuestionCounts compatible map
+  const topicQuestionCounts: Record<string, number> = tagQuestionCounts;
 
   return (
     <div>

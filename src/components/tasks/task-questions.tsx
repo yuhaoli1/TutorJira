@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { QUESTION_TYPES, DIFFICULTY_LABELS } from "@/lib/constants";
+import { QUESTION_TYPES, DIFFICULTY_LABELS, TAG_CATEGORIES } from "@/lib/constants";
 import type { QuestionType } from "@/lib/supabase/types";
+import { TagBadges, type Tag as QuestionTag } from "@/components/questions/tag-badges";
+import { getTypeFromTags, getDifficultyFromTags } from "@/lib/tag-utils";
 
 interface TaskQuestion {
   id: string;
@@ -15,6 +17,7 @@ interface TaskQuestion {
     content: { stem: string; options?: string[]; answer: string; explanation?: string };
     difficulty: number;
     topic: { title: string } | null;
+    tags?: QuestionTag[];
   };
 }
 
@@ -34,8 +37,8 @@ export function TaskQuestionPicker({
 }) {
   const [linked, setLinked] = useState<TaskQuestion[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
-  const [topics, setTopics] = useState<{ id: string; title: string }[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<string>("all");
+  const [knowledgeTags, setKnowledgeTags] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+  const [selectedTagId, setSelectedTagId] = useState<string>("all");
   const [available, setAvailable] = useState<TaskQuestion["question"][]>([]);
   const [searching, setSearching] = useState(false);
   const [showAnswers, setShowAnswers] = useState(initialShowAnswers);
@@ -57,41 +60,54 @@ export function TaskQuestionPicker({
       .order("sort_order");
 
     if (data) {
-      setLinked(data as unknown as TaskQuestion[]);
+      const linked = data as unknown as TaskQuestion[];
+      // Fetch tags for each question
+      const qIds = linked.map((tq) => tq.question.id);
+      if (qIds.length > 0) {
+        const { data: tagLinks } = await supabase
+          .from("question_tag_links")
+          .select("question_id, question_tags(id, name, slug, category_id, question_tag_categories(id, name, slug))")
+          .in("question_id", qIds);
+        if (tagLinks) {
+          const tagMap: Record<string, QuestionTag[]> = {};
+          for (const link of tagLinks) {
+            if (!tagMap[link.question_id]) tagMap[link.question_id] = [];
+            if (link.question_tags) tagMap[link.question_id].push(link.question_tags as unknown as QuestionTag);
+          }
+          for (const tq of linked) {
+            tq.question.tags = tagMap[tq.question.id] || [];
+          }
+        }
+      }
+      setLinked(linked);
     }
   };
 
-  const fetchTopics = async () => {
-    const { data } = await supabase
-      .from("knowledge_topics")
-      .select("id, title")
-      .order("sort_order");
-    if (data) setTopics(data);
+  const fetchKnowledgeTags = async () => {
+    const res = await fetch(`/api/tags?category_slug=${TAG_CATEGORIES.KNOWLEDGE_POINT}`);
+    const data = await res.json();
+    setKnowledgeTags(data.tags || []);
   };
 
   useEffect(() => {
     fetchLinked();
-    fetchTopics();
+    fetchKnowledgeTags();
   }, [taskId]);
 
   const searchQuestions = async () => {
     setSearching(true);
-    let query = supabase
-      .from("questions")
-      .select("id, type, content, difficulty, topic:knowledge_topics(title)")
-      .limit(30);
+    const params = new URLSearchParams({ page_size: "30" });
+    if (selectedTagId !== "all") params.set("tag_id", selectedTagId);
 
-    if (selectedTopic !== "all") {
-      query = query.eq("topic_id", selectedTopic);
-    }
-
-    const { data } = await query;
-    if (data) {
-      // Filter out already linked
+    try {
+      const res = await fetch(`/api/questions?${params}`);
+      const data = await res.json();
       const linkedIds = new Set(linked.map((l) => l.question_id));
       setAvailable(
-        (data as unknown as TaskQuestion["question"][]).filter((q) => !linkedIds.has(q.id))
+        ((data.questions || []) as TaskQuestion["question"][]).filter((q) => !linkedIds.has(q.id))
       );
+    } catch {
+      setAvailable([]);
     }
     setSearching(false);
   };
@@ -163,14 +179,18 @@ export function TaskQuestionPicker({
             <div key={tq.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
               <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
-                    {QUESTION_TYPES[tq.question.type]}
-                  </span>
-                  <span className="text-[10px] text-[#B4BCC8]">
-                    {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
-                  </span>
-                </div>
+                {tq.question.tags && tq.question.tags.length > 0 ? (
+                  <div className="mb-1"><TagBadges tags={tq.question.tags} /></div>
+                ) : (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
+                      {QUESTION_TYPES[tq.question.type]}
+                    </span>
+                    <span className="text-[10px] text-[#B4BCC8]">
+                      {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
+                    </span>
+                  </div>
+                )}
                 <p className="text-[13px] text-[#2E3338] line-clamp-2">{tq.question.content.stem}</p>
               </div>
               {!readOnly && (
@@ -191,14 +211,21 @@ export function TaskQuestionPicker({
         <div className="rounded-xl border border-[#E8EAED] p-3 space-y-3 bg-[#FAFAFA]">
           <div className="flex gap-2">
             <select
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
+              value={selectedTagId}
+              onChange={(e) => setSelectedTagId(e.target.value)}
               className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-2.5 py-1.5 text-[13px] text-[#2E3338] outline-none"
             >
               <option value="all">全部知识点</option>
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>{t.title}</option>
-              ))}
+              {knowledgeTags.filter((t) => !t.parent_id).map((root) => {
+                const children = knowledgeTags.filter((t) => t.parent_id === root.id);
+                if (children.length === 0) return <option key={root.id} value={root.id}>{root.name}</option>;
+                return (
+                  <optgroup key={root.id} label={root.name}>
+                    <option value={root.id}>{root.name}（全部）</option>
+                    {children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </optgroup>
+                );
+              })}
             </select>
             <button
               onClick={searchQuestions}
@@ -222,14 +249,18 @@ export function TaskQuestionPicker({
                   className="cursor-pointer flex items-start gap-2 rounded-xl bg-white p-3 border border-[#E8EAED] hover:border-[#163300] transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[q.type] || ""}`}>
-                        {QUESTION_TYPES[q.type]}
-                      </span>
-                      {q.topic && (
-                        <span className="text-[10px] text-[#B4BCC8]">{q.topic.title}</span>
-                      )}
-                    </div>
+                    {q.tags && q.tags.length > 0 ? (
+                      <div className="mb-1"><TagBadges tags={q.tags} /></div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[q.type] || ""}`}>
+                          {QUESTION_TYPES[q.type]}
+                        </span>
+                        {q.topic && (
+                          <span className="text-[10px] text-[#B4BCC8]">{q.topic.title}</span>
+                        )}
+                      </div>
+                    )}
                     <p className="text-[13px] text-[#2E3338] line-clamp-2">{q.content.stem}</p>
                   </div>
                   <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ 添加</span>
@@ -274,7 +305,28 @@ export function TaskQuestionList({
         .eq("task_id", taskId)
         .order("sort_order");
 
-      if (data) setLinked(data as unknown as TaskQuestion[]);
+      if (data) {
+        const linkedData = data as unknown as TaskQuestion[];
+        // Fetch tags
+        const qIds = linkedData.map((tq) => tq.question.id);
+        if (qIds.length > 0) {
+          const { data: tagLinks } = await supabase
+            .from("question_tag_links")
+            .select("question_id, question_tags(id, name, slug, category_id, question_tag_categories(id, name, slug))")
+            .in("question_id", qIds);
+          if (tagLinks) {
+            const tagMap: Record<string, QuestionTag[]> = {};
+            for (const link of tagLinks) {
+              if (!tagMap[link.question_id]) tagMap[link.question_id] = [];
+              if (link.question_tags) tagMap[link.question_id].push(link.question_tags as unknown as QuestionTag);
+            }
+            for (const tq of linkedData) {
+              tq.question.tags = tagMap[tq.question.id] || [];
+            }
+          }
+        }
+        setLinked(linkedData);
+      }
 
       // 获取提交记录
       const { data: subs } = await supabase
@@ -400,14 +452,18 @@ export function TaskQuestionList({
             <div key={tq.id} className="flex items-start gap-2 rounded-xl bg-[#F4F5F6] p-3">
               <span className="text-xs text-[#B4BCC8] mt-0.5 flex-shrink-0">{i + 1}.</span>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
-                    {QUESTION_TYPES[tq.question.type]}
-                  </span>
-                  <span className="text-[10px] text-[#B4BCC8]">
-                    {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
-                  </span>
-                </div>
+                {tq.question.tags && tq.question.tags.length > 0 ? (
+                  <div className="mb-1"><TagBadges tags={tq.question.tags} /></div>
+                ) : (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColor[tq.question.type] || ""}`}>
+                      {QUESTION_TYPES[tq.question.type]}
+                    </span>
+                    <span className="text-[10px] text-[#B4BCC8]">
+                      {DIFFICULTY_LABELS[tq.question.difficulty as keyof typeof DIFFICULTY_LABELS]}
+                    </span>
+                  </div>
+                )}
                 <p className="text-[13px] text-[#2E3338] line-clamp-2">{tq.question.content.stem}</p>
               </div>
             </div>

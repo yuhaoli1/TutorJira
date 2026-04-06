@@ -17,39 +17,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "消息不能为空" }, { status: 400 });
     }
 
-    // 获取题库摘要信息
-    const [topicsResult, questionsResult] = await Promise.all([
-      supabase
-        .from("knowledge_topics")
-        .select("id, title, parent_id")
-        .order("sort_order"),
-      supabase
-        .from("questions")
-        .select("id, topic_id, content, type, difficulty"),
+    // 获取题库摘要信息（使用标签系统）
+    const [questionsResult, tagLinksResult, tagsResult] = await Promise.all([
+      supabase.from("questions").select("id, content, type, difficulty"),
+      supabase.from("question_tag_links").select("question_id, tag_id"),
+      supabase.from("question_tags").select("id, name, slug, parent_id, category_id, question_tag_categories(slug)"),
     ]);
 
-    const topics = topicsResult.data || [];
     const questions = questionsResult.data || [];
+    const tagLinks = tagLinksResult.data || [];
+    const allTags = tagsResult.data || [];
 
-    // 构建题库上下文
-    const topicSummary = topics
-      .filter((t) => !t.parent_id)
+    // Build tag lookup
+    const knowledgeTags = allTags.filter((t) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug === "knowledge_point");
+    const rootKnowledgeTags = knowledgeTags.filter((t) => !t.parent_id);
+    const childKnowledgeTags = knowledgeTags.filter((t) => t.parent_id);
+
+    // Map question -> tag IDs
+    const qTagMap: Record<string, string[]> = {};
+    for (const link of tagLinks) {
+      if (!qTagMap[link.question_id]) qTagMap[link.question_id] = [];
+      qTagMap[link.question_id].push(link.tag_id);
+    }
+
+    // Build topic summary from knowledge tags
+    const topicSummary = rootKnowledgeTags
       .map((parent) => {
-        const children = topics.filter((t) => t.parent_id === parent.id);
-        const qCount = questions.filter((q) => {
-          return q.topic_id === parent.id || children.some((c) => c.id === q.topic_id);
-        }).length;
-        return `- ${parent.title}（${qCount}题）${children.length > 0 ? `\n  子知识点: ${children.map((c) => c.title).join("、")}` : ""}`;
+        const children = childKnowledgeTags.filter((t) => t.parent_id === parent.id);
+        const allIds = [parent.id, ...children.map((c) => c.id)];
+        const qCount = questions.filter((q) => (qTagMap[q.id] || []).some((tid) => allIds.includes(tid))).length;
+        return `- ${parent.name}（${qCount}题）${children.length > 0 ? `\n  子知识点: ${children.map((c) => c.name).join("、")}` : ""}`;
       })
       .join("\n");
 
-    // 搜索相关题目（基于用户消息中的关键词）
-    const relevantQuestions = findRelevantQuestions(message, questions, topics, 10);
+    // 搜索相关题目
+    const relevantQuestions = findRelevantQuestions(message, questions, knowledgeTags, qTagMap, 10);
     const questionsContext = relevantQuestions
       .map((q, i) => {
         const content = q.content as { stem?: string; options?: string[]; answer?: string; explanation?: string };
-        const topic = topics.find((t) => t.id === q.topic_id);
-        return `题目${i + 1} [${q.type}] [难度${q.difficulty}] [${topic?.title || "未分类"}]
+        const qTags = (qTagMap[q.id] || []).map((tid) => allTags.find((t) => t.id === tid)?.name).filter(Boolean);
+        return `题目${i + 1} [${q.type}] [难度${q.difficulty}] [${qTags.join(", ") || "未分类"}]
 题干: ${content.stem || ""}
 ${content.options ? `选项: ${content.options.join(" | ")}` : ""}
 答案: ${content.answer || "无"}
@@ -125,20 +132,20 @@ ${relevantQuestions.length > 0 ? `与用户问题可能相关的题目：\n${que
 // 简单的关键词匹配找相关题目
 function findRelevantQuestions(
   message: string,
-  questions: { id: string; topic_id: string; content: unknown; type: string; difficulty: number }[],
-  topics: { id: string; title: string; parent_id: string | null }[],
+  questions: { id: string; content: unknown; type: string; difficulty: number }[],
+  knowledgeTags: { id: string; name: string; parent_id: string | null }[],
+  qTagMap: Record<string, string[]>,
   limit: number
 ) {
-  // 找到消息中提到的知识点
-  const matchedTopicIds = new Set<string>();
-  for (const topic of topics) {
-    // 去掉 "第X讲：" 前缀后匹配
-    const cleanTitle = topic.title.replace(/^第\d+讲[：:]/, "");
-    if (message.includes(cleanTitle) || message.includes(topic.title)) {
-      matchedTopicIds.add(topic.id);
-      // 也加入子知识点
-      for (const child of topics.filter((t) => t.parent_id === topic.id)) {
-        matchedTopicIds.add(child.id);
+  // 找到消息中提到的知识点标签
+  const matchedTagIds = new Set<string>();
+  for (const tag of knowledgeTags) {
+    const cleanName = tag.name.replace(/^第\d+讲[：:]/, "");
+    if (message.includes(cleanName) || message.includes(tag.name)) {
+      matchedTagIds.add(tag.id);
+      // 也加入子标签
+      for (const child of knowledgeTags.filter((t) => t.parent_id === tag.id)) {
+        matchedTagIds.add(child.id);
       }
     }
   }
@@ -155,8 +162,8 @@ function findRelevantQuestions(
 
   let filtered = questions;
 
-  if (matchedTopicIds.size > 0) {
-    filtered = filtered.filter((q) => matchedTopicIds.has(q.topic_id));
+  if (matchedTagIds.size > 0) {
+    filtered = filtered.filter((q) => (qTagMap[q.id] || []).some((tid) => matchedTagIds.has(tid)));
   }
   if (targetDifficulty) {
     filtered = filtered.filter((q) => q.difficulty >= targetDifficulty);

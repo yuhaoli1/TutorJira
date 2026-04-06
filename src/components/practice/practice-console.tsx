@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { QUESTION_TYPES, DIFFICULTY_LABELS } from "@/lib/constants";
 import type { QuestionType } from "@/lib/supabase/types";
 import { CheckCircle, XCircle, ArrowRight, Trophy, Loader2 } from "lucide-react";
+import { TagBadges } from "@/components/questions/tag-badges";
+import { getTypeFromTags } from "@/lib/tag-utils";
 
 interface Question {
   id: string;
@@ -16,6 +18,7 @@ interface Question {
   };
   difficulty: number;
   knowledge_topics?: { id: string; title: string } | null;
+  tags?: { id: string; name: string; slug: string | null; category_id: string; question_tag_categories?: { id: string; name: string; slug: string } | null }[];
 }
 
 interface PracticeConsoleProps {
@@ -323,23 +326,27 @@ export function PracticeConsole({
       {/* Question card */}
       <div className="rounded-2xl border border-[#E8EAED] bg-white p-6 mb-4">
         {/* Tags */}
-        <div className="flex items-center gap-2 mb-4">
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              TYPE_COLORS[currentQuestion.type] || "bg-gray-50 text-gray-600"
-            }`}
-          >
-            {QUESTION_TYPES[currentQuestion.type as keyof typeof QUESTION_TYPES]}
-          </span>
-          <span className="text-xs text-[#B4BCC8]">
-            难度 {DIFFICULTY_LABELS[currentQuestion.difficulty as keyof typeof DIFFICULTY_LABELS]}
-          </span>
-          {currentQuestion.knowledge_topics && (
-            <span className="text-xs text-[#B4BCC8]">
-              {currentQuestion.knowledge_topics.title}
+        {currentQuestion.tags && currentQuestion.tags.length > 0 ? (
+          <div className="mb-4"><TagBadges tags={currentQuestion.tags} /></div>
+        ) : (
+          <div className="flex items-center gap-2 mb-4">
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                TYPE_COLORS[currentQuestion.type] || "bg-gray-50 text-gray-600"
+              }`}
+            >
+              {QUESTION_TYPES[currentQuestion.type as keyof typeof QUESTION_TYPES]}
             </span>
-          )}
-        </div>
+            <span className="text-xs text-[#B4BCC8]">
+              难度 {DIFFICULTY_LABELS[currentQuestion.difficulty as keyof typeof DIFFICULTY_LABELS]}
+            </span>
+            {currentQuestion.knowledge_topics && (
+              <span className="text-xs text-[#B4BCC8]">
+                {currentQuestion.knowledge_topics.title}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Stem */}
         <div className="text-base text-[#2E3338] leading-relaxed whitespace-pre-wrap mb-6">

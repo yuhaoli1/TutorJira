@@ -133,6 +133,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fetch tags for each question
+    if (attempts && attempts.length > 0) {
+      const qIds = [...new Set(attempts.map((a: { question_id: string }) => a.question_id))];
+      const { data: tagLinks } = await supabase
+        .from("question_tag_links")
+        .select("question_id, question_tags(id, name, slug, category_id, question_tag_categories(id, name, slug))")
+        .in("question_id", qIds);
+
+      if (tagLinks) {
+        const tagMap: Record<string, unknown[]> = {};
+        for (const link of tagLinks) {
+          if (!tagMap[link.question_id]) tagMap[link.question_id] = [];
+          if (link.question_tags) tagMap[link.question_id].push(link.question_tags);
+        }
+        for (const a of attempts) {
+          const q = (a as Record<string, unknown>).questions as Record<string, unknown> | null;
+          if (q) q.tags = tagMap[a.question_id] || [];
+        }
+      }
+    }
+
     return NextResponse.json({ attempts });
   } catch (error) {
     console.error("获取做题记录失败:", error);

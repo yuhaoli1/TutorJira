@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { QUESTION_TYPES, DIFFICULTY_LABELS } from "@/lib/constants";
 import type { QuestionType } from "@/lib/supabase/types";
 import { RefreshCw, Loader2, CheckCircle, XCircle, Filter } from "lucide-react";
+import { TagBadges } from "@/components/questions/tag-badges";
 
 interface WrongAttempt {
   id: string;
@@ -22,6 +23,7 @@ interface WrongAttempt {
     };
     difficulty: number;
     knowledge_topics: { id: string; title: string } | null;
+    tags?: { id: string; name: string; slug: string | null; category_id: string; question_tag_categories?: { id: string; name: string; slug: string } | null }[];
   };
 }
 
@@ -306,18 +308,24 @@ export function WrongBookList({ studentId }: WrongBookListProps) {
             <div key={attempt.id} className="rounded-xl border border-[#E8EAED] bg-white p-4">
               {/* Tags */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    TYPE_COLORS[q.type] || "bg-gray-50 text-gray-600"
-                  }`}
-                >
-                  {QUESTION_TYPES[q.type as keyof typeof QUESTION_TYPES]}
-                </span>
-                <span className="text-xs text-[#B4BCC8]">
-                  难度 {DIFFICULTY_LABELS[q.difficulty as keyof typeof DIFFICULTY_LABELS]}
-                </span>
-                {q.knowledge_topics && (
-                  <span className="text-xs text-[#B4BCC8]">{q.knowledge_topics.title}</span>
+                {q.tags && q.tags.length > 0 ? (
+                  <TagBadges tags={q.tags} />
+                ) : (
+                  <>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        TYPE_COLORS[q.type] || "bg-gray-50 text-gray-600"
+                      }`}
+                    >
+                      {QUESTION_TYPES[q.type as keyof typeof QUESTION_TYPES]}
+                    </span>
+                    <span className="text-xs text-[#B4BCC8]">
+                      难度 {DIFFICULTY_LABELS[q.difficulty as keyof typeof DIFFICULTY_LABELS]}
+                    </span>
+                    {q.knowledge_topics && (
+                      <span className="text-xs text-[#B4BCC8]">{q.knowledge_topics.title}</span>
+                    )}
+                  </>
                 )}
                 {attempt.source && (
                   <span className="ml-auto text-xs text-[#B4BCC8]">
