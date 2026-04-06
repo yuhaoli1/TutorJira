@@ -4,7 +4,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, Plus, Trash2 } from "lucide-react";
 import { TagSelector } from "./tag-selector";
-import { TAG_CATEGORIES } from "@/lib/constants";
+import { TAG_CATEGORIES, getTagCategoryUI } from "@/lib/constants";
+
+interface TagCategory {
+  id: string;
+  name: string;
+  slug: string;
+  allow_multiple: boolean;
+  sort_order: number;
+}
 
 interface QuestionFormProps {
   question?: {
@@ -38,12 +46,21 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
   const [answer, setAnswer] = useState(question?.content.answer || "");
   const [explanation, setExplanation] = useState(question?.content.explanation || "");
 
-  // Tag-based fields
-  const [knowledgeTags, setKnowledgeTags] = useState<string[]>([]);
-  const [typeTags, setTypeTags] = useState<string[]>([]);
-  const [difficultyTags, setDifficultyTags] = useState<string[]>([]);
-  const [approachTags, setApproachTags] = useState<string[]>([]);
-  const [gradeTags, setGradeTags] = useState<string[]>([]);
+  // Dynamic tag categories & per-category selected IDs
+  const [categories, setCategories] = useState<TagCategory[]>([]);
+  const [tagsByCategory, setTagsByCategory] = useState<Record<string, string[]>>({});
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+
+  // Load tag categories
+  useEffect(() => {
+    fetch("/api/tags/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        setCategories(data.categories || []);
+        setCategoriesLoaded(true);
+      })
+      .catch(() => setCategoriesLoaded(true));
+  }, []);
 
   // Load existing tags when editing
   useEffect(() => {
@@ -58,14 +75,27 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
           if (!byCategory[slug]) byCategory[slug] = [];
           byCategory[slug].push(tag.id);
         }
-        setKnowledgeTags(byCategory[TAG_CATEGORIES.KNOWLEDGE_POINT] || []);
-        setTypeTags(byCategory[TAG_CATEGORIES.QUESTION_TYPE] || []);
-        setDifficultyTags(byCategory[TAG_CATEGORIES.DIFFICULTY] || []);
-        setApproachTags(byCategory[TAG_CATEGORIES.SOLUTION_APPROACH] || []);
-        setGradeTags(byCategory[TAG_CATEGORIES.GRADE] || []);
+        setTagsByCategory(byCategory);
       })
       .catch(() => {});
   }, [question?.id]);
+
+  const updateCategoryTags = (slug: string, ids: string[]) => {
+    setTagsByCategory((prev) => ({ ...prev, [slug]: ids }));
+
+    // Sync legacy type field when question_type tag changes
+    if (slug === TAG_CATEGORIES.QUESTION_TYPE && ids.length > 0) {
+      fetch(`/api/tags?category_slug=${TAG_CATEGORIES.QUESTION_TYPE}`)
+        .then((r) => r.json())
+        .then((d) => {
+          const tag = (d.tags || []).find((t: { id: string }) => t.id === ids[0]);
+          if (tag?.slug && ["choice", "fill_blank", "solution"].includes(tag.slug)) {
+            setType(tag.slug as typeof type);
+          }
+        })
+        .catch(() => {});
+    }
+  };
 
   const handleSave = async () => {
     if (!stem.trim()) {
@@ -77,14 +107,18 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
       return;
     }
 
-    if (knowledgeTags.length === 0) {
-      alert("请选择至少一个知识点");
-      return;
+    // Validate required categories
+    for (const cat of categories) {
+      const ui = getTagCategoryUI(cat.slug, cat.name);
+      if (ui.required && !(tagsByCategory[cat.slug]?.length)) {
+        alert(`请选择${ui.label}`);
+        return;
+      }
     }
 
     setSaving(true);
     try {
-      const allTagIds = [...knowledgeTags, ...typeTags, ...difficultyTags, ...approachTags, ...gradeTags];
+      const allTagIds = Object.values(tagsByCategory).flat();
 
       const body = {
         content: {
@@ -135,63 +169,21 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
         </div>
 
         <div className="p-5 space-y-4">
-          {/* 知识点（标签） */}
-          <TagSelector
-            categorySlug={TAG_CATEGORIES.KNOWLEDGE_POINT}
-            selectedTagIds={knowledgeTags}
-            onChange={setKnowledgeTags}
-            label="知识点 *"
-            placeholder="选择知识点..."
-          />
-
-          {/* 题型（标签） */}
-          <TagSelector
-            categorySlug={TAG_CATEGORIES.QUESTION_TYPE}
-            selectedTagIds={typeTags}
-            onChange={(ids) => {
-              setTypeTags(ids);
-              // Sync legacy type field from tag slug
-              if (ids.length > 0) {
-                fetch(`/api/tags?category_slug=${TAG_CATEGORIES.QUESTION_TYPE}`)
-                  .then((r) => r.json())
-                  .then((d) => {
-                    const tag = (d.tags || []).find((t: { id: string }) => t.id === ids[0]);
-                    if (tag?.slug && ["choice", "fill_blank", "solution"].includes(tag.slug)) {
-                      setType(tag.slug as typeof type);
-                    }
-                  })
-                  .catch(() => {});
-              }
-            }}
-            allowMultiple={false}
-            label="题型 *"
-          />
-
-          {/* 难度（标签） */}
-          <TagSelector
-            categorySlug={TAG_CATEGORIES.DIFFICULTY}
-            selectedTagIds={difficultyTags}
-            onChange={setDifficultyTags}
-            allowMultiple={false}
-            label="难度 *"
-          />
-
-          {/* 解题思路（标签） */}
-          <TagSelector
-            categorySlug={TAG_CATEGORIES.SOLUTION_APPROACH}
-            selectedTagIds={approachTags}
-            onChange={setApproachTags}
-            label="解题思路"
-            placeholder="选择解题思路..."
-          />
-
-          {/* 年级（标签） */}
-          <TagSelector
-            categorySlug={TAG_CATEGORIES.GRADE}
-            selectedTagIds={gradeTags}
-            onChange={setGradeTags}
-            label="适用年级"
-          />
+          {/* 动态标签维度 */}
+          {categoriesLoaded && categories.map((cat) => {
+            const ui = getTagCategoryUI(cat.slug, cat.name);
+            return (
+              <TagSelector
+                key={cat.slug}
+                categorySlug={cat.slug}
+                selectedTagIds={tagsByCategory[cat.slug] || []}
+                onChange={(ids) => updateCategoryTags(cat.slug, ids)}
+                allowMultiple={cat.allow_multiple}
+                label={`${ui.label}${ui.required ? " *" : ""}`}
+                placeholder={ui.placeholder}
+              />
+            );
+          })}
 
           {/* 题干 */}
           <div>

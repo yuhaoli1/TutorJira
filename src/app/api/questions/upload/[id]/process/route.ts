@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
+import { TAG_CATEGORY_UI } from "@/lib/constants";
 
 // POST /api/questions/upload/[id]/process - AI 处理
 export async function POST(
@@ -53,30 +54,31 @@ export async function POST(
       const tags = allTags || [];
       const getCatSlug = (t: typeof tags[0]) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug;
 
-      const kpTags = tags.filter((t) => getCatSlug(t) === "knowledge_point");
-      const typeTags = tags.filter((t) => getCatSlug(t) === "question_type");
-      const diffTags = tags.filter((t) => getCatSlug(t) === "difficulty");
-
-      // 去掉 "第X讲：" 前缀，让 AI 更容易匹配
+      // 动态构建每个维度的匹配映射：catSlug → Map<matchKey, tagId>
+      // 匹配策略：knowledge_point 按 name 匹配，其他维度按 slug 匹配
       const stripPrefix = (name: string) => name.replace(/^第\d+讲[：:]/, "");
-      const topicNames = kpTags.map((t) => stripPrefix(t.name));
+      const tagMapsByCategory = new Map<string, Map<string, string>>();
 
-      // 建立映射：知识点名称 → tag ID
-      const knowledgeTagMap = new Map<string, string>();
-      for (const t of kpTags) {
-        knowledgeTagMap.set(t.name, t.id);
-        knowledgeTagMap.set(stripPrefix(t.name), t.id);
+      for (const t of tags) {
+        const catSlug = getCatSlug(t);
+        if (!catSlug) continue;
+        if (!tagMapsByCategory.has(catSlug)) {
+          tagMapsByCategory.set(catSlug, new Map());
+        }
+        const map = tagMapsByCategory.get(catSlug)!;
+        if (catSlug === "knowledge_point") {
+          // 知识点用 name 匹配（含去前缀版本）
+          map.set(t.name, t.id);
+          map.set(stripPrefix(t.name), t.id);
+        } else {
+          // 其他维度用 slug 匹配
+          if (t.slug) map.set(t.slug, t.id);
+        }
       }
-      // 题型 slug → tag ID
-      const typeTagMap = new Map<string, string>();
-      for (const t of typeTags) {
-        if (t.slug) typeTagMap.set(t.slug, t.id);
-      }
-      // 难度 slug → tag ID (slug is "1"-"5")
-      const diffTagMap = new Map<string, string>();
-      for (const t of diffTags) {
-        if (t.slug) diffTagMap.set(t.slug, t.id);
-      }
+
+      // 知识点名称列表给 AI 参考
+      const kpMap = tagMapsByCategory.get("knowledge_point");
+      const topicNames = kpMap ? [...new Set([...kpMap.keys()])] : [];
 
       let result;
 
@@ -149,25 +151,32 @@ export async function POST(
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
 
-      // 自动将 AI 返回的字段映射到标签 ID
+      // 自动将 AI 返回的字段映射到标签 ID（动态遍历所有维度）
+      // AI 返回的字段 → 维度匹配，由 TAG_CATEGORY_UI.aiFieldKey 驱动
       const questionsWithTopics = result.questions.map((q) => {
         const autoTagIds: string[] = [];
+        const qRecord = q as unknown as Record<string, unknown>;
 
-        // 匹配知识点
-        const knowledgeTagId = q.suggested_topic ? knowledgeTagMap.get(q.suggested_topic) : undefined;
-        if (knowledgeTagId) autoTagIds.push(knowledgeTagId);
+        for (const [catSlug, catMap] of tagMapsByCategory.entries()) {
+          const uiConfig = TAG_CATEGORY_UI[catSlug];
+          if (!uiConfig?.aiFieldKey) continue;
 
-        // 匹配题型
-        const typeTagId = typeTagMap.get(q.type);
-        if (typeTagId) autoTagIds.push(typeTagId);
+          const aiValue = qRecord[uiConfig.aiFieldKey];
+          if (aiValue == null) continue;
 
-        // 匹配难度
-        const diffTagId = diffTagMap.get(String(q.difficulty));
-        if (diffTagId) autoTagIds.push(diffTagId);
+          const matchKey = String(aiValue);
+          const tagId = catMap.get(matchKey);
+          if (tagId) autoTagIds.push(tagId);
+        }
+
+        // backward compat: topic_id
+        const knowledgeTagId = q.suggested_topic
+          ? tagMapsByCategory.get("knowledge_point")?.get(q.suggested_topic)
+          : undefined;
 
         return {
           ...q,
-          topic_id: knowledgeTagId || undefined, // backward compat
+          topic_id: knowledgeTagId || undefined,
           auto_tag_ids: autoTagIds,
         };
       });

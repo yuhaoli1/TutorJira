@@ -113,3 +113,26 @@ export const TAG_CATEGORIES = {
   SOLUTION_APPROACH: "solution_approach",
   GRADE: "grade",
 } as const;
+
+// 标签维度 UI 配置 — 新增维度只需在这里加一行（或不加，会用默认值）
+// label 会覆盖数据库的 name；required 控制保存校验；placeholder 用于选择器
+export interface TagCategoryUIConfig {
+  label: string;
+  required?: boolean;
+  placeholder?: string;
+  /** 用于 AI 自动匹配时的字段映射 key（对应 AI 返回的 JSON key） */
+  aiFieldKey?: string;
+}
+
+export const TAG_CATEGORY_UI: Record<string, TagCategoryUIConfig> = {
+  knowledge_point: { label: "知识点", required: true, placeholder: "选择知识点...", aiFieldKey: "suggested_topic" },
+  question_type: { label: "题型", aiFieldKey: "type" },
+  difficulty: { label: "难度", aiFieldKey: "difficulty" },
+  solution_approach: { label: "解题思路", placeholder: "选择解题思路..." },
+  grade: { label: "适用年级" },
+};
+
+// 获取某个分类的 UI 配置（未知分类返回合理默认值）
+export function getTagCategoryUI(slug: string, dbName?: string): TagCategoryUIConfig {
+  return TAG_CATEGORY_UI[slug] || { label: dbName || slug };
+}

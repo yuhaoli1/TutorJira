@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { QUESTION_TYPES, TAG_CATEGORIES } from "@/lib/constants";
+import { QUESTION_TYPES, getTagCategoryUI } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { TagSelector } from "./tag-selector";
@@ -20,6 +20,15 @@ interface ExtractedQ {
   tag_ids?: string[];
 }
 
+interface TagCategory {
+  id: string;
+  name: string;
+  slug: string;
+  allow_multiple: boolean;
+  sort_order: number;
+  question_tags?: { id: string; name: string; slug: string | null; category_id: string }[];
+}
+
 interface AIReviewPanelProps {
   uploadId: string;
   questions: ExtractedQ[];
@@ -31,41 +40,42 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
   const [saving, setSaving] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
-  // Per-question tag state (indexed by question position)
-  const [questionTags, setQuestionTags] = useState<Record<number, {
-    knowledge: string[];
-    type: string[];
-    difficulty: string[];
-    approach: string[];
-    grade: string[];
-  }>>({});
+  // Dynamic categories loaded from API
+  const [categories, setCategories] = useState<TagCategory[]>([]);
+  // Per-question tags: questionTags[questionIndex][categorySlug] = tagId[]
+  const [questionTags, setQuestionTags] = useState<Record<number, Record<string, string[]>>>({});
   const [tagsLoaded, setTagsLoaded] = useState(false);
 
-  // Load all tags to classify auto_tag_ids into categories
+  // Load all tag categories + tags, then classify auto_tag_ids
   useEffect(() => {
     fetch("/api/tags/categories?include_tags=true")
       .then((r) => r.json())
       .then((data) => {
-        const categories = data.categories || [];
+        const cats: TagCategory[] = data.categories || [];
+        setCategories(cats);
+
         // Build tag_id → category_slug map
         const tagCategoryMap: Record<string, string> = {};
-        for (const cat of categories) {
+        for (const cat of cats) {
           for (const tag of cat.question_tags || []) {
             tagCategoryMap[tag.id] = cat.slug;
           }
         }
 
         // Initialize per-question tags from auto_tag_ids
-        const initial: typeof questionTags = {};
+        const initial: Record<number, Record<string, string[]>> = {};
         questions.forEach((q, i) => {
-          const bucket = { knowledge: [] as string[], type: [] as string[], difficulty: [] as string[], approach: [] as string[], grade: [] as string[] };
+          const bucket: Record<string, string[]> = {};
+          // Init empty arrays for all categories
+          for (const cat of cats) {
+            bucket[cat.slug] = [];
+          }
+          // Classify auto_tag_ids into category buckets
           for (const tagId of q.auto_tag_ids || []) {
             const catSlug = tagCategoryMap[tagId];
-            if (catSlug === "knowledge_point") bucket.knowledge.push(tagId);
-            else if (catSlug === "question_type") bucket.type.push(tagId);
-            else if (catSlug === "difficulty") bucket.difficulty.push(tagId);
-            else if (catSlug === "solution_approach") bucket.approach.push(tagId);
-            else if (catSlug === "grade") bucket.grade.push(tagId);
+            if (catSlug && bucket[catSlug]) {
+              bucket[catSlug].push(tagId);
+            }
           }
           initial[i] = bucket;
         });
@@ -73,12 +83,6 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
         setTagsLoaded(true);
       })
       .catch(() => {
-        // Fallback: empty tags
-        const initial: typeof questionTags = {};
-        questions.forEach((_, i) => {
-          initial[i] = { knowledge: [], type: [], difficulty: [], approach: [], grade: [] };
-        });
-        setQuestionTags(initial);
         setTagsLoaded(true);
       });
   }, []);
@@ -91,10 +95,10 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
     });
   };
 
-  const updateTags = (index: number, category: "knowledge" | "type" | "difficulty" | "approach" | "grade", tagIds: string[]) => {
+  const updateTags = (index: number, categorySlug: string, tagIds: string[]) => {
     setQuestionTags((prev) => ({
       ...prev,
-      [index]: { ...prev[index], [category]: tagIds },
+      [index]: { ...(prev[index] || {}), [categorySlug]: tagIds },
     }));
   };
 
@@ -104,25 +108,26 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
   };
 
   const handleSaveAll = async () => {
-    // Validate: each question needs at least a knowledge tag
+    // Validate required categories
     for (let i = 0; i < questions.length; i++) {
-      const tags = questionTags[i];
-      if (!tags?.knowledge.length && !questions[i].topic_id) {
-        alert(`第 ${i + 1} 题尚未选择知识点`);
-        setExpandedIndex(i);
-        return;
+      const tags = questionTags[i] || {};
+      for (const cat of categories) {
+        const ui = getTagCategoryUI(cat.slug, cat.name);
+        if (ui.required && !(tags[cat.slug]?.length)) {
+          alert(`第 ${i + 1} 题尚未选择${ui.label}`);
+          setExpandedIndex(i);
+          return;
+        }
       }
     }
 
     setSaving(true);
     try {
-      // Build questions with tag_ids
+      // Collect all tag IDs per question
       const questionsWithTags = questions.map((q, i) => {
-        const tags = questionTags[i] || { knowledge: [], type: [], difficulty: [], approach: [], grade: [] };
-        return {
-          ...q,
-          tag_ids: [...tags.knowledge, ...tags.type, ...tags.difficulty, ...tags.approach, ...tags.grade],
-        };
+        const tags = questionTags[i] || {};
+        const allTagIds = Object.values(tags).flat();
+        return { ...q, tag_ids: allTagIds };
       });
 
       const res = await fetch(`/api/questions/upload/${uploadId}/confirm`, {
@@ -178,7 +183,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
 
       {questions.map((q, index) => {
         const isExpanded = expandedIndex === index;
-        const tags = questionTags[index] || { knowledge: [], type: [], difficulty: [] };
+        const tags = questionTags[index] || {};
         return (
           <div
             key={index}
@@ -210,53 +215,26 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
             </div>
 
             {/* 展开编辑 */}
-            {isExpanded && (
+            {isExpanded && tagsLoaded && (
               <div className="px-4 pb-4 space-y-3 border-t border-[#E8EAED]">
-                {/* 知识点（标签） */}
-                <div className="pt-3">
-                  <TagSelector
-                    categorySlug={TAG_CATEGORIES.KNOWLEDGE_POINT}
-                    selectedTagIds={tags.knowledge}
-                    onChange={(ids) => updateTags(index, "knowledge", ids)}
-                    label={`知识点 *${q.suggested_topic ? ` (AI 建议: ${q.suggested_topic})` : ""}`}
-                    placeholder="选择知识点..."
-                  />
-                </div>
-
-                {/* 题型（标签） */}
-                <TagSelector
-                  categorySlug={TAG_CATEGORIES.QUESTION_TYPE}
-                  selectedTagIds={tags.type}
-                  onChange={(ids) => updateTags(index, "type", ids)}
-                  allowMultiple={false}
-                  label="题型"
-                />
-
-                {/* 难度（标签） */}
-                <TagSelector
-                  categorySlug={TAG_CATEGORIES.DIFFICULTY}
-                  selectedTagIds={tags.difficulty}
-                  onChange={(ids) => updateTags(index, "difficulty", ids)}
-                  allowMultiple={false}
-                  label="难度"
-                />
-
-                {/* 解题思路（标签） */}
-                <TagSelector
-                  categorySlug={TAG_CATEGORIES.SOLUTION_APPROACH}
-                  selectedTagIds={tags.approach}
-                  onChange={(ids) => updateTags(index, "approach", ids)}
-                  label="解题思路"
-                  placeholder="选择解题思路..."
-                />
-
-                {/* 年级（标签） */}
-                <TagSelector
-                  categorySlug={TAG_CATEGORIES.GRADE}
-                  selectedTagIds={tags.grade}
-                  onChange={(ids) => updateTags(index, "grade", ids)}
-                  label="适用年级"
-                />
+                {/* 动态标签维度 */}
+                {categories.map((cat, catIdx) => {
+                  const ui = getTagCategoryUI(cat.slug, cat.name);
+                  return (
+                    <div key={cat.slug} className={catIdx === 0 ? "pt-3" : undefined}>
+                      <TagSelector
+                        categorySlug={cat.slug}
+                        selectedTagIds={tags[cat.slug] || []}
+                        onChange={(ids) => updateTags(index, cat.slug, ids)}
+                        allowMultiple={cat.allow_multiple}
+                        label={`${ui.label}${ui.required ? " *" : ""}${
+                          catIdx === 0 && q.suggested_topic ? ` (AI 建议: ${q.suggested_topic})` : ""
+                        }`}
+                        placeholder={ui.placeholder}
+                      />
+                    </div>
+                  );
+                })}
 
                 {/* 题干 */}
                 <div>
