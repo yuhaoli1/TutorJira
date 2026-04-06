@@ -4,15 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { QuestionCard } from "./question-card";
 import { QuestionForm } from "./question-form";
 import { QUESTION_TYPES, DIFFICULTY_LABELS, TAG_CATEGORIES } from "@/lib/constants";
-import { Loader2, Plus, Search, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Topic {
-  id: string;
-  title: string;
-  parent_id: string | null;
-  children?: Topic[];
-}
 
 interface TagOption {
   id: string;
@@ -23,7 +16,6 @@ interface TagOption {
 
 interface Question {
   id: string;
-  topic_id: string;
   type: "choice" | "fill_blank" | "solution";
   content: {
     stem: string;
@@ -38,14 +30,11 @@ interface Question {
 
 export function QuestionList() {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [flatTopics, setFlatTopics] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
 
   // Filters
-  const [filterTopicId, setFilterTopicId] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
   const [filterTagId, setFilterTagId] = useState("");
@@ -58,7 +47,6 @@ export function QuestionList() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
-    fetchTopics();
     fetchTagOptions();
   }, []);
 
@@ -67,7 +55,6 @@ export function QuestionList() {
     try {
       const params = new URLSearchParams();
       params.set("page", String(page));
-      if (filterTopicId) params.set("topic_id", filterTopicId);
       if (filterType) params.set("type", filterType);
       if (filterDifficulty) params.set("difficulty", filterDifficulty);
       if (filterTagId) params.set("tag_id", filterTagId);
@@ -81,31 +68,11 @@ export function QuestionList() {
     } finally {
       setLoading(false);
     }
-  }, [page, filterTopicId, filterType, filterDifficulty, filterTagId]);
+  }, [page, filterType, filterDifficulty, filterTagId]);
 
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
-
-  const fetchTopics = async () => {
-    try {
-      const res = await fetch("/api/topics");
-      const data = await res.json();
-      setTopics(data.topics || []);
-      // Flatten for dropdown
-      const flat: { id: string; title: string }[] = [];
-      const flatten = (nodes: Topic[]) => {
-        for (const n of nodes) {
-          flat.push({ id: n.id, title: n.title });
-          if (n.children) flatten(n.children);
-        }
-      };
-      flatten(data.topics || []);
-      setFlatTopics(flat);
-    } catch (e) {
-      console.error("获取知识点失败:", e);
-    }
-  };
 
   const fetchTagOptions = async () => {
     try {
@@ -149,14 +116,13 @@ export function QuestionList() {
   };
 
   const clearFilters = () => {
-    setFilterTopicId("");
     setFilterType("");
     setFilterDifficulty("");
     setFilterTagId("");
     setPage(1);
   };
 
-  const hasFilters = filterTopicId || filterType || filterDifficulty || filterTagId;
+  const hasFilters = filterType || filterDifficulty || filterTagId;
 
   return (
     <div>
@@ -165,7 +131,7 @@ export function QuestionList() {
         {/* 知识点标签筛选 */}
         <select
           value={filterTagId}
-          onChange={(e) => { setFilterTagId(e.target.value); setFilterTopicId(""); setPage(1); }}
+          onChange={(e) => { setFilterTagId(e.target.value); setPage(1); }}
           className="h-8 rounded-lg border border-[#E8EAED] bg-white px-2.5 text-xs text-[#4D5766] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
         >
           <option value="">全部知识点</option>
@@ -289,7 +255,7 @@ export function QuestionList() {
       {showForm && (
         <QuestionForm
           question={editingQuestion}
-          topics={flatTopics}
+          topics={[]}
           onClose={handleFormClose}
           onSaved={handleFormSaved}
         />

@@ -9,7 +9,7 @@ import { TAG_CATEGORIES } from "@/lib/constants";
 interface QuestionFormProps {
   question?: {
     id: string;
-    topic_id: string;
+    topic_id?: string;
     type: "choice" | "fill_blank" | "solution";
     content: {
       stem: string;
@@ -20,19 +20,17 @@ interface QuestionFormProps {
     difficulty: number;
     tag_ids?: string[];
   } | null;
-  topics: { id: string; title: string }[];
+  topics?: { id: string; title: string }[]; // deprecated, kept for compat
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFormProps) {
+export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) {
   const isEditing = !!question;
   const [saving, setSaving] = useState(false);
 
-  // Legacy fields (still used for backward compat)
-  const [topicId, setTopicId] = useState(question?.topic_id || "");
+  // Type is still needed for conditional rendering (showing choice options)
   const [type, setType] = useState<"choice" | "fill_blank" | "solution">(question?.type || "solution");
-  const [difficulty, setDifficulty] = useState(question?.difficulty || 3);
 
   // Content fields
   const [stem, setStem] = useState(question?.content.stem || "");
