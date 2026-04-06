@@ -47,15 +47,16 @@ export async function POST(
 
     // 批量插入题目
     const insertData = questions.map((q: {
-      topic_id: string;
+      topic_id?: string;
       type: string;
       stem: string;
       options?: string[];
       answer: string;
       explanation?: string;
       difficulty: number;
+      tag_ids?: string[];
     }) => ({
-      topic_id: q.topic_id,
+      topic_id: q.topic_id || null,
       type: q.type as "choice" | "fill_blank" | "solution",
       content: {
         stem: q.stem,
@@ -79,6 +80,21 @@ export async function POST(
         { error: "保存题目失败: " + insertError.message },
         { status: 500 }
       );
+    }
+
+    // Create tag links for each inserted question
+    if (inserted) {
+      const allTagLinks: { question_id: string; tag_id: string }[] = [];
+      for (let i = 0; i < inserted.length; i++) {
+        const q = questions[i];
+        const tagIds: string[] = q.tag_ids || [];
+        for (const tagId of tagIds) {
+          allTagLinks.push({ question_id: inserted[i].id, tag_id: tagId });
+        }
+      }
+      if (allTagLinks.length > 0) {
+        await supabase.from("question_tag_links").insert(allTagLinks);
+      }
     }
 
     // 更新上传记录的题目数量

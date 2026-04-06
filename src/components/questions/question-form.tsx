@@ -79,8 +79,7 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
       return;
     }
 
-    // Require at least one knowledge tag or legacy topic
-    if (knowledgeTags.length === 0 && !topicId) {
+    if (knowledgeTags.length === 0) {
       alert("请选择至少一个知识点");
       return;
     }
@@ -90,15 +89,12 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
       const allTagIds = [...knowledgeTags, ...typeTags, ...difficultyTags, ...approachTags, ...gradeTags];
 
       const body = {
-        topic_id: topicId || undefined,
-        type,
         content: {
           stem: stem.trim(),
           options: type === "choice" ? options.filter((o) => o.trim()) : undefined,
           answer: answer.trim(),
           explanation: explanation.trim() || undefined,
         },
-        difficulty,
         tag_ids: allTagIds,
       };
 
@@ -115,14 +111,6 @@ export function QuestionForm({ question, topics, onClose, onSaved }: QuestionFor
           });
 
       if (res.ok) {
-        // Save tags via the tag link API
-        if (isEditing && allTagIds.length > 0) {
-          await fetch(`/api/questions/${question.id}/tags`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tag_ids: allTagIds }),
-          });
-        }
         onSaved();
       } else {
         const data = await res.json();

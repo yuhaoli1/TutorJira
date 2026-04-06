@@ -117,30 +117,43 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { topic_id, type, content, difficulty, tag_ids } = body;
+    const { content, tag_ids } = body;
 
-    if (!type || !content || !content.stem || !content.answer) {
+    if (!content || !content.stem || !content.answer) {
       return NextResponse.json(
-        { error: "缺少必填字段：type, content.stem, content.answer" },
+        { error: "缺少必填字段：content.stem, content.answer" },
         { status: 400 }
       );
     }
 
-    // topic_id is now optional when using tag system
-    if (!topic_id && (!tag_ids || tag_ids.length === 0)) {
+    if (!tag_ids || tag_ids.length === 0) {
       return NextResponse.json(
-        { error: "请选择至少一个知识点标签或传统知识点" },
+        { error: "请选择至少一个标签" },
         { status: 400 }
       );
+    }
+
+    // Derive legacy fields from tags for backward compat
+    const { data: tagDetails } = await supabase
+      .from("question_tags")
+      .select("slug, question_tag_categories(slug)")
+      .in("id", tag_ids);
+
+    let derivedType = "solution";
+    let derivedDifficulty = 3;
+    for (const tag of tagDetails || []) {
+      const catSlug = (tag.question_tag_categories as unknown as { slug: string } | null)?.slug;
+      if (catSlug === "question_type" && tag.slug) derivedType = tag.slug;
+      if (catSlug === "difficulty" && tag.slug) derivedDifficulty = parseInt(tag.slug) || 3;
     }
 
     const { data: question, error } = await supabase
       .from("questions")
       .insert({
-        topic_id: topic_id || null,
-        type,
+        topic_id: null,
+        type: derivedType,
         content,
-        difficulty: difficulty || 3,
+        difficulty: derivedDifficulty,
         source_type: "manual",
         created_by: user.id,
       })
@@ -151,14 +164,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Create tag links if tag_ids provided
-    if (tag_ids && tag_ids.length > 0 && question) {
-      const tagLinks = tag_ids.map((tagId: string) => ({
-        question_id: question.id,
-        tag_id: tagId,
-      }));
-      await supabase.from("question_tag_links").insert(tagLinks);
-    }
+    // Create tag links
+    const tagLinks = tag_ids.map((tagId: string) => ({
+      question_id: question.id,
+      tag_id: tagId,
+    }));
+    await supabase.from("question_tag_links").insert(tagLinks);
 
     return NextResponse.json({ question });
   } catch (error) {
