@@ -15,7 +15,8 @@ interface ExtractedQ {
   difficulty: number;
   topic_id?: string;
   suggested_topic?: string;
-  // Tag-based fields
+  // Auto-matched tag IDs from AI processing
+  auto_tag_ids?: string[];
   tag_ids?: string[];
 }
 
@@ -35,15 +36,51 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
     knowledge: string[];
     type: string[];
     difficulty: string[];
+    approach: string[];
+    grade: string[];
   }>>({});
+  const [tagsLoaded, setTagsLoaded] = useState(false);
 
-  // Initialize tag state from questions
+  // Load all tags to classify auto_tag_ids into categories
   useEffect(() => {
-    const initial: typeof questionTags = {};
-    questions.forEach((_, i) => {
-      initial[i] = { knowledge: [], type: [], difficulty: [] };
-    });
-    setQuestionTags(initial);
+    fetch("/api/tags/categories?include_tags=true")
+      .then((r) => r.json())
+      .then((data) => {
+        const categories = data.categories || [];
+        // Build tag_id → category_slug map
+        const tagCategoryMap: Record<string, string> = {};
+        for (const cat of categories) {
+          for (const tag of cat.question_tags || []) {
+            tagCategoryMap[tag.id] = cat.slug;
+          }
+        }
+
+        // Initialize per-question tags from auto_tag_ids
+        const initial: typeof questionTags = {};
+        questions.forEach((q, i) => {
+          const bucket = { knowledge: [] as string[], type: [] as string[], difficulty: [] as string[], approach: [] as string[], grade: [] as string[] };
+          for (const tagId of q.auto_tag_ids || []) {
+            const catSlug = tagCategoryMap[tagId];
+            if (catSlug === "knowledge_point") bucket.knowledge.push(tagId);
+            else if (catSlug === "question_type") bucket.type.push(tagId);
+            else if (catSlug === "difficulty") bucket.difficulty.push(tagId);
+            else if (catSlug === "solution_approach") bucket.approach.push(tagId);
+            else if (catSlug === "grade") bucket.grade.push(tagId);
+          }
+          initial[i] = bucket;
+        });
+        setQuestionTags(initial);
+        setTagsLoaded(true);
+      })
+      .catch(() => {
+        // Fallback: empty tags
+        const initial: typeof questionTags = {};
+        questions.forEach((_, i) => {
+          initial[i] = { knowledge: [], type: [], difficulty: [], approach: [], grade: [] };
+        });
+        setQuestionTags(initial);
+        setTagsLoaded(true);
+      });
   }, []);
 
   const updateQuestion = (index: number, updates: Partial<ExtractedQ>) => {
@@ -54,7 +91,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
     });
   };
 
-  const updateTags = (index: number, category: "knowledge" | "type" | "difficulty", tagIds: string[]) => {
+  const updateTags = (index: number, category: "knowledge" | "type" | "difficulty" | "approach" | "grade", tagIds: string[]) => {
     setQuestionTags((prev) => ({
       ...prev,
       [index]: { ...prev[index], [category]: tagIds },
@@ -81,10 +118,10 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
     try {
       // Build questions with tag_ids
       const questionsWithTags = questions.map((q, i) => {
-        const tags = questionTags[i] || { knowledge: [], type: [], difficulty: [] };
+        const tags = questionTags[i] || { knowledge: [], type: [], difficulty: [], approach: [], grade: [] };
         return {
           ...q,
-          tag_ids: [...tags.knowledge, ...tags.type, ...tags.difficulty],
+          tag_ids: [...tags.knowledge, ...tags.type, ...tags.difficulty, ...tags.approach, ...tags.grade],
         };
       });
 
@@ -202,6 +239,23 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   onChange={(ids) => updateTags(index, "difficulty", ids)}
                   allowMultiple={false}
                   label="难度"
+                />
+
+                {/* 解题思路（标签） */}
+                <TagSelector
+                  categorySlug={TAG_CATEGORIES.SOLUTION_APPROACH}
+                  selectedTagIds={tags.approach}
+                  onChange={(ids) => updateTags(index, "approach", ids)}
+                  label="解题思路"
+                  placeholder="选择解题思路..."
+                />
+
+                {/* 年级（标签） */}
+                <TagSelector
+                  categorySlug={TAG_CATEGORIES.GRADE}
+                  selectedTagIds={tags.grade}
+                  onChange={(ids) => updateTags(index, "grade", ids)}
+                  label="适用年级"
                 />
 
                 {/* 题干 */}

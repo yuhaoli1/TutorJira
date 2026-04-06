@@ -44,24 +44,38 @@ export async function POST(
     try {
       const provider = getAIProvider();
 
-      // 获取知识点标签，传给 AI 做自动匹配
-      const { data: knowledgeTags } = await supabase
+      // 获取所有标签，用于 AI 匹配和自动打标
+      const { data: allTags } = await supabase
         .from("question_tags")
         .select("id, name, slug, category_id, question_tag_categories(slug)")
         .order("sort_order");
 
-      const kpTags = (knowledgeTags || []).filter(
-        (t) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug === "knowledge_point"
-      );
+      const tags = allTags || [];
+      const getCatSlug = (t: typeof tags[0]) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug;
+
+      const kpTags = tags.filter((t) => getCatSlug(t) === "knowledge_point");
+      const typeTags = tags.filter((t) => getCatSlug(t) === "question_type");
+      const diffTags = tags.filter((t) => getCatSlug(t) === "difficulty");
 
       // 去掉 "第X讲：" 前缀，让 AI 更容易匹配
       const stripPrefix = (name: string) => name.replace(/^第\d+讲[：:]/, "");
       const topicNames = kpTags.map((t) => stripPrefix(t.name));
+
       // 建立映射：知识点名称 → tag ID
-      const tagMap = new Map<string, string>();
+      const knowledgeTagMap = new Map<string, string>();
       for (const t of kpTags) {
-        tagMap.set(t.name, t.id);
-        tagMap.set(stripPrefix(t.name), t.id);
+        knowledgeTagMap.set(t.name, t.id);
+        knowledgeTagMap.set(stripPrefix(t.name), t.id);
+      }
+      // 题型 slug → tag ID
+      const typeTagMap = new Map<string, string>();
+      for (const t of typeTags) {
+        if (t.slug) typeTagMap.set(t.slug, t.id);
+      }
+      // 难度 slug → tag ID (slug is "1"-"5")
+      const diffTagMap = new Map<string, string>();
+      for (const t of diffTags) {
+        if (t.slug) diffTagMap.set(t.slug, t.id);
       }
 
       let result;
@@ -135,13 +149,26 @@ export async function POST(
         throw new Error(`暂不支持 ${upload.file_type} 类型文件的AI处理`);
       }
 
-      // 根据 AI 返回的 suggested_topic 自动匹配知识点标签
+      // 自动将 AI 返回的字段映射到标签 ID
       const questionsWithTopics = result.questions.map((q) => {
-        const matchedTagId = q.suggested_topic ? tagMap.get(q.suggested_topic) : undefined;
+        const autoTagIds: string[] = [];
+
+        // 匹配知识点
+        const knowledgeTagId = q.suggested_topic ? knowledgeTagMap.get(q.suggested_topic) : undefined;
+        if (knowledgeTagId) autoTagIds.push(knowledgeTagId);
+
+        // 匹配题型
+        const typeTagId = typeTagMap.get(q.type);
+        if (typeTagId) autoTagIds.push(typeTagId);
+
+        // 匹配难度
+        const diffTagId = diffTagMap.get(String(q.difficulty));
+        if (diffTagId) autoTagIds.push(diffTagId);
+
         return {
           ...q,
-          topic_id: matchedTagId || undefined, // backward compat
-          matched_knowledge_tag_id: matchedTagId || undefined,
+          topic_id: knowledgeTagId || undefined, // backward compat
+          auto_tag_ids: autoTagIds,
         };
       });
 
