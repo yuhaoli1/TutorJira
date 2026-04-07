@@ -35,38 +35,72 @@ export default async function StudentDashboard() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">My learning</h2>
-      <p className="mt-1 text-sm text-[#B4BCC8]">
-        Hi {user.name} — keep it up!
-      </p>
+      <div className="flex items-baseline justify-between">
+        <div>
+          <h2
+            className="text-[28px] leading-none font-[510] text-[#2E3338] tracking-display-lg"
+          >
+            My learning
+          </h2>
+          <p className="mt-2 text-[13px] text-[#8a8f98]">
+            Hi {user.name} — keep it up!
+          </p>
+        </div>
+      </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Link
+      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        <DashboardCard
           href="/student/tasks"
-          className="rounded-2xl bg-white p-8 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
-        >
-          <p className="text-sm text-[#B4BCC8]">Pending tasks</p>
-          <p className="mt-2 text-3xl font-bold text-[#2E3338]">
-            {pendingTaskCount}
-          </p>
-        </Link>
-        <Link
+          label="Pending tasks"
+          value={pendingTaskCount.toString()}
+        />
+        <DashboardCard
           href="/student/practice"
-          className="rounded-2xl bg-white p-8 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
-        >
-          <p className="text-sm text-[#B4BCC8]">Practice</p>
-          <p className="mt-2 text-3xl font-bold text-[#2E3338]">Start →</p>
-        </Link>
-        <Link
+          label="Practice"
+          value="Start"
+          accent
+        />
+        <DashboardCard
           href="/student/wrong-book"
-          className="rounded-2xl bg-white p-8 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
-        >
-          <p className="text-sm text-[#B4BCC8]">Wrong answers</p>
-          <p className="mt-2 text-3xl font-bold text-[#2E3338]">
-            {wrongCount}
-          </p>
-        </Link>
+          label="Wrong answers"
+          value={wrongCount.toString()}
+        />
       </div>
     </div>
+  );
+}
+
+function DashboardCard({
+  href,
+  label,
+  value,
+  accent = false,
+}: {
+  href: string;
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative rounded-lg border border-[#E8EAED] bg-white px-5 py-4 transition-colors hover:border-[#163300]/40"
+    >
+      <p className="text-[12px] font-[510] uppercase tracking-[0.04em] text-[#8a8f98]">
+        {label}
+      </p>
+      <p
+        className={`mt-3 text-2xl font-[590] tracking-display ${
+          accent ? "text-[#163300]" : "text-[#2E3338]"
+        }`}
+      >
+        {value}
+        {accent && (
+          <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        )}
+      </p>
+    </Link>
   );
 }
