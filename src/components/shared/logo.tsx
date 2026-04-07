@@ -9,7 +9,7 @@ export function LogoIcon({ size = 32, className = "" }: LogoProps) {
   return (
     <Image
       src="/logo.png"
-      alt="拾萤"
+      alt="Firefly"
       width={size}
       height={size}
       className={`object-contain flex-shrink-0 ${className}`}

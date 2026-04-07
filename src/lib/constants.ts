@@ -1,32 +1,36 @@
-// UI 文字常量 — 方便后续国际化
+// UI label constants. These mirror the keys used by the database/enum types
+// and are referenced via lookups like `ROLES[user.role]` throughout the app.
+// As the app moves toward full next-intl coverage, these can be replaced
+// piecemeal by `t()` calls and this file will eventually shrink to types only.
+
 export const ROLES = {
-  admin: "管理员",
-  teacher: "老师",
-  parent: "家长",
-  student: "学生",
+  admin: "Administrator",
+  teacher: "Teacher",
+  parent: "Parent",
+  student: "Student",
 } as const;
 
 export const TASK_TYPES = {
-  dictation: "默写",
-  recitation: "背诵",
-  correction: "错题订正",
-  homework: "作业",
-  other: "其他",
+  dictation: "Dictation",
+  recitation: "Recitation",
+  correction: "Corrections",
+  homework: "Homework",
+  other: "Other",
 } as const;
 
 export const TASK_STATUS = {
-  pending: "待完成",
-  submitted: "已提交",
-  confirmed: "已批阅通过",
-  rejected: "已打回",
-  closed: "已关闭",
+  pending: "Pending",
+  submitted: "Submitted",
+  confirmed: "Approved",
+  rejected: "Returned",
+  closed: "Closed",
 } as const;
 
 export const TASK_PRIORITIES = {
-  urgent: "紧急",
-  high: "高",
-  medium: "中",
-  low: "低",
+  urgent: "Urgent",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
 } as const;
 
 export const TASK_PRIORITY_COLORS = {
@@ -37,75 +41,73 @@ export const TASK_PRIORITY_COLORS = {
 } as const;
 
 export const ACTIVITY_ACTIONS = {
-  created: "创建了任务",
-  status_change: "更改了状态",
-  note_added: "添加了备注",
-  result_recorded: "录入了成绩",
-  priority_changed: "更改了优先级",
-  task_closed: "关闭了任务",
+  created: "created the task",
+  status_change: "changed the status",
+  note_added: "added a note",
+  result_recorded: "recorded a result",
+  priority_changed: "changed the priority",
+  task_closed: "closed the task",
 } as const;
 
 export const CHECKIN_FREQUENCY = {
-  daily: "每日",
-  weekly: "每周",
+  daily: "Daily",
+  weekly: "Weekly",
 } as const;
 
 export const RECURRENCE_TYPES = {
-  daily: "每天",
-  weekly: "每周",
+  daily: "Daily",
+  weekly: "Weekly",
 } as const;
 
 export const WEEKDAYS = {
-  1: "周一",
-  2: "周二",
-  3: "周三",
-  4: "周四",
-  5: "周五",
-  6: "周六",
-  7: "周日",
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
+  7: "Sun",
 } as const;
 
 export const QUESTION_TYPES = {
-  choice: "选择题",
-  fill_blank: "填空题",
-  solution: "解答题",
+  choice: "Multiple choice",
+  fill_blank: "Fill in the blank",
+  solution: "Free response",
 } as const;
 
 export const DIFFICULTY_LABELS = {
-  1: "简单",
-  2: "较简单",
-  3: "中等",
-  4: "较难",
-  5: "困难",
+  1: "Very easy",
+  2: "Easy",
+  3: "Medium",
+  4: "Hard",
+  5: "Very hard",
 } as const;
 
 export const UPLOAD_STATUS = {
-  pending: "等待处理",
-  processing: "处理中",
-  completed: "已完成",
-  failed: "处理失败",
+  pending: "Queued",
+  processing: "Processing",
+  completed: "Completed",
+  failed: "Failed",
 } as const;
 
-export const GRADES = ["五年级", "六年级"] as const;
+export const GRADES = ["Grade 5", "Grade 6"] as const;
 
 export const SUBJECTS = [
-  "数学",
-  "语文",
-  "英语",
-  "物理",
-  "化学",
-  "政治",
-  "历史",
-  "地理",
-  "生物",
-  "中译英",
-  "英译中",
-  "阅读",
-  "完型",
-  "默写",
+  "Math",
+  "English language arts",
+  "Reading",
+  "Writing",
+  "Science",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "History",
+  "Geography",
+  "Social studies",
+  "Spelling",
 ] as const;
 
-// 标签系统 — 维度 slug 常量
+// Tag system — dimension slug constants
 export const TAG_CATEGORIES = {
   KNOWLEDGE_POINT: "knowledge_point",
   QUESTION_TYPE: "question_type",
@@ -114,25 +116,26 @@ export const TAG_CATEGORIES = {
   GRADE: "grade",
 } as const;
 
-// 标签维度 UI 配置 — 新增维度只需在这里加一行（或不加，会用默认值）
-// label 会覆盖数据库的 name；required 控制保存校验；placeholder 用于选择器
+// Tag dimension UI config — to add a new dimension, add a row here
+// (or skip — defaults will be used). `label` overrides the DB `name`,
+// `required` controls save-time validation, `placeholder` is for the picker.
 export interface TagCategoryUIConfig {
   label: string;
   required?: boolean;
   placeholder?: string;
-  /** 用于 AI 自动匹配时的字段映射 key（对应 AI 返回的 JSON key） */
+  /** AI auto-match field key (corresponds to the JSON key returned by the AI) */
   aiFieldKey?: string;
 }
 
 export const TAG_CATEGORY_UI: Record<string, TagCategoryUIConfig> = {
-  knowledge_point: { label: "知识点", required: true, placeholder: "选择知识点...", aiFieldKey: "suggested_topic" },
-  question_type: { label: "题型", aiFieldKey: "type" },
-  difficulty: { label: "难度", aiFieldKey: "difficulty" },
-  solution_approach: { label: "解题思路", placeholder: "选择解题思路..." },
-  grade: { label: "适用年级" },
+  knowledge_point: { label: "Topic", required: true, placeholder: "Select a topic...", aiFieldKey: "suggested_topic" },
+  question_type: { label: "Question type", aiFieldKey: "type" },
+  difficulty: { label: "Difficulty", aiFieldKey: "difficulty" },
+  solution_approach: { label: "Solution approach", placeholder: "Select a solution approach..." },
+  grade: { label: "Grade level" },
 };
 
-// 获取某个分类的 UI 配置（未知分类返回合理默认值）
+// Get the UI config for a category slug; unknown slugs get sensible defaults.
 export function getTagCategoryUI(slug: string, dbName?: string): TagCategoryUIConfig {
   return TAG_CATEGORY_UI[slug] || { label: dbName || slug };
 }

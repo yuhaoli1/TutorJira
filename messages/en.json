@@ -2,5 +2,8 @@
   "App": {
     "name": "Firefly",
     "tagline": "AI-powered learning management platform."
+  },
+  "Common": {
+    "logout": "Log out"
   }
 }

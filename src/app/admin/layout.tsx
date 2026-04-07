@@ -3,11 +3,11 @@ import { Sidebar } from "@/components/shared/sidebar";
 import { ROLES } from "@/lib/constants";
 
 const navItems = [
-  { label: "总览", href: "/admin/dashboard" },
-  { label: "任务管理", href: "/teacher/tasks" },
-  { label: "学生管理", href: "/admin/students" },
-  { label: "家长视角", href: "/parent/dashboard" },
-  { label: "设置", href: "/admin/settings" },
+  { label: "Overview", href: "/admin/dashboard" },
+  { label: "Tasks", href: "/teacher/tasks" },
+  { label: "Students", href: "/admin/students" },
+  { label: "Parent view", href: "/parent/dashboard" },
+  { label: "Settings", href: "/admin/settings" },
 ];
 
 export default async function AdminLayout({
@@ -20,7 +20,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-white">
       <Sidebar
-        title="拾萤"
+        title="Firefly"
         navItems={navItems}
         userName={user.name}
         role={ROLES[user.role]}

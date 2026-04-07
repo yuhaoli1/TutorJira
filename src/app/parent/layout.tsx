@@ -3,8 +3,8 @@ import { Sidebar } from "@/components/shared/sidebar";
 import { ROLES } from "@/lib/constants";
 
 const navItems = [
-  { label: "任务管理", href: "/parent/tasks" },
-  { label: "孩子成绩", href: "/parent/children" },
+  { label: "Tasks", href: "/parent/tasks" },
+  { label: "Children", href: "/parent/children" },
 ];
 
 export default async function ParentLayout({
@@ -17,7 +17,7 @@ export default async function ParentLayout({
   return (
     <div className="min-h-screen bg-white">
       <Sidebar
-        title="拾萤"
+        title="Firefly"
         navItems={navItems}
         userName={user.name}
         role={ROLES[user.role]}

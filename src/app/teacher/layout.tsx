@@ -3,10 +3,10 @@ import { Sidebar } from "@/components/shared/sidebar";
 import { ROLES } from "@/lib/constants";
 
 const navItems = [
-  { label: "总览", href: "/teacher/dashboard" },
-  { label: "任务管理", href: "/teacher/tasks" },
-  { label: "题库管理", href: "/teacher/questions" },
-  { label: "学生管理", href: "/teacher/students" },
+  { label: "Overview", href: "/teacher/dashboard" },
+  { label: "Tasks", href: "/teacher/tasks" },
+  { label: "Question bank", href: "/teacher/questions" },
+  { label: "Students", href: "/teacher/students" },
 ];
 
 export default async function TeacherLayout({
@@ -19,7 +19,7 @@ export default async function TeacherLayout({
   return (
     <div className="min-h-screen bg-white">
       <Sidebar
-        title="拾萤"
+        title="Firefly"
         navItems={navItems}
         userName={user.name}
         role={ROLES[user.role]}
