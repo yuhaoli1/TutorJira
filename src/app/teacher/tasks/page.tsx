@@ -7,14 +7,14 @@ export default async function TasksPage() {
   await requireRole(["admin", "teacher"]);
   const supabase = await createClient();
 
-  // ✅ 服务端预取看板数据，首屏直接带数据
+  // Server-side prefetch board data so first paint has it
   const { cards, students } = await fetchBoardData(supabase);
 
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)]">
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">任务管理</h2>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">Tasks</h2>
       <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">
-        管理学生任务和录入抽测成绩
+        Manage student tasks and record quiz results
       </p>
       <KanbanBoard
         isTeacher={true}

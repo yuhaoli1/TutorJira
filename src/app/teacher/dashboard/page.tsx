@@ -82,8 +82,8 @@ export default async function TeacherDashboard() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">工作台</h2>
-      <p className="mt-1 text-sm text-[#B4BCC8]">欢迎回来，{user.name}</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">Dashboard</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">Welcome back, {user.name}</p>
 
       {/* Summary cards */}
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -91,23 +91,23 @@ export default async function TeacherDashboard() {
           href="/teacher/tasks"
           className="rounded-2xl bg-white p-6 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
         >
-          <p className="text-sm text-[#B4BCC8]">待完成任务</p>
+          <p className="text-sm text-[#B4BCC8]">Pending tasks</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {totalPending}
           </p>
         </Link>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">已批阅通过任务</p>
+          <p className="text-sm text-[#B4BCC8]">Approved tasks</p>
           <p className="mt-1 text-3xl font-bold text-green-600">
             {totalConfirmed}
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">任务总数</p>
+          <p className="text-sm text-[#B4BCC8]">Total tasks</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">{totalTasks}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">学生总数</p>
+          <p className="text-sm text-[#B4BCC8]">Total students</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {totalStudents}
           </p>
@@ -116,19 +116,19 @@ export default async function TeacherDashboard() {
 
       {/* Student stats table */}
       <div className="mt-10">
-        <h3 className="text-lg font-bold text-[#2E3338]">学生概览</h3>
+        <h3 className="text-lg font-bold text-[#2E3338]">Students overview</h3>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-[#E8EAED] bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#E8EAED] bg-[#F4F5F6] text-left text-[#B4BCC8]">
-                <th className="px-5 py-3.5 font-medium">学生</th>
-                <th className="px-5 py-3.5 font-medium">年级</th>
-                <th className="px-5 py-3.5 font-medium text-center">待完成</th>
-                <th className="px-5 py-3.5 font-medium text-center">已批阅通过</th>
-                <th className="px-5 py-3.5 font-medium text-center">已打回</th>
-                <th className="px-5 py-3.5 font-medium text-center">完成率</th>
+                <th className="px-5 py-3.5 font-medium">Student</th>
+                <th className="px-5 py-3.5 font-medium">Grade</th>
+                <th className="px-5 py-3.5 font-medium text-center">Pending</th>
+                <th className="px-5 py-3.5 font-medium text-center">Approved</th>
+                <th className="px-5 py-3.5 font-medium text-center">Rejected</th>
+                <th className="px-5 py-3.5 font-medium text-center">Completion</th>
                 <th className="px-5 py-3.5 font-medium text-center">
-                  平均正确率
+                  Avg accuracy
                 </th>
               </tr>
             </thead>
@@ -216,7 +216,7 @@ export default async function TeacherDashboard() {
                     colSpan={7}
                     className="px-5 py-10 text-center text-[#B4BCC8]"
                   >
-                    暂无学生
+                    No students yet
                   </td>
                 </tr>
               )}

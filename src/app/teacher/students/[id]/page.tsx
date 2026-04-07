@@ -22,7 +22,7 @@ export default async function StudentDetailPage({
 
   if (!student) {
     return (
-      <div className="text-center py-12 text-[#B4BCC8]">学生不存在</div>
+      <div className="text-center py-12 text-[#B4BCC8]">Student not found</div>
     );
   }
 
@@ -115,7 +115,7 @@ export default async function StudentDetailPage({
         href="/teacher/dashboard"
         className="text-sm text-[#163300] hover:text-[#163300]/70 font-medium"
       >
-        &larr; 返回工作台
+        &larr; Back to dashboard
       </Link>
 
       <div className="mt-5 flex items-center gap-4">
@@ -128,11 +128,11 @@ export default async function StudentDetailPage({
       {/* Stats cards */}
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">任务总数</p>
+          <p className="text-sm text-[#B4BCC8]">Total tasks</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">{total}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">完成率</p>
+          <p className="text-sm text-[#B4BCC8]">Completion rate</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               completionRate !== null && completionRate >= 80
@@ -146,7 +146,7 @@ export default async function StudentDetailPage({
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">平均正确率</p>
+          <p className="text-sm text-[#B4BCC8]">Avg accuracy</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               overallCorrectRate !== null && overallCorrectRate >= 80
@@ -160,7 +160,7 @@ export default async function StudentDetailPage({
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">测试次数</p>
+          <p className="text-sm text-[#B4BCC8]">Tests taken</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {(testResults ?? []).length}
           </p>
@@ -170,7 +170,7 @@ export default async function StudentDetailPage({
       {/* Subject breakdown */}
       {subjectSummary.length > 0 && (
         <div className="mt-10">
-          <h3 className="text-lg font-bold text-[#2E3338]">各科正确率</h3>
+          <h3 className="text-lg font-bold text-[#2E3338]">Accuracy by subject</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {subjectSummary.map((s) => (
               <div
@@ -206,8 +206,8 @@ export default async function StudentDetailPage({
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-[#B4BCC8]">
-                  共{s.testCount}次测试 · 总{s.totalQuestions}题 错
-                  {s.totalWrong}题
+                  {s.testCount} tests · {s.totalQuestions} questions ·{" "}
+                  {s.totalWrong} wrong
                 </p>
               </div>
             ))}
@@ -217,7 +217,7 @@ export default async function StudentDetailPage({
 
       {/* Task history */}
       <div className="mt-10">
-        <h3 className="text-lg font-bold text-[#2E3338]">任务历史</h3>
+        <h3 className="text-lg font-bold text-[#2E3338]">Task history</h3>
         <div className="mt-4 space-y-3">
           {(assignments ?? []).map((a) => {
             const task = a.task as unknown as {
@@ -257,7 +257,7 @@ export default async function StudentDetailPage({
                       {TASK_STATUS[status]}
                     </span>
                     <span className="text-xs text-[#B4BCC8]">
-                      {new Date(task.due_date).toLocaleDateString("zh-CN")}
+                      {new Date(task.due_date).toLocaleDateString("en-US")}
                     </span>
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export default async function StudentDetailPage({
                           key={i}
                           className="rounded-full bg-[#F4F5F6] px-2.5 py-1 text-xs text-[#4D5766]"
                         >
-                          {r.subject} {r.total_questions}题 错{r.wrong_count}{" "}
+                          {r.subject} {r.total_questions} Q · {r.wrong_count} wrong{" "}
                           <span
                             className={
                               rate >= 80
@@ -294,7 +294,7 @@ export default async function StudentDetailPage({
                 )}
 
                 {a.note && (
-                  <p className="mt-2 text-xs text-[#B4BCC8]">备注：{a.note}</p>
+                  <p className="mt-2 text-xs text-[#B4BCC8]">Note: {a.note}</p>
                 )}
               </div>
             );
@@ -302,7 +302,7 @@ export default async function StudentDetailPage({
 
           {(assignments ?? []).length === 0 && (
             <div className="rounded-2xl border border-[#E8EAED] bg-white p-10 text-center text-[#B4BCC8]">
-              暂无任务记录
+              No tasks yet
             </div>
           )}
         </div>

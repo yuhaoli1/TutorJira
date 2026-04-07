@@ -64,16 +64,16 @@ export function StudentManagerClient({ students }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-[#2E3338] tracking-tight">学生管理</h2>
+      <h2 className="text-xl font-bold text-[#2E3338] tracking-tight">Students</h2>
       <p className="mt-1 text-[13px] text-[#B4BCC8]">
-        搜索或选择学生查看详细数据
+        Search or pick a student to see details
       </p>
 
       {/* Search + Dropdown */}
       <div className="mt-5 flex items-center gap-3">
         <input
           type="text"
-          placeholder="搜索学生姓名..."
+          placeholder="Search students..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -86,7 +86,7 @@ export function StudentManagerClient({ students }: Props) {
           onChange={(e) => setSelectedId(e.target.value || null)}
           className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
         >
-          <option value="">选择学生</option>
+          <option value="">Select student</option>
           {filtered.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name} ({s.grade})
@@ -98,8 +98,8 @@ export function StudentManagerClient({ students }: Props) {
       {/* Prompt when no student selected */}
       {!selected && (
         <div className="mt-12 text-center text-[#B4BCC8]">
-          <p className="text-base">请从上方选择一位学生查看数据</p>
-          <p className="mt-1 text-[13px]">共 {students.length} 位学生</p>
+          <p className="text-base">Pick a student above to view their data</p>
+          <p className="mt-1 text-[13px]">{students.length} students total</p>
         </div>
       )}
 
@@ -122,7 +122,7 @@ function StudentDetail({
         onClick={onBack}
         className="text-[13px] text-[#163300] hover:text-[#163300]/70 font-medium transition-colors duration-150"
       >
-        &larr; 返回列表
+        &larr; Back to list
       </button>
 
       <div className="mt-4 flex items-center gap-3">
@@ -135,13 +135,13 @@ function StudentDetail({
       {/* Stats cards */}
       <div className="mt-5 grid gap-4 sm:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">任务总数</p>
+          <p className="text-[13px] text-[#B4BCC8]">Total tasks</p>
           <p className="mt-1 text-2xl font-bold text-[#2E3338]">
             {student.total}
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">完成率</p>
+          <p className="text-[13px] text-[#B4BCC8]">Completion rate</p>
           <p
             className={`mt-1 text-2xl font-bold ${
               student.completionRate !== null && student.completionRate >= 80
@@ -158,7 +158,7 @@ function StudentDetail({
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">平均正确率</p>
+          <p className="text-[13px] text-[#B4BCC8]">Avg accuracy</p>
           <p
             className={`mt-1 text-2xl font-bold ${
               student.overallCorrectRate !== null &&
@@ -176,7 +176,7 @@ function StudentDetail({
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">测试次数</p>
+          <p className="text-[13px] text-[#B4BCC8]">Tests taken</p>
           <p className="mt-1 text-2xl font-bold text-[#2E3338]">
             {student.testCount}
           </p>
@@ -186,7 +186,7 @@ function StudentDetail({
       {/* Subject breakdown */}
       {student.subjects.length > 0 && (
         <div className="mt-10">
-          <h4 className="text-base font-bold text-[#2E3338]">各科正确率</h4>
+          <h4 className="text-base font-bold text-[#2E3338]">Accuracy by subject</h4>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {student.subjects.map((s) => (
               <div
@@ -222,8 +222,8 @@ function StudentDetail({
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-[#B4BCC8]">
-                  共{s.testCount}次测试 · 总{s.totalQuestions}题 错
-                  {s.totalWrong}题
+                  {s.testCount} tests · {s.totalQuestions} questions ·{" "}
+                  {s.totalWrong} wrong
                 </p>
               </div>
             ))}
@@ -233,7 +233,7 @@ function StudentDetail({
 
       {/* Task history */}
       <div className="mt-10">
-        <h4 className="text-base font-bold text-[#2E3338]">任务历史</h4>
+        <h4 className="text-base font-bold text-[#2E3338]">Task history</h4>
         <div className="mt-4 space-y-3">
           {student.taskHistory.map((a) => (
             <div
@@ -262,7 +262,7 @@ function StudentDetail({
                     {a.statusLabel}
                   </span>
                   <span className="text-xs text-[#B4BCC8]">
-                    {new Date(a.dueDate).toLocaleDateString("zh-CN")}
+                    {new Date(a.dueDate).toLocaleDateString("en-US")}
                   </span>
                 </div>
               </div>
@@ -274,7 +274,7 @@ function StudentDetail({
                       key={i}
                       className="rounded-full bg-[#F4F5F6] px-2.5 py-1 text-xs text-[#4D5766]"
                     >
-                      {r.subject} {r.total_questions}题 错{r.wrong_count}{" "}
+                      {r.subject} {r.total_questions} Q · {r.wrong_count} wrong{" "}
                       <span
                         className={
                           r.rate >= 80
@@ -292,14 +292,14 @@ function StudentDetail({
               )}
 
               {a.note && (
-                <p className="mt-2 text-xs text-[#B4BCC8]">备注：{a.note}</p>
+                <p className="mt-2 text-xs text-[#B4BCC8]">Note: {a.note}</p>
               )}
             </div>
           ))}
 
           {student.taskHistory.length === 0 && (
             <div className="rounded-2xl border border-[#E8EAED] bg-white p-10 text-center text-[#B4BCC8]">
-              暂无任务记录
+              No tasks yet
             </div>
           )}
         </div>
