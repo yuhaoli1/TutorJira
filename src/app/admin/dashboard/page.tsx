@@ -16,15 +16,15 @@ export default async function AdminDashboard() {
   ]);
 
   const stats = [
-    { label: "学生总数", value: studentCount ?? 0 },
-    { label: "老师人数", value: teacherCount ?? 0 },
-    { label: "任务总数", value: taskCount ?? 0 },
+    { label: "Total students", value: studentCount ?? 0 },
+    { label: "Total teachers", value: teacherCount ?? 0 },
+    { label: "Total tasks", value: taskCount ?? 0 },
   ];
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">总览</h2>
-      <p className="mt-1 text-sm text-[#B4BCC8]">欢迎回来，{user.name}</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">Overview</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">Welcome back, {user.name}</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {stats.map((stat) => (
