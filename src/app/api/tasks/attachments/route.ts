@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const fileName = `task-attachments/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const serviceClient = createServiceClient(
-      process.env.SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 

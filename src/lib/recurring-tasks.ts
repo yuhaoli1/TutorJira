@@ -71,9 +71,8 @@ function getDatesToGenerate(template: RecurringTemplate, today: Date): string[] 
 }
 
 export async function generateRecurringTasks(): Promise<number> {
-  // Use the real Supabase URL for server-side calls (not the proxied URL)
   const supabase = createClient(
-    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 

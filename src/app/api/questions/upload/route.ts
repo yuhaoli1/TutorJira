@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split(".").pop() || "bin";
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    // Use service client to talk to Supabase directly (bypass the Nginx proxy to avoid Storage upload failures)
+    // Use service client to talk to Supabase directly for Storage uploads
     const serviceClient = createServiceClient(
-      process.env.SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
