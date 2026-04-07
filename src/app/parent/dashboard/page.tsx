@@ -27,13 +27,13 @@ export default async function ParentDashboard() {
       ) ?? [];
   }
 
-  // 获取学生信息
+  // Fetch student info
   const { data: students } = await supabase
     .from("students")
     .select("id, name, grade")
     .in("id", studentIds.length > 0 ? studentIds : ["__none__"]);
 
-  // 获取所有任务
+  // Fetch all assignments
   const { data: assignments } = await supabase
     .from("task_assignments")
     .select(
@@ -42,7 +42,7 @@ export default async function ParentDashboard() {
     .in("student_id", studentIds.length > 0 ? studentIds : ["__none__"])
     .order("created_at", { ascending: false });
 
-  // 获取测试结果
+  // Fetch test results
   const assignmentIds = (assignments ?? []).map((a) => a.id);
   const { data: testResults } = await supabase
     .from("test_results")
@@ -52,7 +52,7 @@ export default async function ParentDashboard() {
       assignmentIds.length > 0 ? assignmentIds : ["__none__"]
     );
 
-  // 每个孩子的统计
+  // Per-child stats
   const childStats = (students ?? []).map((student) => {
     const studentAssignments = (assignments ?? []).filter(
       (a) => a.student_id === student.id
@@ -101,7 +101,7 @@ export default async function ParentDashboard() {
     };
   });
 
-  // 最近测试结果 (带学生和任务信息)
+  // Recent test results (with student and task info)
   const recentResults = (assignments ?? [])
     .filter((a) =>
       (testResults ?? []).some((r) => r.task_assignment_id === a.id)

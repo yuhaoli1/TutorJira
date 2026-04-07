@@ -66,9 +66,9 @@ export function ParentDashboardClient({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-[#2E3338] tracking-tight">今日概览</h2>
+          <h2 className="text-xl font-bold text-[#2E3338] tracking-tight">Today's overview</h2>
           <p className="mt-1 text-[13px] text-[#B4BCC8]">
-            {userName}，今天也要加油哦
+            Hi {userName} — let's make today count
           </p>
         </div>
         {childStats.length > 1 && (
@@ -77,7 +77,7 @@ export function ParentDashboardClient({
             onChange={(e) => setSelectedChild(e.target.value)}
             className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           >
-            <option value="all">全部孩子</option>
+            <option value="all">All children</option>
             {childStats.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -93,19 +93,19 @@ export function ParentDashboardClient({
           href="/parent/tasks"
           className="rounded-2xl bg-white p-6 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
         >
-          <p className="text-[13px] text-[#B4BCC8]">待完成任务</p>
+          <p className="text-[13px] text-[#B4BCC8]">Pending tasks</p>
           <p className="mt-1 text-2xl font-bold text-amber-600">
             {totalPending}
           </p>
         </Link>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">已批阅通过</p>
+          <p className="text-[13px] text-[#B4BCC8]">Approved</p>
           <p className="mt-1 text-2xl font-bold text-green-600">
             {totalConfirmed}
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-[13px] text-[#B4BCC8]">任务总数</p>
+          <p className="text-[13px] text-[#B4BCC8]">Total tasks</p>
           <p className="mt-1 text-2xl font-bold text-[#2E3338]">{totalTasks}</p>
         </div>
         <Link
@@ -113,7 +113,7 @@ export function ParentDashboardClient({
           className="rounded-2xl bg-white p-6 border border-[#E8EAED] hover:border-[#B4BCC8] transition-all duration-150"
         >
           <p className="text-[13px] text-[#B4BCC8]">
-            {isAdmin ? "学生总数" : "已绑定孩子"}
+            {isAdmin ? "Total students" : "Linked children"}
           </p>
           <p className="mt-1 text-2xl font-bold text-[#2E3338]">
             {childStats.length}
@@ -123,9 +123,9 @@ export function ParentDashboardClient({
 
       {childStats.length === 0 && !isAdmin && (
         <div className="mt-10 rounded-2xl border border-dashed border-[#E8EAED] p-10 text-center">
-          <p className="text-[#B4BCC8]">还没有绑定孩子信息</p>
+          <p className="text-[#B4BCC8]">No children linked yet</p>
           <p className="mt-1 text-xs text-[#B4BCC8]">
-            请联系老师帮您绑定孩子账号
+            Ask your teacher to link a student account
           </p>
         </div>
       )}
@@ -133,7 +133,7 @@ export function ParentDashboardClient({
       {/* Per-child stats */}
       {filteredStats.length > 0 && (
         <div className="mt-10">
-          <h3 className="text-base font-bold text-[#2E3338]">孩子概览</h3>
+          <h3 className="text-base font-bold text-[#2E3338]">Children</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredStats.map((child) => (
               <Link
@@ -146,12 +146,12 @@ export function ParentDashboardClient({
                     <p className="font-medium text-[#2E3338]">{child.name}</p>
                     <p className="text-xs text-[#B4BCC8]">{child.grade}</p>
                   </div>
-                  <span className="text-xs text-[#163300] font-medium">查看详情 →</span>
+                  <span className="text-xs text-[#163300] font-medium">View details →</span>
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <p className="text-xs text-[#B4BCC8]">待完成</p>
+                    <p className="text-xs text-[#B4BCC8]">Pending</p>
                     <p
                       className={`text-lg font-bold ${child.pending > 0 ? "text-amber-600" : "text-[#E8EAED]"}`}
                     >
@@ -159,7 +159,7 @@ export function ParentDashboardClient({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#B4BCC8]">完成率</p>
+                    <p className="text-xs text-[#B4BCC8]">Completion</p>
                     <p
                       className={`text-lg font-bold ${
                         child.completionRate === null
@@ -177,7 +177,7 @@ export function ParentDashboardClient({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#B4BCC8]">正确率</p>
+                    <p className="text-xs text-[#B4BCC8]">Accuracy</p>
                     <p
                       className={`text-lg font-bold ${
                         child.avgCorrectRate === null
@@ -204,7 +204,7 @@ export function ParentDashboardClient({
       {/* Recent test results */}
       {filteredResults.length > 0 && (
         <div className="mt-10">
-          <h3 className="text-base font-bold text-[#2E3338]">最近测试成绩</h3>
+          <h3 className="text-base font-bold text-[#2E3338]">Recent test scores</h3>
           <div className="mt-4 space-y-3">
             {filteredResults.map((a) => (
               <div
@@ -243,7 +243,7 @@ export function ParentDashboardClient({
                       key={i}
                       className="rounded-full bg-[#F4F5F6] px-2.5 py-1 text-xs text-[#4D5766]"
                     >
-                      {r.subject} {r.total_questions}题 错{r.wrong_count}{" "}
+                      {r.subject} {r.total_questions} Q · {r.wrong_count} wrong{" "}
                       <span
                         className={
                           r.rate >= 80

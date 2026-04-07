@@ -24,19 +24,19 @@ export default async function ParentChildrenPage() {
       [];
   }
 
-  // 获取学生信息
+  // Fetch student info
   const { data: students } = await supabase
     .from("students")
     .select("id, name, grade")
     .in("id", studentIds.length > 0 ? studentIds : ["__none__"]);
 
-  // 获取所有任务
+  // Fetch all assignments
   const { data: assignments } = await supabase
     .from("task_assignments")
     .select("id, student_id, status")
     .in("student_id", studentIds.length > 0 ? studentIds : ["__none__"]);
 
-  // 获取测试结果
+  // Fetch test results
   const assignmentIds = (assignments ?? []).map((a) => a.id);
   const { data: testResults } = await supabase
     .from("test_results")
@@ -46,7 +46,7 @@ export default async function ParentChildrenPage() {
       assignmentIds.length > 0 ? assignmentIds : ["__none__"]
     );
 
-  // 每个孩子的统计
+  // Per-child stats
   const childStats = (students ?? []).map((student) => {
     const studentAssignments = (assignments ?? []).filter(
       (a) => a.student_id === student.id
@@ -119,14 +119,14 @@ export default async function ParentChildrenPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">孩子成绩</h2>
-      <p className="mt-1 text-sm text-[#B4BCC8]">查看每个孩子的学习情况</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">My children</h2>
+      <p className="mt-1 text-sm text-[#B4BCC8]">See how each child is doing</p>
 
       {childStats.length === 0 && (
         <div className="mt-10 rounded-2xl border-2 border-dashed border-[#E8EAED] p-10 text-center">
-          <p className="text-[#B4BCC8]">还没有绑定孩子信息</p>
+          <p className="text-[#B4BCC8]">No children linked yet</p>
           <p className="mt-1 text-xs text-[#B4BCC8]">
-            请联系老师帮您绑定孩子账号
+            Ask your teacher to link a student account
           </p>
         </div>
       )}
@@ -149,20 +149,20 @@ export default async function ParentChildrenPage() {
                 href={`/parent/children/${child.id}`}
                 className="rounded-full bg-[#163300] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#163300]/90 transition-colors duration-150"
               >
-                查看详情 →
+                View details →
               </Link>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6">
               <div className="text-center">
-                <p className="text-xs text-[#B4BCC8]">任务总数</p>
+                <p className="text-xs text-[#B4BCC8]">Total tasks</p>
                 <p className="mt-1 text-2xl font-bold text-[#2E3338]">
                   {child.total}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-[#B4BCC8]">待完成</p>
+                <p className="text-xs text-[#B4BCC8]">Pending</p>
                 <p
                   className={`mt-1 text-2xl font-bold ${child.pending > 0 ? "text-amber-600" : "text-[#E8EAED]"}`}
                 >
@@ -170,7 +170,7 @@ export default async function ParentChildrenPage() {
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-[#B4BCC8]">完成率</p>
+                <p className="text-xs text-[#B4BCC8]">Completion rate</p>
                 <p
                   className={`mt-1 text-2xl font-bold ${
                     child.completionRate === null
@@ -188,7 +188,7 @@ export default async function ParentChildrenPage() {
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-[#B4BCC8]">平均正确率</p>
+                <p className="text-xs text-[#B4BCC8]">Avg accuracy</p>
                 <p
                   className={`mt-1 text-2xl font-bold ${
                     child.avgCorrectRate === null
@@ -211,7 +211,7 @@ export default async function ParentChildrenPage() {
             {child.subjects.length > 0 && (
               <div className="border-t border-[#E8EAED] px-6 py-5">
                 <p className="text-sm font-medium text-[#B4BCC8] mb-3">
-                  各科正确率
+                  Accuracy by subject
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {child.subjects.map((s) => (
@@ -234,7 +234,7 @@ export default async function ParentChildrenPage() {
                         {s.correctRate}%
                       </span>
                       <span className="text-xs text-[#B4BCC8]">
-                        ({s.testCount}次)
+                        ({s.testCount} tests)
                       </span>
                     </div>
                   ))}
