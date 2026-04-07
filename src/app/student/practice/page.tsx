@@ -66,8 +66,8 @@ export default async function PracticePage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">做题练习</h2>
-      <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">选择知识点开始练习</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">Practice</h2>
+      <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">Pick a topic to start practicing</p>
       <PracticeHub
         topicTree={topicTree}
         topicQuestionCounts={topicQuestionCounts}

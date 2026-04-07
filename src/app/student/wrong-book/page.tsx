@@ -14,8 +14,8 @@ export default async function WrongBookPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">错题集</h2>
-      <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">回顾做错的题目，重新练习</p>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">Wrong answers</h2>
+      <p className="mt-1 mb-6 text-sm text-[#B4BCC8]">Review and retry questions you missed</p>
       <WrongBookList studentId={student?.id || ""} />
     </div>
   );

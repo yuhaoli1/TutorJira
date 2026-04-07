@@ -17,8 +17,8 @@ export default async function StudentGradesPage() {
   if (!student) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#B4BCC8]">还没有关联学生信息</p>
-        <p className="mt-1 text-xs text-[#B4BCC8]">请联系老师帮你绑定账号</p>
+        <p className="text-[#B4BCC8]">No student record linked yet</p>
+        <p className="mt-1 text-xs text-[#B4BCC8]">Ask your teacher to link your account</p>
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default async function StudentGradesPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">我的成绩</h2>
+      <h2 className="text-2xl font-extrabold text-[#2E3338] tracking-tight">My grades</h2>
       <p className="mt-1 text-sm text-[#B4BCC8]">
         {student.name} · {student.grade}
       </p>
@@ -115,11 +115,11 @@ export default async function StudentGradesPage() {
       {/* Stats cards */}
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">任务总数</p>
+          <p className="text-sm text-[#B4BCC8]">Total tasks</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">{total}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">完成率</p>
+          <p className="text-sm text-[#B4BCC8]">Completion rate</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               completionRate !== null && completionRate >= 80
@@ -133,7 +133,7 @@ export default async function StudentGradesPage() {
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">平均正确率</p>
+          <p className="text-sm text-[#B4BCC8]">Avg accuracy</p>
           <p
             className={`mt-1 text-3xl font-bold ${
               overallCorrectRate !== null && overallCorrectRate >= 80
@@ -147,7 +147,7 @@ export default async function StudentGradesPage() {
           </p>
         </div>
         <div className="rounded-2xl bg-white p-6 border border-[#E8EAED]">
-          <p className="text-sm text-[#B4BCC8]">测试次数</p>
+          <p className="text-sm text-[#B4BCC8]">Tests taken</p>
           <p className="mt-1 text-3xl font-bold text-[#2E3338]">
             {(testResults ?? []).length}
           </p>
@@ -157,7 +157,7 @@ export default async function StudentGradesPage() {
       {/* Subject breakdown */}
       {subjects.length > 0 && (
         <div className="mt-10">
-          <h3 className="text-lg font-bold text-[#2E3338]">各科正确率</h3>
+          <h3 className="text-lg font-bold text-[#2E3338]">Accuracy by subject</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {subjects.map((s) => (
               <div
@@ -193,8 +193,8 @@ export default async function StudentGradesPage() {
                   />
                 </div>
                 <p className="mt-1.5 text-xs text-[#B4BCC8]">
-                  共{s.testCount}次测试 · 总{s.totalQuestions}题 错
-                  {s.totalWrong}题
+                  {s.testCount} tests · {s.totalQuestions} questions ·{" "}
+                  {s.totalWrong} wrong
                 </p>
               </div>
             ))}
@@ -204,7 +204,7 @@ export default async function StudentGradesPage() {
 
       {/* Task history */}
       <div className="mt-10">
-        <h3 className="text-lg font-bold text-[#2E3338]">任务历史</h3>
+        <h3 className="text-lg font-bold text-[#2E3338]">Task history</h3>
         <div className="mt-4 space-y-3">
           {(assignments ?? []).map((a) => {
             const task = a.task as unknown as {
@@ -244,7 +244,7 @@ export default async function StudentGradesPage() {
                       {TASK_STATUS[status]}
                     </span>
                     <span className="text-xs text-[#B4BCC8]">
-                      {new Date(task.due_date).toLocaleDateString("zh-CN")}
+                      {new Date(task.due_date).toLocaleDateString("en-US")}
                     </span>
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export default async function StudentGradesPage() {
                           key={i}
                           className="rounded-full bg-[#F4F5F6] px-2.5 py-1 text-xs text-[#4D5766]"
                         >
-                          {r.subject} {r.total_questions}题 错{r.wrong_count}{" "}
+                          {r.subject} {r.total_questions} Q · {r.wrong_count} wrong{" "}
                           <span
                             className={
                               rate >= 80
@@ -285,7 +285,7 @@ export default async function StudentGradesPage() {
 
           {(assignments ?? []).length === 0 && (
             <div className="rounded-2xl border border-[#E8EAED] bg-white p-10 text-center text-[#B4BCC8]">
-              暂无任务记录
+              No tasks yet
             </div>
           )}
         </div>
