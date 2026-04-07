@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // 确认成功，检查是否有 profile
+      // Exchange succeeded — check whether the user has a profile
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -34,6 +34,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // 出错时回到登录页
+  // Fall back to the login page on error
   return NextResponse.redirect(`${origin}/login`);
 }
