@@ -36,9 +36,8 @@ yarn-error.log*
 # vercel
 .vercel
 
-# supabase CLI workspace + one-shot schema dumps
+# supabase CLI workspace
 /supabase/.temp/
-/sydney_schema.sql
 
 # typescript
 *.tsbuildinfo
