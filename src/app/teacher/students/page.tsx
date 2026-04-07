@@ -33,9 +33,7 @@ export default async function AdminStudentsPage() {
       studentIds.length > 0 ? studentIds : ["__none__"]
     );
   }
-  const { data: students } = await studentsQuery.order("name");
 
-  // Fetch all assignments
   let assignmentsQuery = supabase
     .from("task_assignments")
     .select(
@@ -49,7 +47,12 @@ export default async function AdminStudentsPage() {
       studentIds.length > 0 ? studentIds : ["__none__"]
     );
   }
-  const { data: assignments } = await assignmentsQuery;
+
+  // students + assignments are independent — fetch in parallel
+  const [{ data: students }, { data: assignments }] = await Promise.all([
+    studentsQuery.order("name"),
+    assignmentsQuery,
+  ]);
 
   // Fetch test results
   const assignmentIds = (assignments ?? []).map((a) => a.id);

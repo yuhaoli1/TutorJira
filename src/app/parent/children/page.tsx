@@ -7,8 +7,8 @@ export default async function ParentChildrenPage() {
   const supabase = await createClient();
   const isAdmin = user.role === "admin";
 
+  // Step 1: resolve which students this user can see
   let studentIds: string[] = [];
-
   if (isAdmin) {
     const { data: allStudents } = await supabase
       .from("students")
@@ -24,19 +24,21 @@ export default async function ParentChildrenPage() {
       [];
   }
 
-  // Fetch student info
-  const { data: students } = await supabase
-    .from("students")
-    .select("id, name, grade")
-    .in("id", studentIds.length > 0 ? studentIds : ["__none__"]);
+  const safeStudentIds = studentIds.length > 0 ? studentIds : ["__none__"];
 
-  // Fetch all assignments
-  const { data: assignments } = await supabase
-    .from("task_assignments")
-    .select("id, student_id, status")
-    .in("student_id", studentIds.length > 0 ? studentIds : ["__none__"]);
+  // Step 2: students + assignments are independent — fetch in parallel
+  const [{ data: students }, { data: assignments }] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, name, grade")
+      .in("id", safeStudentIds),
+    supabase
+      .from("task_assignments")
+      .select("id, student_id, status")
+      .in("student_id", safeStudentIds),
+  ]);
 
-  // Fetch test results
+  // Step 3: test_results depends on assignment ids
   const assignmentIds = (assignments ?? []).map((a) => a.id);
   const { data: testResults } = await supabase
     .from("test_results")

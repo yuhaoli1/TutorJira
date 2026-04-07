@@ -38,27 +38,27 @@ export default async function ParentChildDetailPage({
     }
   }
 
-  // Fetch student
-  const { data: student } = await supabase
-    .from("students")
-    .select("id, name, grade")
-    .eq("id", id)
-    .single();
+  // student + assignments are independent — fetch in parallel
+  const [{ data: student }, { data: assignments }] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, name, grade")
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("task_assignments")
+      .select(
+        "id, status, note, created_at, submitted_at, confirmed_at, task:tasks(title, type, due_date)"
+      )
+      .eq("student_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (!student) {
     return (
       <div className="text-center py-12 text-[#B4BCC8]">Student not found</div>
     );
   }
-
-  // Fetch all assignments for this student
-  const { data: assignments } = await supabase
-    .from("task_assignments")
-    .select(
-      "id, status, note, created_at, submitted_at, confirmed_at, task:tasks(title, type, due_date)"
-    )
-    .eq("student_id", id)
-    .order("created_at", { ascending: false });
 
   // Fetch test results
   const assignmentIds = (assignments ?? []).map((a) => a.id);

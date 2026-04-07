@@ -6,27 +6,25 @@ export default async function PracticePage() {
   const user = await requireRole(["student"]);
   const supabase = await createClient();
 
-  // Get student record
-  const { data: student } = await supabase
-    .from("students")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
-
-  // Fetch knowledge point tags (replacing knowledge_topics)
-  const { data: knowledgeTags } = await supabase
-    .from("question_tags")
-    .select("id, name, slug, parent_id, sort_order, metadata, category_id, question_tag_categories(slug)")
-    .order("sort_order", { ascending: true });
+  // All three reads are independent — fetch in parallel
+  const [
+    { data: student },
+    { data: knowledgeTags },
+    { data: tagLinks },
+  ] = await Promise.all([
+    supabase.from("students").select("id").eq("user_id", user.id).single(),
+    supabase
+      .from("question_tags")
+      .select(
+        "id, name, slug, parent_id, sort_order, metadata, category_id, question_tag_categories(slug)"
+      )
+      .order("sort_order", { ascending: true }),
+    supabase.from("question_tag_links").select("tag_id"),
+  ]);
 
   const kpTags = (knowledgeTags || []).filter(
     (t) => (t.question_tag_categories as unknown as { slug: string } | null)?.slug === "knowledge_point"
   );
-
-  // Fetch question counts per tag
-  const { data: tagLinks } = await supabase
-    .from("question_tag_links")
-    .select("tag_id");
 
   const tagQuestionCounts: Record<string, number> = {};
   tagLinks?.forEach((l) => {

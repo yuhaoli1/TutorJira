@@ -7,18 +7,18 @@ export default async function TeacherDashboard() {
   const user = await requireRole(["admin", "teacher"]);
   const supabase = await createClient();
 
-  // Fetch all students
-  const { data: students } = await supabase
-    .from("students")
-    .select("id, name, grade")
-    .order("name");
+  // students + assignments are independent — fetch in parallel
+  const [{ data: students }, { data: assignments }] = await Promise.all([
+    supabase
+      .from("students")
+      .select("id, name, grade")
+      .order("name"),
+    supabase
+      .from("task_assignments")
+      .select("id, student_id, status, task:tasks(title, type, due_date)"),
+  ]);
 
-  // Fetch all task assignments with test results
-  const { data: assignments } = await supabase
-    .from("task_assignments")
-    .select("id, student_id, status, task:tasks(title, type, due_date)");
-
-  // Fetch all test results
+  // test_results depends on assignment ids
   const assignmentIds = (assignments ?? []).map((a) => a.id);
   const { data: testResults } = await supabase
     .from("test_results")
