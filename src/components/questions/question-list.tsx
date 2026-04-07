@@ -64,7 +64,7 @@ export function QuestionList() {
       setQuestions(data.questions || []);
       setTotal(data.total || 0);
     } catch (e) {
-      console.error("获取题目失败:", e);
+      console.error("Failed to fetch questions:", e);
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export function QuestionList() {
       const data = await res.json();
       setKnowledgeTagOptions(data.tags || []);
     } catch (e) {
-      console.error("获取标签失败:", e);
+      console.error("Failed to fetch tags:", e);
     }
   };
 
@@ -90,10 +90,10 @@ export function QuestionList() {
       if (res.ok) {
         fetchQuestions();
       } else {
-        alert("删除失败");
+        alert("Delete failed");
       }
     } catch (e) {
-      console.error("删除失败:", e);
+      console.error("Delete failed:", e);
     }
   };
 
@@ -126,15 +126,15 @@ export function QuestionList() {
 
   return (
     <div>
-      {/* 筛选栏 */}
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* 知识点标签筛选 */}
+        {/* Topic tag filter */}
         <select
           value={filterTagId}
           onChange={(e) => { setFilterTagId(e.target.value); setPage(1); }}
           className="h-8 rounded-lg border border-[#E8EAED] bg-white px-2.5 text-xs text-[#4D5766] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
         >
-          <option value="">全部知识点</option>
+          <option value="">All topics</option>
           {knowledgeTagOptions.filter((t) => !t.parent_id).map((root) => {
             const children = knowledgeTagOptions.filter((t) => t.parent_id === root.id);
             if (children.length === 0) {
@@ -146,7 +146,7 @@ export function QuestionList() {
             }
             return (
               <optgroup key={root.id} label={root.name}>
-                <option value={root.id}>{root.name}（全部）</option>
+                <option value={root.id}>{root.name} (all)</option>
                 {children.map((child) => (
                   <option key={child.id} value={child.id}>
                     {child.name}
@@ -162,7 +162,7 @@ export function QuestionList() {
           onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
           className="h-8 rounded-lg border border-[#E8EAED] bg-white px-2.5 text-xs text-[#4D5766] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
         >
-          <option value="">全部题型</option>
+          <option value="">All types</option>
           {Object.entries(QUESTION_TYPES).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -175,7 +175,7 @@ export function QuestionList() {
           onChange={(e) => { setFilterDifficulty(e.target.value); setPage(1); }}
           className="h-8 rounded-lg border border-[#E8EAED] bg-white px-2.5 text-xs text-[#4D5766] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
         >
-          <option value="">全部难度</option>
+          <option value="">All difficulties</option>
           {Object.entries(DIFFICULTY_LABELS).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -189,7 +189,7 @@ export function QuestionList() {
             className="flex items-center gap-1 text-xs text-[#B4BCC8] hover:text-[#4D5766]"
           >
             <X className="size-3" />
-            清除筛选
+            Clear filters
           </button>
         )}
 
@@ -197,19 +197,19 @@ export function QuestionList() {
 
         <Button size="sm" onClick={() => setShowForm(true)}>
           <Plus className="size-3.5 mr-1" />
-          添加题目
+          Add question
         </Button>
       </div>
 
-      {/* 题目列表 */}
+      {/* Question list */}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-[#B4BCC8]">
           <Loader2 className="size-5 animate-spin mr-2" />
-          加载中...
+          Loading...
         </div>
       ) : questions.length === 0 ? (
         <div className="text-center py-12 text-[#B4BCC8] text-sm">
-          {hasFilters ? "未找到匹配的题目" : "暂无题目，点击「添加题目」创建"}
+          {hasFilters ? "No questions match your filters" : "No questions yet — click \"Add question\" to create one"}
         </div>
       ) : (
         <>
@@ -224,7 +224,7 @@ export function QuestionList() {
             ))}
           </div>
 
-          {/* 分页 */}
+          {/* Pagination */}
           {total > 20 && (
             <div className="flex items-center justify-center gap-2 mt-4">
               <Button
@@ -233,10 +233,10 @@ export function QuestionList() {
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
-                上一页
+                Previous
               </Button>
               <span className="text-xs text-[#B4BCC8]">
-                第 {page} 页 / 共 {Math.ceil(total / 20)} 页（{total} 题）
+                Page {page} of {Math.ceil(total / 20)} ({total} total)
               </span>
               <Button
                 variant="outline"
@@ -244,14 +244,14 @@ export function QuestionList() {
                 disabled={page * 20 >= total}
                 onClick={() => setPage(page + 1)}
               >
-                下一页
+                Next
               </Button>
             </div>
           )}
         </>
       )}
 
-      {/* 创建/编辑表单 */}
+      {/* Create/edit form */}
       {showForm && (
         <QuestionForm
           question={editingQuestion}

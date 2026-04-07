@@ -20,10 +20,10 @@ interface ExtractedQ {
 }
 
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-  { key: "browse", label: "题库浏览", icon: <BookOpen className="size-4" /> },
-  { key: "upload", label: "上传题目", icon: <Upload className="size-4" /> },
-  { key: "topics", label: "知识点管理", icon: <FolderTree className="size-4" /> },
-  { key: "chat", label: "AI 助手", icon: <Sparkles className="size-4" /> },
+  { key: "browse", label: "Browse", icon: <BookOpen className="size-4" /> },
+  { key: "upload", label: "Upload", icon: <Upload className="size-4" /> },
+  { key: "topics", label: "Topics", icon: <FolderTree className="size-4" /> },
+  { key: "chat", label: "AI assistant", icon: <Sparkles className="size-4" /> },
 ];
 
 export function QuestionsHub() {
@@ -34,7 +34,7 @@ export function QuestionsHub() {
   const [extractedQuestions, setExtractedQuestions] = useState<ExtractedQ[]>([]);
 
   const handleProcessed = (id: string, questions: ExtractedQ[]) => {
-    // 先清空再设置，确保 AIReviewPanel 重新挂载
+    // Clear first, then set, to force AIReviewPanel to remount
     setUploadId(null);
     setExtractedQuestions([]);
     setTimeout(() => {
@@ -51,7 +51,7 @@ export function QuestionsHub() {
 
   return (
     <div>
-      {/* 标签栏 */}
+      {/* Tab bar */}
       <div className="flex gap-1 mb-6 bg-[#F4F5F6] rounded-xl p-1">
         {TABS.map((tab) => (
           <button
@@ -69,7 +69,7 @@ export function QuestionsHub() {
         ))}
       </div>
 
-      {/* 内容区 */}
+      {/* Content */}
       {activeTab === "browse" && <QuestionList />}
 
       {activeTab === "upload" && (

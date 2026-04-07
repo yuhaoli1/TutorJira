@@ -28,7 +28,7 @@ export function TagSelector({
   onChange,
   allowMultiple = true,
   label,
-  placeholder = "选择...",
+  placeholder = "Select...",
 }: TagSelectorProps) {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +151,7 @@ export function TagSelector({
                     value={root.id}
                     disabled={selectedTagIds.includes(root.id)}
                   >
-                    {root.name}（全部）
+                    {root.name} (all)
                   </option>
                   {children.map((child) => (
                     <option

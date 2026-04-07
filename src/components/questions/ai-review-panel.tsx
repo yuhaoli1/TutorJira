@@ -114,7 +114,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
       for (const cat of categories) {
         const ui = getTagCategoryUI(cat.slug, cat.name);
         if (ui.required && !(tags[cat.slug]?.length)) {
-          alert(`第 ${i + 1} 题尚未选择${ui.label}`);
+          alert(`Question ${i + 1} is missing ${ui.label}`);
           setExpandedIndex(i);
           return;
         }
@@ -138,15 +138,15 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
 
       if (res.ok) {
         const data = await res.json();
-        alert(`成功保存 ${data.count} 道题目`);
+        alert(`Saved ${data.count} questions`);
         onSaved();
       } else {
         const data = await res.json();
-        alert(data.error || "保存失败");
+        alert(data.error || "Save failed");
       }
     } catch (e) {
-      console.error("保存失败:", e);
-      alert("保存失败");
+      console.error("Save failed:", e);
+      alert("Save failed");
     } finally {
       setSaving(false);
     }
@@ -155,7 +155,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
   if (questions.length === 0) {
     return (
       <div className="text-center py-8 text-[#B4BCC8] text-sm">
-        未识别到题目
+        No questions extracted
       </div>
     );
   }
@@ -164,28 +164,28 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-medium text-[#2E3338]">
-          共识别 {questions.length} 道题目，请审核后保存
+          {questions.length} questions extracted — review and save
         </p>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => {
-              if (confirm("确定放弃所有识别结果？")) onSaved();
+              if (confirm("Discard all extracted questions?")) onSaved();
             }}
             disabled={saving}
           >
-            放弃全部
+            Discard all
           </Button>
           <Button onClick={handleSaveAll} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-1" />
-                保存中...
+                Saving...
               </>
           ) : (
             <>
               <Save className="size-4 mr-1" />
-              保存全部
+              Save all
             </>
           )}
           </Button>
@@ -200,7 +200,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
             key={index}
             className="rounded-xl border border-[#E8EAED] bg-white overflow-hidden"
           >
-            {/* 折叠标题 */}
+            {/* Collapsed header */}
             <div
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[#F4F5F6]"
               onClick={() => setExpandedIndex(isExpanded ? null : index)}
@@ -225,10 +225,10 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
               </div>
             </div>
 
-            {/* 展开编辑 */}
+            {/* Expanded editor */}
             {isExpanded && tagsLoaded && (
               <div className="px-4 pb-4 space-y-3 border-t border-[#E8EAED]">
-                {/* 动态标签维度 */}
+                {/* Dynamic tag categories */}
                 {categories.map((cat, catIdx) => {
                   const ui = getTagCategoryUI(cat.slug, cat.name);
                   return (
@@ -239,7 +239,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                         onChange={(ids) => updateTags(index, cat.slug, ids)}
                         allowMultiple={cat.allow_multiple}
                         label={`${ui.label}${ui.required ? " *" : ""}${
-                          catIdx === 0 && q.suggested_topic ? ` (AI 建议: ${q.suggested_topic})` : ""
+                          catIdx === 0 && q.suggested_topic ? ` (AI suggested: ${q.suggested_topic})` : ""
                         }`}
                         placeholder={ui.placeholder}
                       />
@@ -247,9 +247,9 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   );
                 })}
 
-                {/* 题干 */}
+                {/* Stem */}
                 <div>
-                  <label className="block text-xs font-medium text-[#4D5766] mb-1">题干</label>
+                  <label className="block text-xs font-medium text-[#4D5766] mb-1">Question</label>
                   <textarea
                     value={q.stem}
                     onChange={(e) => updateQuestion(index, { stem: e.target.value })}
@@ -258,10 +258,10 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   />
                 </div>
 
-                {/* 选项 */}
+                {/* Options */}
                 {q.type === "choice" && (
                   <div>
-                    <label className="block text-xs font-medium text-[#4D5766] mb-1">选项</label>
+                    <label className="block text-xs font-medium text-[#4D5766] mb-1">Options</label>
                     <div className="space-y-1.5">
                       {(q.options || []).map((opt, i) => (
                         <input
@@ -280,9 +280,9 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   </div>
                 )}
 
-                {/* 答案 */}
+                {/* Answer */}
                 <div>
-                  <label className="block text-xs font-medium text-[#4D5766] mb-1">答案</label>
+                  <label className="block text-xs font-medium text-[#4D5766] mb-1">Answer</label>
                   <textarea
                     value={q.answer}
                     onChange={(e) => updateQuestion(index, { answer: e.target.value })}
@@ -291,9 +291,9 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   />
                 </div>
 
-                {/* 解析 */}
+                {/* Explanation */}
                 <div>
-                  <label className="block text-xs font-medium text-[#4D5766] mb-1">解析</label>
+                  <label className="block text-xs font-medium text-[#4D5766] mb-1">Explanation</label>
                   <textarea
                     value={q.explanation || ""}
                     onChange={(e) => updateQuestion(index, { explanation: e.target.value })}
@@ -302,7 +302,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                   />
                 </div>
 
-                {/* 删除按钮 */}
+                {/* Delete button */}
                 <div className="flex justify-end">
                   <Button
                     variant="destructive"
@@ -310,7 +310,7 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
                     onClick={() => removeQuestion(index)}
                   >
                     <Trash2 className="size-3.5 mr-1" />
-                    删除此题
+                    Delete this question
                   </Button>
                 </div>
               </div>
@@ -319,18 +319,18 @@ export function AIReviewPanel({ uploadId, questions: initialQuestions, onSaved }
         );
       })}
 
-      {/* 底部保存按钮 */}
+      {/* Bottom save button */}
       <div className="flex justify-end pt-2">
         <Button onClick={handleSaveAll} disabled={saving}>
           {saving ? (
             <>
               <Loader2 className="size-4 animate-spin mr-1" />
-              保存中...
+              Saving...
             </>
           ) : (
             <>
               <Save className="size-4 mr-1" />
-              保存全部（{questions.length} 题）
+              Save all ({questions.length})
             </>
           )}
         </Button>

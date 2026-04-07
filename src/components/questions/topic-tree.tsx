@@ -42,7 +42,7 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
         setSubjects(data.subjects);
       }
     } catch (e) {
-      console.error("获取知识点失败:", e);
+      console.error("Failed to fetch topics:", e);
     } finally {
       setLoading(false);
     }
@@ -54,14 +54,14 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
       const res = await fetch("/api/topics/import", { method: "POST" });
       const data = await res.json();
       if (res.ok) {
-        alert(`导入成功！共导入 ${data.total_inserted} 个知识点`);
+        alert(`Imported ${data.total_inserted} topics successfully`);
         fetchTopics();
       } else {
-        alert(data.error || "导入失败");
+        alert(data.error || "Import failed");
       }
     } catch (e) {
-      console.error("导入失败:", e);
-      alert("导入失败");
+      console.error("Import failed:", e);
+      alert("Import failed");
     } finally {
       setImporting(false);
     }
@@ -137,17 +137,17 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
     return (
       <div className="flex items-center justify-center py-12 text-[#B4BCC8]">
         <Loader2 className="size-5 animate-spin mr-2" />
-        加载知识点中...
+        Loading topics...
       </div>
     );
   }
 
   return (
     <div>
-      {/* 学科选择器 */}
+      {/* Subject picker */}
       {subjects.length > 0 && (
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#E8EAED]">
-          <span className="text-sm text-[#4D5766]">学科：</span>
+          <span className="text-sm text-[#4D5766]">Subject:</span>
           <button
             onClick={() => setSelectedSubject(null)}
             className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -156,7 +156,7 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
                 : "bg-[#F4F5F6] text-[#4D5766] hover:bg-[#E8EAED]"
             }`}
           >
-            全部
+            All
           </button>
           {subjects.map((s) => (
             <button
@@ -176,15 +176,15 @@ export function TopicTree({ onSelectTopic, selectedTopicId }: TopicTreeProps) {
 
       {topics.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-[#B4BCC8] text-sm mb-4">暂无知识点数据</p>
+          <p className="text-[#B4BCC8] text-sm mb-4">No topics yet</p>
           <Button onClick={handleImport} disabled={importing}>
             {importing ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-1" />
-                导入中...
+                Importing...
               </>
             ) : (
-              "导入奥数课程知识点"
+              "Import Common Core topics"
             )}
           </Button>
         </div>

@@ -99,11 +99,11 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
 
   const handleSave = async () => {
     if (!stem.trim()) {
-      alert("请输入题干");
+      alert("Please enter the question");
       return;
     }
     if (!answer.trim()) {
-      alert("请输入答案");
+      alert("Please enter an answer");
       return;
     }
 
@@ -111,7 +111,7 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
     for (const cat of categories) {
       const ui = getTagCategoryUI(cat.slug, cat.name);
       if (ui.required && !(tagsByCategory[cat.slug]?.length)) {
-        alert(`请选择${ui.label}`);
+        alert(`Please select ${ui.label}`);
         return;
       }
     }
@@ -146,11 +146,11 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
         onSaved();
       } else {
         const data = await res.json();
-        alert(data.error || "保存失败");
+        alert(data.error || "Save failed");
       }
     } catch (e) {
-      console.error("保存失败:", e);
-      alert("保存失败");
+      console.error("Save failed:", e);
+      alert("Save failed");
     } finally {
       setSaving(false);
     }
@@ -161,7 +161,7 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
       <div className="w-full max-w-lg mx-4 bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8EAED]">
           <h3 className="text-base font-semibold text-[#2E3338]">
-            {isEditing ? "编辑题目" : "添加题目"}
+            {isEditing ? "Edit question" : "Add question"}
           </h3>
           <button onClick={onClose} className="text-[#B4BCC8] hover:text-[#4D5766]">
             <X className="size-5" />
@@ -169,7 +169,7 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
         </div>
 
         <div className="p-5 space-y-4">
-          {/* 动态标签维度 */}
+          {/* Dynamic tag categories */}
           {categoriesLoaded && categories.map((cat) => {
             const ui = getTagCategoryUI(cat.slug, cat.name);
             return (
@@ -185,22 +185,22 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
             );
           })}
 
-          {/* 题干 */}
+          {/* Stem */}
           <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">题干 *</label>
+            <label className="block text-xs font-medium text-[#4D5766] mb-1">Question *</label>
             <textarea
               value={stem}
               onChange={(e) => setStem(e.target.value)}
               rows={4}
               className="w-full rounded-lg border border-[#E8EAED] bg-white px-3 py-2 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20 resize-y"
-              placeholder="请输入题目内容..."
+              placeholder="Type the question..."
             />
           </div>
 
-          {/* 选项（仅选择题） */}
+          {/* Options (multiple choice only) */}
           {type === "choice" && (
             <div>
-              <label className="block text-xs font-medium text-[#4D5766] mb-1">选项</label>
+              <label className="block text-xs font-medium text-[#4D5766] mb-1">Options</label>
               <div className="space-y-2">
                 {options.map((opt, i) => (
                   <div key={i} className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
                         setOptions(newOpts);
                       }}
                       className="flex-1 h-8 rounded-lg border border-[#E8EAED] bg-white px-3 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20"
-                      placeholder={`选项 ${String.fromCharCode(65 + i)}`}
+                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
                     />
                     {options.length > 2 && (
                       <button
@@ -231,50 +231,50 @@ export function QuestionForm({ question, onClose, onSaved }: QuestionFormProps) 
                     className="flex items-center gap-1 text-xs text-[#B4BCC8] hover:text-[#4D5766]"
                   >
                     <Plus className="size-3" />
-                    添加选项
+                    Add option
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* 答案 */}
+          {/* Answer */}
           <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">答案 *</label>
+            <label className="block text-xs font-medium text-[#4D5766] mb-1">Answer *</label>
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               rows={type === "solution" ? 4 : 1}
               className="w-full rounded-lg border border-[#E8EAED] bg-white px-3 py-2 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20 resize-y"
-              placeholder={type === "choice" ? "如：A" : "请输入答案..."}
+              placeholder={type === "choice" ? "e.g. A" : "Type the answer..."}
             />
           </div>
 
-          {/* 解析 */}
+          {/* Explanation */}
           <div>
-            <label className="block text-xs font-medium text-[#4D5766] mb-1">解析</label>
+            <label className="block text-xs font-medium text-[#4D5766] mb-1">Explanation</label>
             <textarea
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
               rows={3}
               className="w-full rounded-lg border border-[#E8EAED] bg-white px-3 py-2 text-sm text-[#2E3338] focus:outline-none focus:ring-2 focus:ring-[#163300]/20 resize-y"
-              placeholder="解题思路..."
+              placeholder="How to solve it..."
             />
           </div>
         </div>
 
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#E8EAED]">
           <Button variant="outline" onClick={onClose}>
-            取消
+            Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-1" />
-                保存中...
+                Saving...
               </>
             ) : (
-              isEditing ? "更新" : "保存"
+              isEditing ? "Update" : "Save"
             )}
           </Button>
         </div>

@@ -55,7 +55,7 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
     <div className="rounded-xl border border-[#E8EAED] bg-white p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          {/* 标签行 */}
+          {/* Tag row */}
           {question.tags && question.tags.length > 0 ? (
             <div className="mb-2">
               <TagBadges tags={question.tags} />
@@ -74,7 +74,7 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
                   DIFFICULTY_COLORS[question.difficulty] || "bg-gray-50 text-gray-600"
                 }`}
               >
-                {DIFFICULTY_LABELS[question.difficulty as keyof typeof DIFFICULTY_LABELS] || `难度${question.difficulty}`}
+                {DIFFICULTY_LABELS[question.difficulty as keyof typeof DIFFICULTY_LABELS] || `Difficulty ${question.difficulty}`}
               </span>
               {question.knowledge_topics && (
                 <span className="text-xs text-[#B4BCC8] truncate">
@@ -84,12 +84,12 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
             </div>
           )}
 
-          {/* 题干 */}
+          {/* Stem */}
           <p className="text-sm text-[#2E3338] leading-relaxed whitespace-pre-wrap">
             {question.content.stem}
           </p>
 
-          {/* 选项 */}
+          {/* Options */}
           {question.type === "choice" && question.content.options && (
             <div className="mt-2 space-y-1">
               {question.content.options.map((opt, i) => (
@@ -100,21 +100,21 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
             </div>
           )}
 
-          {/* 答案 */}
+          {/* Answer */}
           <div className="mt-3 pt-2 border-t border-[#E8EAED]">
             <p className="text-xs text-[#B4BCC8]">
-              答案：
+              Answer:{" "}
               <span className="text-[#163300] font-medium">{question.content.answer}</span>
             </p>
             {question.content.explanation && (
               <p className="text-xs text-[#B4BCC8] mt-1">
-                解析：{question.content.explanation}
+                Explanation: {question.content.explanation}
               </p>
             )}
           </div>
         </div>
 
-        {/* 操作按钮 */}
+        {/* Action buttons */}
         <div className="flex flex-col gap-1 shrink-0">
           {onEdit && (
             <Button
@@ -130,7 +130,7 @@ export function QuestionCard({ question, onEdit, onDelete }: QuestionCardProps) 
               variant="ghost"
               size="icon-xs"
               onClick={() => {
-                if (confirm("确定删除此题目？")) {
+                if (confirm("Delete this question?")) {
                   onDelete(question.id);
                 }
               }}

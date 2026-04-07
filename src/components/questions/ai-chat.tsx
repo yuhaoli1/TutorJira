@@ -12,11 +12,11 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-  "给我一道小数乘、除法的速算与巧算的题",
-  "从题库里找一道行程问题，再给我3个变体",
-  "帮我出5道关于最大公因数的填空题",
-  "题库里有多少道关于方程的题目？",
-  "给我一道难度4以上的面积模型题",
+  "Give me a quick mental-math problem on decimal multiplication and division",
+  "Find a distance/rate problem in the library and give me 3 variants",
+  "Make me 5 fill-in-the-blank problems on greatest common factor",
+  "How many problems about equations are in the library?",
+  "Give me an area-model problem with difficulty 4 or higher",
 ];
 
 export function AIChat() {
@@ -61,7 +61,7 @@ export function AIChat() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "AI 回复失败");
+        throw new Error(data.error || "AI reply failed");
       }
 
       const assistantMsg: Message = {
@@ -76,7 +76,7 @@ export function AIChat() {
       const errorMsg: Message = {
         id: Math.random().toString(36).slice(2) + Date.now().toString(36),
         role: "assistant",
-        content: `出错了: ${e instanceof Error ? e.message : "未知错误"}`,
+        content: `Something went wrong: ${e instanceof Error ? e.message : "unknown error"}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -95,7 +95,7 @@ export function AIChat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
-      {/* 消息区 */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -103,10 +103,10 @@ export function AIChat() {
               <Sparkles className="size-6 text-[#9FE870]" />
             </div>
             <h3 className="text-lg font-semibold text-[#2E3338] mb-2">
-              题库 AI 助手
+              Question library AI assistant
             </h3>
             <p className="text-sm text-[#B4BCC8] mb-6 max-w-md">
-              我可以从题库中查找题目、生成变体题、按知识点出题。试试下面的问题：
+              I can find questions in the library, generate variants, or create new ones by topic. Try one of these:
             </p>
             <div className="flex flex-wrap gap-2 justify-center max-w-lg">
               {SUGGESTIONS.map((s, i) => (
@@ -165,7 +165,7 @@ export function AIChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 输入区 */}
+      {/* Input */}
       <div className="border-t border-[#E8EAED] pt-3">
         <div className="flex gap-2 items-end">
           <textarea
@@ -173,7 +173,7 @@ export function AIChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="问我关于题库的问题..."
+            placeholder="Ask me anything about the question library..."
             rows={1}
             className="flex-1 resize-none rounded-xl border border-[#E8EAED] bg-white px-4 py-2.5 text-sm text-[#2E3338] placeholder:text-[#B4BCC8] focus:outline-none focus:ring-2 focus:ring-[#163300]/20 max-h-32"
             style={{ minHeight: "42px" }}
