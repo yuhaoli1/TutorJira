@@ -135,61 +135,61 @@ function Icon({ children, size = 48 }: { children: React.ReactNode; size?: numbe
 const FEATURES = [
   {
     icon: Icons.camera,
-    title: "拍照建题库",
-    desc: "拍一张试卷，AI自动识别题目、分类知识点，秒速入库",
+    title: "Photo to question bank",
+    desc: "Snap a worksheet — AI extracts questions, tags topics, and adds them to your bank in seconds.",
   },
   {
     icon: Icons.target,
-    title: "精准练习",
-    desc: "按知识点、难度自由组卷，哪里不会练哪里",
+    title: "Targeted practice",
+    desc: "Build practice sets by topic and difficulty. Drill exactly what's weak.",
   },
   {
     icon: Icons.book,
-    title: "智能错题本",
-    desc: "错题自动收集，一键重做，直到彻底掌握",
+    title: "Smart mistakes notebook",
+    desc: "Mistakes are collected automatically. Re-do them in one click until mastered.",
   },
   {
     icon: Icons.chart,
-    title: "数据看板",
-    desc: "学习进度、正确率、薄弱环节，数据说话",
+    title: "Data dashboard",
+    desc: "Progress, accuracy, weak spots — let the data speak.",
   },
   {
     icon: Icons.family,
-    title: "家长实时看",
-    desc: "孩子做了多少题、对了几道，手机随时看",
+    title: "Parents in the loop",
+    desc: "How much your child practiced and how they're doing — anytime, on any phone.",
   },
   {
     icon: Icons.clipboard,
-    title: "老师布任务",
-    desc: "一键布置练习任务，进度自动追踪，省心省力",
+    title: "Teachers assign tasks",
+    desc: "Assign practice in one click. Progress tracks itself.",
   },
 ];
 
 const STEPS = [
-  { icon: Icons.sparkle, title: "注册登录", desc: "老师创建机构，邀请学生和家长" },
-  { icon: Icons.upload, title: "建立题库", desc: "拍照上传试卷，AI自动提取题目" },
-  { icon: Icons.clipboard, title: "布置练习", desc: "按知识点给学生布置任务" },
-  { icon: Icons.trending, title: "数据追踪", desc: "实时查看学习进度和成绩" },
+  { icon: Icons.sparkle, title: "Sign up", desc: "Create your studio and invite students and parents." },
+  { icon: Icons.upload, title: "Build a question bank", desc: "Upload worksheet photos. AI extracts the questions." },
+  { icon: Icons.clipboard, title: "Assign practice", desc: "Send students tasks by topic." },
+  { icon: Icons.trending, title: "Track progress", desc: "See live learning progress and grades." },
 ];
 
 const AUDIENCES = [
   {
     icon: Icons.student,
-    label: "学生",
-    tagline: "做题像闯关，越学越上瘾",
-    points: ["趣味做题界面", "错题自动收集", "知识点闯关"],
+    label: "Students",
+    tagline: "Practice that feels like a game.",
+    points: ["Playful practice UI", "Automatic mistake tracking", "Topic-by-topic mastery"],
   },
   {
     icon: Icons.parents,
-    label: "家长",
-    tagline: "孩子学了什么，一眼就知道",
-    points: ["实时成绩报告", "学习趋势分析", "薄弱点提醒"],
+    label: "Parents",
+    tagline: "Always know what your child is learning.",
+    points: ["Live progress reports", "Learning trend analysis", "Weak-spot alerts"],
   },
   {
     icon: Icons.school,
-    label: "机构 / 老师",
-    tagline: "轻松管理，专注教学",
-    points: ["AI题库建设", "任务一键布置", "学生数据看板"],
+    label: "Tutors & studios",
+    tagline: "Less admin. More teaching.",
+    points: ["AI-powered question bank", "One-click task assignment", "Student data dashboard"],
   },
 ];
 
@@ -202,7 +202,7 @@ export function LandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <LogoIcon size={36} />
             <span className="text-xl font-black tracking-tight text-white">
-              拾萤
+              Firefly
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -210,14 +210,14 @@ export function LandingPage() {
               href="/login"
               className="px-4 py-2 text-sm font-bold rounded-xl transition-colors text-white/80 hover:text-white hover:bg-white/10"
             >
-              登录
+              Log in
             </Link>
             <Link
               href="/login"
               className="px-5 py-2.5 text-sm font-bold rounded-xl border-b-[3px] hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150"
               style={{ background: "#CCFF44", borderBottomColor: "#9ABF33", color: "#0A1628" }}
             >
-              免费开始
+              Start free
             </Link>
           </div>
         </div>
@@ -271,19 +271,19 @@ export function LandingPage() {
               <div className="flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold mb-6 border border-white/20 bg-white/10 text-blue-200 backdrop-blur-sm">
                   <Icon size={20}>{Icons.sparkle}</Icon>
-                  AI驱动的智能学习平台
+                  AI-powered learning platform
                 </div>
 
                 <h1 className="text-4xl md:text-[3.5rem] font-black leading-[1.15] tracking-tight text-white">
-                  让每个孩子
+                  Help every child
                   <br />
-                  <span style={{ color: "#CCFF44" }}>爱上学习</span>
+                  <span style={{ color: "#CCFF44" }}>love learning</span>
                 </h1>
 
                 <p className="mt-5 text-base md:text-lg leading-relaxed max-w-lg text-blue-100/70">
-                  源自「囊萤映雪」—— 拾起萤火，照亮求知之路。
+                  A small light goes a long way.
                   <br />
-                  AI建题库、智能练习、错题追踪，让学习更高效。
+                  Build question banks with AI, practice smart, and track every mistake.
                 </p>
 
                 <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 md:justify-start justify-center">
@@ -292,14 +292,14 @@ export function LandingPage() {
                     className="group px-8 py-4 text-base font-bold text-[#0A1628] rounded-2xl border-b-4 hover:-translate-y-0.5 active:translate-y-0 active:border-b-0 transition-all duration-150 shadow-lg"
                     style={{ background: "#CCFF44", borderBottomColor: "#9ABF33", boxShadow: "0 8px 24px rgba(200,255,50,0.3)" }}
                   >
-                    免费开始使用
+                    Get started free
                     <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
                   </Link>
                   <a
                     href="#features"
                     className="px-8 py-4 text-base font-bold rounded-2xl border-2 border-white/20 text-white/80 hover:border-blue-400/50 hover:text-white transition-colors backdrop-blur-sm"
                   >
-                    了解更多
+                    Learn more
                   </a>
                 </div>
               </div>
@@ -316,9 +316,9 @@ export function LandingPage() {
         <section className="relative z-10 py-10 px-6">
           <div className="max-w-2xl mx-auto flex items-center justify-center gap-4 md:gap-8">
             {[
-              { num: "AI", label: "Claude · GPT · DeepSeek · Gemini", sub: "自由切换，不绑定任何模型" },
-              { num: "4角色", label: "学生·家长·老师·管理", sub: "多角色协同" },
-              { num: "∞", label: "题库无限扩展", sub: "拍照即入库" },
+              { num: "AI", label: "Claude · GPT · DeepSeek · Gemini", sub: "Switch freely — never locked in" },
+              { num: "4 roles", label: "Student · Parent · Teacher · Admin", sub: "Built for collaboration" },
+              { num: "∞", label: "Unlimited question bank", sub: "Snap a photo to add" },
             ].map((s, i) => (
               <div
                 key={i}
@@ -336,10 +336,10 @@ export function LandingPage() {
         <section className="relative z-10 py-16 md:py-20 px-6">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-black text-center mb-3 text-white">
-              为<span style={{ color: "#CCFF44" }}>每个人</span>而设计
+              Built for <span style={{ color: "#CCFF44" }}>everyone</span>
             </h2>
             <p className="text-center mb-12 text-base text-blue-200/60">
-              学生、家长、机构，都能找到属于自己的价值
+              Students, parents, tutors — everyone gets value.
             </p>
 
             <div className="grid md:grid-cols-3 gap-5">
@@ -374,10 +374,10 @@ export function LandingPage() {
         <section id="features" className="relative z-10 py-16 md:py-20 px-6">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-black text-center mb-3 text-white">
-              <span style={{ color: "#CCFF44" }}>6大功能</span>，让学习更简单
+              <span style={{ color: "#CCFF44" }}>6 features</span> that make learning easier
             </h2>
             <p className="text-center mb-12 text-base text-blue-200/60">
-              每一个功能都是为了让孩子学得更好、家长更放心
+              Every feature is built to help kids learn better and parents worry less.
             </p>
 
             <div className="grid md:grid-cols-3 gap-5">
@@ -407,10 +407,10 @@ export function LandingPage() {
       <section className="py-16 md:py-24 px-6" style={{ background: GREEN_BG }}>
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-black text-center mb-3" style={{ color: DARK }}>
-            4步开始，<span style={{ color: GREEN }}>超级简单</span>
+            <span style={{ color: GREEN }}>Get started</span> in 4 simple steps
           </h2>
           <p className="text-center mb-14 text-base" style={{ color: GRAY }}>
-            不需要复杂的配置，注册即用
+            No complicated setup — sign up and go.
           </p>
 
           <div className="grid md:grid-cols-4 gap-4">
@@ -441,16 +441,19 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto text-center">
           <LogoIcon size={80} className="mx-auto mb-6" />
           <h2 className="text-3xl md:text-4xl font-black mb-6" style={{ color: DARK }}>
-            为什么叫<span style={{ color: GREEN }}>「拾萤」</span>？
+            Why <span style={{ color: GREEN }}>Firefly</span>?
           </h2>
           <p className="text-base md:text-lg leading-relaxed mb-8" style={{ color: GRAY }}>
-            晋代车胤家贫，夏日捕捉萤火虫照明读书 —— 这就是
-            <span className="font-bold" style={{ color: DARK }}>「囊萤映雪」</span>的故事。
+            A single firefly doesn&rsquo;t look like much. But{" "}
+            <span className="font-bold" style={{ color: DARK }}>
+              gather enough of them
+            </span>{" "}
+            and you have light to read by.
             <br className="hidden md:block" />
-            千年后的今天，我们用AI重新「拾」起那些萤火，
+            That&rsquo;s how learning works too — small wins, collected over time, become real understanding.
             <br className="hidden md:block" />
             <span className="font-bold" style={{ color: GREEN_DARK }}>
-              让科技成为照亮学习之路的微光。
+              We use AI to help every student gather their own fireflies.
             </span>
           </p>
           <div
@@ -458,7 +461,7 @@ export function LandingPage() {
             style={{ borderColor: GREEN, background: GREEN_LIGHT, color: GREEN_DARK }}
           >
             <LogoIcon size={24} />
-            拾起萤火，点亮未来
+            Small lights, big learning
           </div>
         </div>
       </section>
@@ -472,17 +475,17 @@ export function LandingPage() {
           >
             <LogoIcon size={64} className="mx-auto mb-6 relative z-10 drop-shadow-lg" />
             <h2 className="text-3xl md:text-4xl font-black mb-4 relative z-10">
-              准备好开始了吗？
+              Ready to get started?
             </h2>
             <p className="text-lg md:text-xl opacity-90 mb-8 relative z-10">
-              免费注册，让AI帮助孩子更聪明地学习
+              Sign up free and let AI help kids learn smarter.
             </p>
             <Link
               href="/login"
               className="inline-block px-10 py-4 text-lg font-black rounded-2xl border-b-4 border-gray-200 bg-white hover:-translate-y-1 active:translate-y-0 active:border-b-0 transition-all duration-150 shadow-xl relative z-10"
               style={{ color: GREEN_DARK }}
             >
-              立即体验 →
+              Try it now →
             </Link>
           </div>
         </div>
@@ -493,11 +496,11 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <LogoIcon size={28} />
-            <span className="text-lg font-black" style={{ color: DARK }}>拾萤</span>
-            <span className="text-sm ml-1" style={{ color: GRAY }}>AI智能学习平台</span>
+            <span className="text-lg font-black" style={{ color: DARK }}>Firefly</span>
+            <span className="text-sm ml-1" style={{ color: GRAY }}>AI learning platform</span>
           </div>
           <p className="text-sm" style={{ color: GRAY }}>
-            © {new Date().getFullYear()} 拾萤 ShiYing. All rights reserved.
+            © {new Date().getFullYear()} Firefly. All rights reserved.
           </p>
         </div>
       </footer>

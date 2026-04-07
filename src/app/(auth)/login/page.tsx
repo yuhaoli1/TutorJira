@@ -46,7 +46,11 @@ export default function LoginPage() {
     }
   };
 
-  // 手机号发送验证码
+  // TODO: phone OTP login is currently hardcoded to +86 (China). Either remove
+  // phone login entirely or add country-code selection before going live to a
+  // non-Chinese audience.
+
+  // Send SMS verification code
   const sendCode = async () => {
     setLoading(true);
     setError("");
@@ -57,13 +61,13 @@ export default function LoginPage() {
       if (error) throw error;
       setStep("otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "发送验证码失败");
+      setError(err instanceof Error ? err.message : "Failed to send verification code");
     } finally {
       setLoading(false);
     }
   };
 
-  // 手机号验证 OTP
+  // Verify SMS OTP
   const verifyCode = async () => {
     setLoading(true);
     setError("");
@@ -76,13 +80,13 @@ export default function LoginPage() {
       if (error) throw error;
       if (data.user) await checkProfileAndRedirect(data.user.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "验证码错误");
+      setError(err instanceof Error ? err.message : "Invalid verification code");
     } finally {
       setLoading(false);
     }
   };
 
-  // 邮箱密码登录
+  // Email + password sign in
   const emailLogin = async () => {
     setLoading(true);
     setError("");
@@ -94,13 +98,13 @@ export default function LoginPage() {
       if (error) throw error;
       if (data.user) await checkProfileAndRedirect(data.user.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败");
+      setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // 邮箱注册
+  // Email sign up
   const emailSignUp = async () => {
     setLoading(true);
     setError("");
@@ -110,10 +114,10 @@ export default function LoginPage() {
         password,
       });
       if (error) throw error;
-      // 需要邮箱确认，显示提示
+      // Email confirmation required — show the check-email screen.
       setStep("check-email");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "注册失败");
+      setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -123,20 +127,20 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: "#F9FDF4" }}>
       {/* Top-left logo link */}
       <a href="/" className="absolute top-5 left-6 flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <img src="/logo.png" alt="拾萤" className="w-8 h-8 object-contain" />
-        <span className="text-base font-black text-[#2D2D2D] tracking-tight">拾萤</span>
+        <img src="/logo.png" alt="Firefly" className="w-8 h-8 object-contain" />
+        <span className="text-base font-black text-[#2D2D2D] tracking-tight">Firefly</span>
       </a>
 
       <div className="w-full max-w-sm space-y-8 rounded-3xl bg-white p-8 border-2 border-b-4 border-[#E8F5D6]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.png" alt="拾萤" className="w-12 h-12 object-contain" />
-            <h1 className="text-2xl font-black text-[#2D2D2D] tracking-tight">拾萤</h1>
+            <img src="/logo.png" alt="Firefly" className="w-12 h-12 object-contain" />
+            <h1 className="text-2xl font-black text-[#2D2D2D] tracking-tight">Firefly</h1>
           </div>
-          <p className="mt-1 text-sm text-[#6B7280]">AI智能学习平台 · 请登录或注册</p>
+          <p className="mt-1 text-sm text-[#6B7280]">AI learning platform · Sign in or create an account</p>
         </div>
 
-        {/* 切换登录方式 */}
+        {/* Toggle between email and phone */}
         {step !== "check-email" && (
           <div className="grid grid-cols-2 gap-2 rounded-full bg-[#F4F5F6] p-1">
           <button
@@ -151,7 +155,7 @@ export default function LoginPage() {
                 : "text-[#B4BCC8] hover:text-[#4D5766]"
             }`}
           >
-            邮箱登录
+            Email
           </button>
           <button
             onClick={() => {
@@ -165,7 +169,7 @@ export default function LoginPage() {
                 : "text-[#B4BCC8] hover:text-[#4D5766]"
             }`}
           >
-            手机号登录
+            Phone
           </button>
           </div>
         )}
@@ -176,19 +180,19 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* 邮箱登录 */}
+        {/* Email sign in */}
         {method === "email" && step !== "check-email" && (
           <div className="space-y-4">
             <input
               type="email"
-              placeholder="邮箱地址"
+              placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             />
             <input
               type="password"
-              placeholder="密码（至少6位）"
+              placeholder="Password (at least 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
@@ -198,18 +202,18 @@ export default function LoginPage() {
               disabled={loading || !email || password.length < 6}
               className="w-full py-3 text-base"
             >
-              {loading ? "处理中..." : isSignUp ? "注册" : "登录"}
+              {loading ? "Working..." : isSignUp ? "Sign up" : "Sign in"}
             </Button>
             <button
               onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
               className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
-              {isSignUp ? "已有账号？去登录" : "没有账号？去注册"}
+              {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
             </button>
           </div>
         )}
 
-        {/* 手机号登录 */}
+        {/* Phone sign in */}
         {method === "phone" && step === "input" && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -218,7 +222,7 @@ export default function LoginPage() {
               </span>
               <input
                 type="tel"
-                placeholder="手机号"
+                placeholder="Phone number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-base text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
@@ -230,22 +234,22 @@ export default function LoginPage() {
               disabled={loading || phone.replace(/\D/g, "").length < 11}
               className="w-full py-3 text-base"
             >
-              {loading ? "发送中..." : "获取验证码"}
+              {loading ? "Sending..." : "Send code"}
             </Button>
           </div>
         )}
 
-        {/* 邮箱确认提示 */}
+        {/* Email confirmation screen */}
         {step === "check-email" && (
           <div className="space-y-4 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-3xl">
               ✉
             </div>
             <p className="text-base font-medium text-[#2E3338]">
-              确认邮件已发送
+              Confirmation email sent
             </p>
             <p className="text-sm text-[#B4BCC8]">
-              请查看 <span className="font-medium text-[#4D5766]">{email}</span> 的收件箱，点击确认链接完成注册
+              Check the inbox at <span className="font-medium text-[#4D5766]">{email}</span> and click the confirmation link to finish signing up.
             </p>
             <button
               onClick={() => {
@@ -255,20 +259,20 @@ export default function LoginPage() {
               }}
               className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
-              返回登录
+              Back to sign in
             </button>
           </div>
         )}
 
-        {/* 手机号 OTP 验证 */}
+        {/* Phone OTP verification */}
         {method === "phone" && step === "otp" && (
           <div className="space-y-4">
             <p className="text-center text-sm text-[#B4BCC8]">
-              验证码已发送至 +86 {phone}
+              Code sent to +86 {phone}
             </p>
             <input
               type="text"
-              placeholder="6位验证码"
+              placeholder="6-digit code"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
               className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-4 py-3 text-center text-2xl tracking-widest text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
@@ -279,7 +283,7 @@ export default function LoginPage() {
               disabled={loading || otp.length < 6}
               className="w-full py-3 text-base"
             >
-              {loading ? "验证中..." : "登录"}
+              {loading ? "Verifying..." : "Sign in"}
             </Button>
             <button
               onClick={() => {
@@ -288,7 +292,7 @@ export default function LoginPage() {
               }}
               className="w-full text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors duration-150"
             >
-              返回修改手机号
+              Use a different phone number
             </button>
           </div>
         )}
