@@ -82,7 +82,7 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
           className="flex items-center gap-1.5 text-sm text-[#4D5766] hover:text-[#2E3338] mb-4 transition-colors"
         >
           <ArrowLeft className="size-4" />
-          返回知识点选择
+          Back to topics
         </button>
         <PracticeConsole
           topicIds={config.topicIds}
@@ -101,27 +101,27 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
       {/* Settings bar */}
       <div className="flex items-center gap-4 p-4 rounded-xl bg-[#F4F5F6]">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-[#4D5766]">难度：</label>
+          <label className="text-xs font-medium text-[#4D5766]">Difficulty:</label>
           <select
             value={selectedDifficulty || ""}
             onChange={(e) => setSelectedDifficulty(e.target.value ? parseInt(e.target.value) : undefined)}
             className="rounded-lg border border-[#E8EAED] bg-white px-2.5 py-1.5 text-xs text-[#2E3338] outline-none focus:border-[#163300]"
           >
-            <option value="">全部难度</option>
+            <option value="">All difficulties</option>
             {Object.entries(DIFFICULTY_LABELS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-[#4D5766]">题量：</label>
+          <label className="text-xs font-medium text-[#4D5766]">Questions:</label>
           <select
             value={questionCount}
             onChange={(e) => setQuestionCount(parseInt(e.target.value))}
             className="rounded-lg border border-[#E8EAED] bg-white px-2.5 py-1.5 text-xs text-[#2E3338] outline-none focus:border-[#163300]"
           >
             {[5, 10, 15, 20, 30].map((n) => (
-              <option key={n} value={n}>{n} 题</option>
+              <option key={n} value={n}>{n}</option>
             ))}
           </select>
         </div>
@@ -147,7 +147,7 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-[#B4BCC8]">
-                  {topic.totalQuestions} 题
+                  {topic.totalQuestions} questions
                 </span>
                 {topic.totalQuestions > 0 && (
                   <button
@@ -157,7 +157,7 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
                     }}
                     className="px-3 py-1 rounded-full bg-[#163300] text-white text-xs font-medium hover:bg-[#1e4400] transition-colors"
                   >
-                    开始练习
+                    Start practice
                   </button>
                 )}
               </div>
@@ -175,13 +175,13 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
                     >
                       <span className="text-sm text-[#4D5766]">{child.title}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-[#B4BCC8]">{count} 题</span>
+                        <span className="text-xs text-[#B4BCC8]">{count} questions</span>
                         {count > 0 && (
                           <button
                             onClick={() => handleStartFromChild(child)}
                             className="px-2.5 py-1 rounded-full border border-[#163300] text-[#163300] text-xs font-medium hover:bg-[#163300] hover:text-white transition-colors"
                           >
-                            练习
+                            Practice
                           </button>
                         )}
                       </div>
@@ -195,7 +195,7 @@ export function PracticeHub({ topicTree, topicQuestionCounts, studentId }: Pract
 
         {topicTree.length === 0 && (
           <div className="text-center py-12 text-[#B4BCC8]">
-            暂无知识点，请联系老师添加
+            No topics yet — ask your teacher to add some
           </div>
         )}
       </div>

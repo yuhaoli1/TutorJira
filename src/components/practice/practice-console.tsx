@@ -111,7 +111,7 @@ export function PracticeConsole({
         setQuestions(shuffled.slice(0, questionCount));
       }
     } catch (error) {
-      console.error("获取题目失败:", error);
+      console.error("Failed to fetch questions:", error);
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ export function PracticeConsole({
 
   const checkAnswer = (userAnswer: string, correctAnswer: string): boolean => {
     const normalize = (s: string) =>
-      s.trim().toLowerCase().replace(/\s+/g, "").replace(/[，。、；：""''（）]/g, "");
+      s.trim().toLowerCase().replace(/\s+/g, "").replace(/[,.;:"'()]/g, "");
 
     // For choice questions, check option letter (A, B, C, D)
     if (currentQuestion?.type === "choice") {
@@ -176,7 +176,7 @@ export function PracticeConsole({
         }),
       });
     } catch (error) {
-      console.error("保存答题记录失败:", error);
+      console.error("Failed to save attempt:", error);
     }
 
     setSubmitting(false);
@@ -198,7 +198,7 @@ export function PracticeConsole({
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="size-8 text-[#163300] animate-spin" />
-        <p className="mt-3 text-sm text-[#B4BCC8]">正在加载题目...</p>
+        <p className="mt-3 text-sm text-[#B4BCC8]">Loading questions...</p>
       </div>
     );
   }
@@ -207,12 +207,12 @@ export function PracticeConsole({
   if (questions.length === 0) {
     return (
       <div className="text-center py-20">
-        <p className="text-[#B4BCC8]">该知识点暂无题目</p>
+        <p className="text-[#B4BCC8]">No questions for this topic yet</p>
         <button
           onClick={onFinish}
           className="mt-4 px-4 py-2 rounded-full bg-[#163300] text-white text-sm font-medium hover:bg-[#1e4400] transition-colors"
         >
-          返回
+          Back
         </button>
       </div>
     );
@@ -228,26 +228,26 @@ export function PracticeConsole({
       <div className="max-w-lg mx-auto py-8">
         <div className="text-center mb-8">
           <Trophy className="size-16 text-[#9FE870] mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-[#2E3338]">练习完成！</h3>
+          <h3 className="text-2xl font-bold text-[#2E3338]">Practice complete!</h3>
           <p className="text-sm text-[#B4BCC8] mt-1">{topicTitle}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="text-center p-4 rounded-xl bg-[#F4F5F6]">
             <p className="text-2xl font-bold text-[#163300]">{accuracy}%</p>
-            <p className="text-xs text-[#B4BCC8] mt-1">正确率</p>
+            <p className="text-xs text-[#B4BCC8] mt-1">Accuracy</p>
           </div>
           <div className="text-center p-4 rounded-xl bg-[#F4F5F6]">
             <p className="text-2xl font-bold text-[#2E3338]">
               {correctCount}/{results.length}
             </p>
-            <p className="text-xs text-[#B4BCC8] mt-1">答对/总题数</p>
+            <p className="text-xs text-[#B4BCC8] mt-1">Correct / Total</p>
           </div>
           <div className="text-center p-4 rounded-xl bg-[#F4F5F6]">
             <p className="text-2xl font-bold text-[#2E3338]">
-              {Math.round(totalTime / 60)}分{totalTime % 60}秒
+              {Math.round(totalTime / 60)}m {totalTime % 60}s
             </p>
-            <p className="text-xs text-[#B4BCC8] mt-1">总用时</p>
+            <p className="text-xs text-[#B4BCC8] mt-1">Total time</p>
           </div>
         </div>
 
@@ -255,7 +255,7 @@ export function PracticeConsole({
         {results.some((r) => !r.isCorrect) && (
           <div className="mb-8">
             <h4 className="text-sm font-medium text-[#2E3338] mb-3">
-              错题回顾（{results.filter((r) => !r.isCorrect).length} 题）
+              Wrong answers ({results.filter((r) => !r.isCorrect).length})
             </h4>
             <div className="space-y-3">
               {results
@@ -266,10 +266,10 @@ export function PracticeConsole({
                   return (
                     <div key={i} className="p-3 rounded-xl border border-red-100 bg-red-50/50">
                       <p className="text-sm text-[#2E3338] mb-1">{q.content.stem}</p>
-                      <p className="text-xs text-red-500">你的答案：{r.answer}</p>
-                      <p className="text-xs text-[#163300]">正确答案：{q.content.answer}</p>
+                      <p className="text-xs text-red-500">Your answer: {r.answer}</p>
+                      <p className="text-xs text-[#163300]">Correct answer: {q.content.answer}</p>
                       {q.content.explanation && (
-                        <p className="text-xs text-[#4D5766] mt-1">解析：{q.content.explanation}</p>
+                        <p className="text-xs text-[#4D5766] mt-1">Explanation: {q.content.explanation}</p>
                       )}
                     </div>
                   );
@@ -283,7 +283,7 @@ export function PracticeConsole({
             onClick={onFinish}
             className="flex-1 px-4 py-2.5 rounded-full border border-[#E8EAED] text-sm font-medium text-[#4D5766] hover:bg-[#F4F5F6] transition-colors"
           >
-            返回
+            Back
           </button>
           <button
             onClick={() => {
@@ -297,7 +297,7 @@ export function PracticeConsole({
             }}
             className="flex-1 px-4 py-2.5 rounded-full bg-[#163300] text-white text-sm font-medium hover:bg-[#1e4400] transition-colors"
           >
-            再练一组
+            Practice again
           </button>
         </div>
       </div>
@@ -338,7 +338,7 @@ export function PracticeConsole({
               {QUESTION_TYPES[currentQuestion.type as keyof typeof QUESTION_TYPES]}
             </span>
             <span className="text-xs text-[#B4BCC8]">
-              难度 {DIFFICULTY_LABELS[currentQuestion.difficulty as keyof typeof DIFFICULTY_LABELS]}
+              Difficulty {DIFFICULTY_LABELS[currentQuestion.difficulty as keyof typeof DIFFICULTY_LABELS]}
             </span>
             {currentQuestion.knowledge_topics && (
               <span className="text-xs text-[#B4BCC8]">
@@ -392,7 +392,7 @@ export function PracticeConsole({
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               disabled={showResult}
-              placeholder="请输入答案"
+              placeholder="Enter your answer"
               className="w-full px-4 py-3 rounded-xl border-2 border-[#E8EAED] text-sm text-[#2E3338] outline-none focus:border-[#163300] disabled:bg-[#F4F5F6] transition-colors"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !showResult) handleSubmit();
@@ -407,7 +407,7 @@ export function PracticeConsole({
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               disabled={showResult}
-              placeholder="请输入解题过程和答案"
+              placeholder="Show your work and final answer"
               rows={6}
               className="w-full px-4 py-3 rounded-xl border-2 border-[#E8EAED] text-sm text-[#2E3338] outline-none focus:border-[#163300] disabled:bg-[#F4F5F6] resize-none transition-colors"
             />
@@ -425,23 +425,23 @@ export function PracticeConsole({
               {isCorrect ? (
                 <>
                   <CheckCircle className="size-5 text-green-500" />
-                  <span className="text-sm font-medium text-green-700">回答正确！</span>
+                  <span className="text-sm font-medium text-green-700">Correct!</span>
                 </>
               ) : (
                 <>
                   <XCircle className="size-5 text-red-500" />
-                  <span className="text-sm font-medium text-red-700">回答错误</span>
+                  <span className="text-sm font-medium text-red-700">Incorrect</span>
                 </>
               )}
             </div>
             {!isCorrect && (
               <p className="text-sm text-[#2E3338]">
-                正确答案：<span className="font-medium text-[#163300]">{currentQuestion.content.answer}</span>
+                Correct answer: <span className="font-medium text-[#163300]">{currentQuestion.content.answer}</span>
               </p>
             )}
             {currentQuestion.content.explanation && (
               <p className="text-sm text-[#4D5766] mt-2">
-                解析：{currentQuestion.content.explanation}
+                Explanation: {currentQuestion.content.explanation}
               </p>
             )}
           </div>
@@ -459,7 +459,7 @@ export function PracticeConsole({
             {submitting ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              "提交答案"
+              "Submit answer"
             )}
           </button>
         ) : (
@@ -467,7 +467,7 @@ export function PracticeConsole({
             onClick={handleNext}
             className="flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-[#163300] text-white text-sm font-medium hover:bg-[#1e4400] transition-colors"
           >
-            {currentIndex + 1 >= questions.length ? "查看结果" : "下一题"}
+            {currentIndex + 1 >= questions.length ? "View results" : "Next question"}
             <ArrowRight className="size-4" />
           </button>
         )}
