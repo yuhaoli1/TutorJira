@@ -15,7 +15,7 @@ interface QuestionInfo {
   correct_answer?: string;
 }
 
-// POST /api/tasks/extract-answers — 从照片中识别学生答案
+// POST /api/tasks/extract-answers — recognize student answers from a photo
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -31,27 +31,27 @@ export async function POST(request: NextRequest) {
     const questionsJson = formData.get("questions") as string | null;
 
     if (!image || !questionsJson) {
-      return NextResponse.json({ error: "缺少图片或题目信息" }, { status: 400 });
+      return NextResponse.json({ error: "Missing image or question info" }, { status: 400 });
     }
 
-    // 验证图片
+    // Validate image
     if (!image.type.startsWith("image/")) {
-      return NextResponse.json({ error: "只支持图片文件" }, { status: 400 });
+      return NextResponse.json({ error: "Only image files are supported" }, { status: 400 });
     }
     if (image.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "图片大小不能超过10MB" }, { status: 400 });
+      return NextResponse.json({ error: "Image size must not exceed 10MB" }, { status: 400 });
     }
 
     const questions: QuestionInfo[] = JSON.parse(questionsJson);
 
-    // 图片转 base64
+    // Convert image to base64
     const buffer = Buffer.from(await image.arrayBuffer());
     const base64 = buffer.toString("base64");
     const mimeType = image.type;
 
     const apiKey = process.env.DOUBAO_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "AI 服务未配置" }, { status: 500 });
+      return NextResponse.json({ error: "AI service is not configured" }, { status: 500 });
     }
 
     const model = process.env.DOUBAO_MODEL || "doubao-1.5-vision-pro-250328";
@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("豆包答案识别失败:", errorText);
+      console.error("Doubao answer extraction failed:", errorText);
       return NextResponse.json(
-        { error: `AI 识别失败: ${response.status}` },
+        { error: `AI extraction failed: ${response.status}` },
         { status: 500 },
       );
     }
@@ -97,14 +97,14 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     const rawText = data.choices?.[0]?.message?.content || "";
 
-    // 解析 AI 返回的 JSON
+    // Parse JSON returned by AI
     const answers = parseExtractedAnswers(rawText, questions);
 
     return NextResponse.json({ answers });
   } catch (error) {
-    console.error("答案识别失败:", error);
+    console.error("Answer extraction failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "答案识别失败" },
+      { error: error instanceof Error ? error.message : "Answer extraction failed" },
       { status: 500 },
     );
   }
@@ -117,12 +117,12 @@ function parseExtractedAnswers(
   try {
     const jsonMatch = rawText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      console.error("无法从AI响应中提取JSON:", rawText);
+      console.error("Failed to extract JSON from AI response:", rawText);
       return questions.map((q) => ({ index: q.index, answer: "", is_correct: false }));
     }
     const parsed = JSON.parse(jsonMatch[0]) as { index: number; answer: string; is_correct?: boolean }[];
 
-    // 确保每道题都有结果
+    // Ensure every question has a result
     return questions.map((q) => {
       const found = parsed.find((r) => r.index === q.index);
       return {
@@ -132,7 +132,7 @@ function parseExtractedAnswers(
       };
     });
   } catch (e) {
-    console.error("解析答案识别结果失败:", e);
+    console.error("Failed to parse answer extraction result:", e);
     return questions.map((q) => ({ index: q.index, answer: "", is_correct: false }));
   }
 }

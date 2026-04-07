@@ -11,7 +11,7 @@ interface AnswerToCheck {
   type: string;
 }
 
-// POST /api/tasks/check-answers - 用 AI 批量判断学生答案是否正确
+// POST /api/tasks/check-answers - use AI to batch-check whether student answers are correct
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -19,17 +19,17 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { answers } = (await request.json()) as { answers: AnswerToCheck[] };
     if (!answers || answers.length === 0) {
-      return NextResponse.json({ error: "没有需要检查的答案" }, { status: 400 });
+      return NextResponse.json({ error: "No answers to check" }, { status: 400 });
     }
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) {
-      // fallback: 简单字符串比较
+      // fallback: simple string comparison
       const results = answers.map((a) => ({
         question_id: a.question_id,
         is_correct: simpleFallbackCompare(a.student_answer, a.correct_answer),
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ results });
     }
 
-    // 选择题直接比较，不需要 AI
+    // Multiple-choice questions are compared directly, no AI needed
     const choiceAnswers = answers.filter((a) => a.type === "choice");
     const nonChoiceAnswers = answers.filter((a) => a.type !== "choice");
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       is_correct: simpleFallbackCompare(a.student_answer, a.correct_answer),
     }));
 
-    // 非选择题用 AI 判断
+    // Non-multiple-choice questions use AI for grading
     let aiResults: { question_id: string; is_correct: boolean }[] = [];
 
     if (nonChoiceAnswers.length > 0) {
@@ -65,15 +65,15 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: `你是一个小学数学答案判断助手。你的任务是判断学生的答案是否正确。
-注意：
-- 答案的表达方式可能不同但含义相同（例如"兔12只，鸡23只"和"鸡23只，兔12只"都算正确）
-- 数学表达式等价也算正确（例如"1/2"和"0.5"）
-- 单位不同但数值正确也算正确（例如"12只"和"12"）
-- 答案顺序不同但内容完整也算正确
-- 选择题只需比较选项字母
-- 如果学生答案为空，直接判为错误
-你必须严格按照 JSON 格式返回结果，不要输出任何其他内容。`,
+              content: `You are an elementary-school math answer grading assistant. Your job is to determine whether the student's answer is correct.
+Notes:
+- Answers may be expressed differently but mean the same thing (e.g. "12 rabbits, 23 chickens" and "23 chickens, 12 rabbits" are both correct)
+- Equivalent mathematical expressions are also correct (e.g. "1/2" and "0.5")
+- Different units but the same numeric value are correct (e.g. "12 items" and "12")
+- Answers in a different order but with complete content are also correct
+- For multiple choice, just compare the option letter
+- If the student answer is empty, mark it as incorrect
+You must strictly return the result in JSON format and output nothing else.`,
             },
             { role: "user", content: prompt },
           ],
@@ -96,9 +96,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ results: [...choiceResults, ...aiResults] });
   } catch (error) {
-    console.error("答案检查失败:", error);
+    console.error("Answer check failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "答案检查失败" },
+      { error: error instanceof Error ? error.message : "Answer check failed" },
       { status: 500 },
     );
   }
@@ -107,14 +107,14 @@ export async function POST(request: NextRequest) {
 function buildCheckPrompt(answers: AnswerToCheck[]): string {
   const items = answers
     .map(
-      (a, i) => `题目${i + 1}:
-题干: ${a.stem}
-标准答案: ${a.correct_answer}
-学生答案: ${a.student_answer}`,
+      (a, i) => `Question ${i + 1}:
+Stem: ${a.stem}
+Reference answer: ${a.correct_answer}
+Student answer: ${a.student_answer}`,
     )
     .join("\n\n");
 
-  return `请判断以下每道题学生的答案是否正确，返回 JSON 数组格式：
+  return `Determine whether the student's answer is correct for each question below, and return a JSON array in the format:
 [{"index": 0, "is_correct": true/false}, ...]
 
 ${items}`;
@@ -145,7 +145,7 @@ function parseAIResults(
   }
 }
 
-// 简单 fallback 比较（去空格标点后比较，支持顺序无关）
+// Simple fallback comparison (strips whitespace/punctuation, order-independent)
 function simpleFallbackCompare(student: string, correct: string): boolean {
   const normalize = (s: string) =>
     s
@@ -156,7 +156,7 @@ function simpleFallbackCompare(student: string, correct: string): boolean {
   const a = normalize(student);
   const b = normalize(correct);
   if (a === b) return true;
-  // 顺序无关
+  // Order-independent
   const split = (s: string) =>
     s
       .split(/[,，、；;]/)

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// GET /api/questions - 列表查询
+// GET /api/questions - list query
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -92,18 +92,18 @@ export async function GET(request: NextRequest) {
       page_size: pageSize,
     });
   } catch (error) {
-    console.error("获取题目列表失败:", error);
-    return NextResponse.json({ error: "获取题目列表失败" }, { status: 500 });
+    console.error("Failed to fetch question list:", error);
+    return NextResponse.json({ error: "Failed to fetch question list" }, { status: 500 });
   }
 }
 
-// POST /api/questions - 手动创建题目
+// POST /api/questions - manually create a question
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -121,14 +121,14 @@ export async function POST(request: NextRequest) {
 
     if (!content || !content.stem || !content.answer) {
       return NextResponse.json(
-        { error: "缺少必填字段：content.stem, content.answer" },
+        { error: "Missing required fields: content.stem, content.answer" },
         { status: 400 }
       );
     }
 
     if (!tag_ids || tag_ids.length === 0) {
       return NextResponse.json(
-        { error: "请选择至少一个标签" },
+        { error: "Please select at least one tag" },
         { status: 400 }
       );
     }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ question });
   } catch (error) {
-    console.error("创建题目失败:", error);
-    return NextResponse.json({ error: "创建题目失败" }, { status: 500 });
+    console.error("Failed to create question:", error);
+    return NextResponse.json({ error: "Failed to create question" }, { status: 500 });
   }
 }

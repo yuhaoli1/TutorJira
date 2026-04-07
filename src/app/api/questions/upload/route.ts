@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
-// POST /api/questions/upload - 文件上传
+// POST /api/questions/upload - file upload
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -18,17 +18,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "请选择文件" }, { status: 400 });
+      return NextResponse.json({ error: "Please choose a file" }, { status: 400 });
     }
 
-    // 确定文件类型
+    // Determine file type
     let fileType: "pdf" | "docx" | "image";
     const mimeType = file.type;
     if (mimeType === "application/pdf") {
@@ -42,22 +42,22 @@ export async function POST(request: NextRequest) {
       fileType = "image";
     } else {
       return NextResponse.json(
-        { error: "不支持的文件类型，请上传 PDF、Word 或图片文件" },
+        { error: "Unsupported file type — upload PDF, Word, or image files" },
         { status: 400 }
       );
     }
 
-    // 生成唯一文件名
+    // Generate a unique file name
     const ext = file.name.split(".").pop() || "bin";
     const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    // 用 service client 直连 Supabase（绕过 Nginx 代理，避免 Storage 上传失败）
+    // Use service client to talk to Supabase directly (bypass the Nginx proxy to avoid Storage upload failures)
     const serviceClient = createServiceClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 上传到 Supabase Storage
+    // Upload to Supabase Storage
     const fileBuffer = await file.arrayBuffer();
     const { error: uploadError } = await serviceClient.storage
       .from("question-uploads")
@@ -67,19 +67,19 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("文件上传失败:", uploadError);
+      console.error("File upload failed:", uploadError);
       return NextResponse.json(
-        { error: "文件上传失败: " + uploadError.message },
+        { error: "File upload failed: " + uploadError.message },
         { status: 500 }
       );
     }
 
-    // 获取文件URL（用真实 Supabase URL）
+    // Get the file URL (use the real Supabase URL)
     const { data: urlData } = serviceClient.storage
       .from("question-uploads")
       .getPublicUrl(fileName);
 
-    // 创建 question_uploads 记录
+    // Create a question_uploads record
     const { data: upload, error: insertError } = await supabase
       .from("question_uploads")
       .insert({
@@ -92,16 +92,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error("创建上传记录失败:", insertError);
+      console.error("Failed to create upload record:", insertError);
       return NextResponse.json(
-        { error: "创建上传记录失败" },
+        { error: "Failed to create upload record" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ upload });
   } catch (error) {
-    console.error("文件上传失败:", error);
-    return NextResponse.json({ error: "文件上传失败" }, { status: 500 });
+    console.error("File upload failed:", error);
+    return NextResponse.json({ error: "File upload failed" }, { status: 500 });
   }
 }

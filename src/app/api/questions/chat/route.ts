@@ -3,21 +3,21 @@ import { createClient } from "@/lib/supabase/server";
 
 const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
 
-// POST /api/questions/chat - 题库 AI 对话
+// POST /api/questions/chat - question bank AI chat
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { message, history } = await request.json();
     if (!message) {
-      return NextResponse.json({ error: "消息不能为空" }, { status: 400 });
+      return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
 
-    // 获取题库摘要信息（使用标签系统，限制数据量）
+    // Fetch question bank summary (uses tag system, with row limits)
     const [questionsResult, tagLinksResult, tagsResult] = await Promise.all([
       supabase.from("questions").select("id, content, type, difficulty").limit(500),
       supabase.from("question_tag_links").select("question_id, tag_id").limit(2000),
@@ -46,47 +46,47 @@ export async function POST(request: NextRequest) {
         const children = childKnowledgeTags.filter((t) => t.parent_id === parent.id);
         const allIds = [parent.id, ...children.map((c) => c.id)];
         const qCount = questions.filter((q) => (qTagMap[q.id] || []).some((tid) => allIds.includes(tid))).length;
-        return `- ${parent.name}（${qCount}题）${children.length > 0 ? `\n  子知识点: ${children.map((c) => c.name).join("、")}` : ""}`;
+        return `- ${parent.name} (${qCount} questions)${children.length > 0 ? `\n  Subtopics: ${children.map((c) => c.name).join(", ")}` : ""}`;
       })
       .join("\n");
 
-    // 搜索相关题目
+    // Search for relevant questions
     const relevantQuestions = findRelevantQuestions(message, questions, knowledgeTags, qTagMap, 10);
     const questionsContext = relevantQuestions
       .map((q, i) => {
         const content = q.content as { stem?: string; options?: string[]; answer?: string; explanation?: string };
         const qTags = (qTagMap[q.id] || []).map((tid) => allTags.find((t) => t.id === tid)?.name).filter(Boolean);
-        return `题目${i + 1} [${q.type}] [难度${q.difficulty}] [${qTags.join(", ") || "未分类"}]
-题干: ${content.stem || ""}
-${content.options ? `选项: ${content.options.join(" | ")}` : ""}
-答案: ${content.answer || "无"}
-${content.explanation ? `解析: ${content.explanation}` : ""}`;
+        return `Question ${i + 1} [${q.type}] [difficulty ${q.difficulty}] [${qTags.join(", ") || "uncategorized"}]
+Stem: ${content.stem || ""}
+${content.options ? `Options: ${content.options.join(" | ")}` : ""}
+Answer: ${content.answer || "none"}
+${content.explanation ? `Explanation: ${content.explanation}` : ""}`;
       })
       .join("\n\n");
 
-    const systemPrompt = `你是一个专业的数学题库AI助手，服务于小学奥数辅导机构。你可以：
-1. 从题库中查找和推荐题目
-2. 基于题库中的原题生成变体题（改变数字、情境，保持同类型同难度）
-3. 按知识点、难度、题型筛选题目
-4. 回答关于题库内容的统计问题
+    const systemPrompt = `You are a professional math question bank AI assistant, serving an elementary-school Math Olympiad tutoring institution. You can:
+1. Search for and recommend questions from the question bank
+2. Generate variant questions based on existing questions (change numbers and scenarios, keep the same type and difficulty)
+3. Filter questions by knowledge point, difficulty, and question type
+4. Answer statistical questions about the contents of the question bank
 
-当前题库概况：
-共 ${questions.length} 道题目，涵盖以下知识点：
+Current question bank overview:
+A total of ${questions.length} questions, covering the following knowledge points:
 ${topicSummary}
 
-${relevantQuestions.length > 0 ? `与用户问题可能相关的题目：\n${questionsContext}` : ""}
+${relevantQuestions.length > 0 ? `Questions possibly relevant to the user's question:\n${questionsContext}` : ""}
 
-回复规则：
-- 用中文回答
-- 如果用户要求出题或找题，优先从题库中找原题展示
-- 如果用户要求变体题，先展示原题，再基于原题生成变体（保持知识点和难度一致，改变具体数字或情境）
-- 题目展示格式清晰，标注题型和难度
-- 如果题库中没有相关题目，告知用户并提供建议`;
+Reply rules:
+- Answer in English
+- If the user asks for a question or to find one, prioritize showing original questions from the bank
+- If the user asks for variants, first display the original question, then generate variants based on it (keep the same knowledge point and difficulty, change specific numbers or scenarios)
+- Display questions in a clear format, labeled with type and difficulty
+- If no relevant questions are in the bank, tell the user and offer suggestions`;
 
-    // 调用 DeepSeek
+    // Call DeepSeek
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "AI 服务未配置" }, { status: 500 });
+      return NextResponse.json({ error: "AI service is not configured" }, { status: 500 });
     }
 
     const messages = [
@@ -113,23 +113,23 @@ ${relevantQuestions.length > 0 ? `与用户问题可能相关的题目：\n${que
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`AI 调用失败: ${response.status} - ${errorText}`);
+      throw new Error(`AI call failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "抱歉，我没能生成回复。";
+    const reply = data.choices?.[0]?.message?.content || "Sorry, I could not generate a reply.";
 
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error("AI 对话失败:", error);
+    console.error("AI chat failed:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "AI 对话失败" },
+      { error: error instanceof Error ? error.message : "AI chat failed" },
       { status: 500 }
     );
   }
 }
 
-// 简单的关键词匹配找相关题目
+// Simple keyword matching to find relevant questions
 function findRelevantQuestions(
   message: string,
   questions: { id: string; content: unknown; type: string; difficulty: number }[],
@@ -137,28 +137,28 @@ function findRelevantQuestions(
   qTagMap: Record<string, string[]>,
   limit: number
 ) {
-  // 找到消息中提到的知识点标签
+  // Find knowledge-point tags mentioned in the message
   const matchedTagIds = new Set<string>();
   for (const tag of knowledgeTags) {
-    const cleanName = tag.name.replace(/^第\d+讲[：:]/, "");
+    const cleanName = tag.name.replace(/^Lesson \d+:\s*/, "");
     if (message.includes(cleanName) || message.includes(tag.name)) {
       matchedTagIds.add(tag.id);
-      // 也加入子标签
+      // Also include child tags
       for (const child of knowledgeTags.filter((t) => t.parent_id === tag.id)) {
         matchedTagIds.add(child.id);
       }
     }
   }
 
-  // 检查难度要求
-  const difficultyMatch = message.match(/难度\s*(\d)/);
+  // Check difficulty requirement
+  const difficultyMatch = message.match(/difficulty\s*(\d)/i);
   const targetDifficulty = difficultyMatch ? parseInt(difficultyMatch[1]) : null;
 
-  // 检查题型要求
+  // Check question type requirement
   let targetType: string | null = null;
-  if (message.includes("选择题") || message.includes("选择")) targetType = "choice";
-  if (message.includes("填空题") || message.includes("填空")) targetType = "fill_blank";
-  if (message.includes("解答题") || message.includes("解答")) targetType = "solution";
+  if (message.includes("multiple choice") || message.includes("choice")) targetType = "choice";
+  if (message.includes("fill in the blank") || message.includes("fill")) targetType = "fill_blank";
+  if (message.includes("solution") || message.includes("solve")) targetType = "solution";
 
   let filtered = questions;
 
@@ -172,7 +172,7 @@ function findRelevantQuestions(
     filtered = filtered.filter((q) => q.type === targetType);
   }
 
-  // 如果没有匹配，随机取一些
+  // If no matches, pick some at random
   if (filtered.length === 0 && questions.length > 0) {
     filtered = [...questions].sort(() => Math.random() - 0.5);
   }

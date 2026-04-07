@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// 每个子知识点的例题数据
+// Sample question data for each subtopic
 const SAMPLE_QUESTIONS: Record<string, {
   stem: string;
   type: "choice" | "fill_blank" | "solution";
@@ -10,515 +10,515 @@ const SAMPLE_QUESTIONS: Record<string, {
   explanation?: string;
   difficulty: number;
 }> = {
-  // ===== 第1讲：小数乘、除法的速算与巧算 =====
-  "拆分与凑整": {
-    stem: "计算：2.5 × 48 × 1.25 = ?",
+  // ===== Lesson 1: fast and clever computation with decimal multiplication and division =====
+  "Splitting and rounding to whole numbers": {
+    stem: "Compute: 2.5 x 48 x 1.25 = ?",
     type: "fill_blank",
     answer: "150",
-    explanation: "2.5 × 4 = 10，1.25 × 8 = 10，将48拆分为4×12或6×8。2.5 × 1.25 × 48 = 2.5 × 1.25 × 8 × 6 = 10 × 15 = 150",
+    explanation: "2.5 x 4 = 10, 1.25 x 8 = 10. Split 48 as 4x12 or 6x8. 2.5 x 1.25 x 48 = 2.5 x 1.25 x 8 x 6 = 10 x 15 = 150",
     difficulty: 2,
   },
-  "积不变的规律": {
-    stem: "已知 3.6 × 2.5 = 9，那么 36 × 0.25 = ?",
+  "Invariance of products": {
+    stem: "Given that 3.6 x 2.5 = 9, what is 36 x 0.25?",
     type: "fill_blank",
     answer: "9",
-    explanation: "3.6扩大10倍变36，2.5缩小10倍变0.25，一个因数扩大10倍，另一个缩小10倍，积不变，所以结果还是9。",
+    explanation: "3.6 grows by 10x to 36, and 2.5 shrinks by 10x to 0.25. When one factor is multiplied by 10 and the other divided by 10, the product stays the same, so the result is still 9.",
     difficulty: 1,
   },
-  "除法的性质的应用": {
-    stem: "计算：6.3 ÷ 0.7 ÷ 0.9 = ?",
+  "Applying division properties": {
+    stem: "Compute: 6.3 / 0.7 / 0.9 = ?",
     type: "fill_blank",
     answer: "10",
-    explanation: "利用除法性质：a ÷ b ÷ c = a ÷ (b × c)。6.3 ÷ (0.7 × 0.9) = 6.3 ÷ 0.63 = 10",
+    explanation: "Use the division property: a / b / c = a / (b x c). 6.3 / (0.7 x 0.9) = 6.3 / 0.63 = 10",
     difficulty: 2,
   },
-  "多位小数的乘、除法": {
-    stem: "计算：0.125 × 0.25 × 32 = ?",
+  "Multi-digit decimal multiplication and division": {
+    stem: "Compute: 0.125 x 0.25 x 32 = ?",
     type: "fill_blank",
     answer: "1",
-    explanation: "0.125 × 8 = 1，0.25 × 4 = 1。将32拆为8×4，则0.125 × 8 × 0.25 × 4 = 1 × 1 = 1",
+    explanation: "0.125 x 8 = 1, 0.25 x 4 = 1. Split 32 as 8x4, then 0.125 x 8 x 0.25 x 4 = 1 x 1 = 1",
     difficulty: 2,
   },
 
-  // ===== 第2讲：最大公因数和最小公倍数 =====
-  "最大公因数": {
-    stem: "36和48的最大公因数是多少？",
+  // ===== Lesson 2: greatest common divisor and least common multiple =====
+  "Greatest common divisor": {
+    stem: "What is the greatest common divisor of 36 and 48?",
     type: "fill_blank",
     answer: "12",
-    explanation: "36 = 2² × 3²，48 = 2⁴ × 3，最大公因数 = 2² × 3 = 12",
+    explanation: "36 = 2^2 x 3^2, 48 = 2^4 x 3, so GCD = 2^2 x 3 = 12",
     difficulty: 2,
   },
-  "最小公倍数": {
-    stem: "12和18的最小公倍数是多少？",
+  "Least common multiple": {
+    stem: "What is the least common multiple of 12 and 18?",
     type: "fill_blank",
     answer: "36",
-    explanation: "12 = 2² × 3，18 = 2 × 3²，最小公倍数 = 2² × 3² = 36",
+    explanation: "12 = 2^2 x 3, 18 = 2 x 3^2, so LCM = 2^2 x 3^2 = 36",
     difficulty: 2,
   },
-  "两者之间的关系": {
-    stem: "两个数的最大公因数是6，最小公倍数是60，其中一个数是12，另一个数是多少？",
+  "Relationship between the two": {
+    stem: "Two numbers have GCD 6 and LCM 60. One of them is 12. What is the other?",
     type: "fill_blank",
     answer: "30",
-    explanation: "两个数的乘积 = 最大公因数 × 最小公倍数。12 × x = 6 × 60 = 360，x = 360 ÷ 12 = 30",
+    explanation: "Product of two numbers = GCD x LCM. 12 x x = 6 x 60 = 360, x = 360 / 12 = 30",
     difficulty: 3,
   },
-  "分解质因数的应用": {
-    stem: "把90分解质因数：90 = ?",
+  "Applying prime factorization": {
+    stem: "Factor 90 into primes: 90 = ?",
     type: "fill_blank",
-    answer: "2 × 3² × 5",
-    explanation: "90 = 2 × 45 = 2 × 9 × 5 = 2 × 3² × 5",
+    answer: "2 x 3^2 x 5",
+    explanation: "90 = 2 x 45 = 2 x 9 x 5 = 2 x 3^2 x 5",
     difficulty: 2,
   },
-  "分数的拆分": {
-    stem: "把 7/12 拆分成两个不同的单位分数之和：7/12 = 1/? + 1/?",
+  "Splitting fractions": {
+    stem: "Split 7/12 into the sum of two distinct unit fractions: 7/12 = 1/? + 1/?",
     type: "fill_blank",
     answer: "1/3 + 1/4",
     explanation: "7/12 = (4+3)/12 = 4/12 + 3/12 = 1/3 + 1/4",
     difficulty: 3,
   },
 
-  // ===== 第3讲：火车行程问题 =====
-  "火车过桥问题": {
-    stem: "一列火车长200米，以每秒20米的速度通过一座长800米的大桥，需要多少秒？",
+  // ===== Lesson 3: train travel problems =====
+  "Train crossing a bridge": {
+    stem: "A train 200 meters long, traveling at 20 m/s, crosses an 800-meter bridge. How many seconds does it take?",
     type: "fill_blank",
     answer: "50",
-    explanation: "火车过桥需要走的路程 = 车长 + 桥长 = 200 + 800 = 1000米。时间 = 1000 ÷ 20 = 50秒",
+    explanation: "Distance to travel = train length + bridge length = 200 + 800 = 1000 m. Time = 1000 / 20 = 50 s",
     difficulty: 2,
   },
-  "火车相遇问题": {
-    stem: "两列火车相向而行，甲车长150米，速度每秒15米；乙车长100米，速度每秒10米。从车头相遇到车尾分离需要多少秒？",
+  "Two trains meeting": {
+    stem: "Two trains travel toward each other. Train A is 150 m long at 15 m/s; train B is 100 m long at 10 m/s. From when their fronts meet to when their tails separate, how many seconds elapse?",
     type: "fill_blank",
     answer: "10",
-    explanation: "两车需要走的总路程 = 甲车长 + 乙车长 = 150 + 100 = 250米。速度和 = 15 + 10 = 25米/秒。时间 = 250 ÷ 25 = 10秒",
+    explanation: "Total distance = 150 + 100 = 250 m. Combined speed = 15 + 10 = 25 m/s. Time = 250 / 25 = 10 s",
     difficulty: 3,
   },
-  "火车追及问题": {
-    stem: "快车长160米，慢车长140米。快车速度每秒22米，慢车速度每秒18米。快车从追上慢车到完全超过慢车需要多少秒？",
+  "Train overtaking": {
+    stem: "The fast train is 160 m long, the slow train 140 m. Their speeds are 22 m/s and 18 m/s. From when the fast train catches the slow one to when it has fully passed, how many seconds does it take?",
     type: "fill_blank",
     answer: "75",
-    explanation: "追及距离 = 快车长 + 慢车长 = 160 + 140 = 300米。速度差 = 22 - 18 = 4米/秒。时间 = 300 ÷ 4 = 75秒",
+    explanation: "Catch-up distance = 160 + 140 = 300 m. Speed difference = 22 - 18 = 4 m/s. Time = 300 / 4 = 75 s",
     difficulty: 3,
   },
 
-  // ===== 第4讲：解复杂方程 / 错中求解 =====
-  "解方程的各种题型": {
-    stem: "解方程：3(2x - 1) + 4 = 19",
+  // ===== Lesson 4: solving complex equations / fixing mistakes =====
+  "Various equation problems": {
+    stem: "Solve: 3(2x - 1) + 4 = 19",
     type: "solution",
     answer: "x = 3",
     explanation: "3(2x - 1) + 4 = 19\n6x - 3 + 4 = 19\n6x + 1 = 19\n6x = 18\nx = 3",
     difficulty: 2,
   },
-  "小数乘除中的错中求解": {
-    stem: "小明计算一道除法题时，把除数6.5错看成5.6，结果得到了25。正确的结果应该是多少？",
+  "Fixing mistakes in decimal multiplication and division": {
+    stem: "Xiao Ming misread the divisor 6.5 as 5.6 and got 25 as the result. What is the correct result?",
     type: "solution",
-    answer: "21.538...(约21.5)",
-    explanation: "被除数 = 25 × 5.6 = 140。正确结果 = 140 ÷ 6.5 ≈ 21.5",
+    answer: "21.538... (about 21.5)",
+    explanation: "Dividend = 25 x 5.6 = 140. Correct result = 140 / 6.5 ~= 21.5",
     difficulty: 3,
   },
-  "方程中的错中求解问题": {
-    stem: "小红解方程时，把某数×5错看成某数÷5，得到结果是3。正确的结果应该是多少？",
+  "Fixing mistakes in equations": {
+    stem: "Xiao Hong misread 'a number x 5' as 'a number / 5' and got 3. What is the correct result?",
     type: "solution",
     answer: "75",
-    explanation: "错误：某数 ÷ 5 = 3，某数 = 15。正确：15 × 5 = 75",
+    explanation: "Wrong: number / 5 = 3, number = 15. Correct: 15 x 5 = 75",
     difficulty: 3,
   },
 
-  // ===== 第5讲：列方程解应用题 =====
-  "解决鸡兔同笼问题": {
-    stem: "笼中有鸡和兔共35只，共有94只脚。鸡和兔各有多少只？",
+  // ===== Lesson 5: setting up equations to solve word problems =====
+  "Solving the chickens-and-rabbits problem": {
+    stem: "There are chickens and rabbits in a cage, 35 heads in total and 94 feet. How many of each are there?",
     type: "solution",
-    answer: "鸡23只，兔12只",
-    explanation: "设兔x只，则鸡(35-x)只。4x + 2(35-x) = 94，4x + 70 - 2x = 94，2x = 24，x = 12。兔12只，鸡23只。",
+    answer: "23 chickens, 12 rabbits",
+    explanation: "Let x be the number of rabbits, then chickens = 35 - x. 4x + 2(35 - x) = 94, 4x + 70 - 2x = 94, 2x = 24, x = 12. So 12 rabbits and 23 chickens.",
     difficulty: 2,
   },
-  "解决盈亏问题": {
-    stem: "一些糖分给小朋友，每人分3颗多7颗，每人分5颗少3颗。有几个小朋友？有多少颗糖？",
+  "Solving surplus-and-shortage problems": {
+    stem: "Some candies are distributed to children. Giving each 3 leaves 7 extra; giving each 5 is 3 short. How many children, and how many candies?",
     type: "solution",
-    answer: "5个小朋友，22颗糖",
-    explanation: "设有x个小朋友。3x + 7 = 5x - 3，10 = 2x，x = 5。糖果数 = 3×5+7 = 22颗。",
+    answer: "5 children, 22 candies",
+    explanation: "Let x be the number of children. 3x + 7 = 5x - 3, 10 = 2x, x = 5. Candies = 3 x 5 + 7 = 22.",
     difficulty: 3,
   },
-  "解决年龄问题": {
-    stem: "爸爸今年42岁，儿子今年12岁。几年前爸爸的年龄是儿子的5倍？",
+  "Solving age problems": {
+    stem: "Father is 42 this year, son is 12. How many years ago was father's age 5 times the son's?",
     type: "fill_blank",
     answer: "4.5",
-    explanation: "设x年前。42 - x = 5(12 - x)，42 - x = 60 - 5x，4x = 18，x = 4.5年前",
+    explanation: "Let x years ago. 42 - x = 5(12 - x), 42 - x = 60 - 5x, 4x = 18, x = 4.5 years ago",
     difficulty: 3,
   },
-  "解决相遇、追及问题": {
-    stem: "甲乙两地相距360千米，客车和货车同时从两地相向而行。客车每小时60千米，货车每小时40千米。几小时后相遇？",
+  "Solving meeting and overtaking problems": {
+    stem: "Two places A and B are 360 km apart. A passenger train and a freight train start from the two places toward each other at the same time, at 60 km/h and 40 km/h respectively. After how many hours do they meet?",
     type: "fill_blank",
     answer: "3.6",
-    explanation: "速度和 = 60 + 40 = 100千米/小时。时间 = 360 ÷ 100 = 3.6小时",
+    explanation: "Combined speed = 60 + 40 = 100 km/h. Time = 360 / 100 = 3.6 hours",
     difficulty: 2,
   },
-  "解决流水行船问题": {
-    stem: "一艘船在静水中的速度是每小时20千米，水流速度每小时4千米。这艘船从A到B顺水需要3小时，从B回A逆水需要几小时？",
+  "Solving boat-in-current problems": {
+    stem: "A boat's speed in still water is 20 km/h. The current is 4 km/h. The boat goes from A to B downstream in 3 hours. How many hours does it take to return upstream?",
     type: "fill_blank",
     answer: "4.5",
-    explanation: "顺水速度 = 20+4 = 24千米/小时。AB距离 = 24×3 = 72千米。逆水速度 = 20-4 = 16千米/小时。时间 = 72÷16 = 4.5小时",
+    explanation: "Downstream speed = 20 + 4 = 24 km/h. Distance AB = 24 x 3 = 72 km. Upstream speed = 20 - 4 = 16 km/h. Time = 72 / 16 = 4.5 hours",
     difficulty: 3,
   },
 
-  // ===== 第6讲：长方体和正方体 =====
-  "三视图求表面积": {
-    stem: "一个长方体的正面看是长5厘米、宽3厘米的长方形，侧面看是长4厘米、宽3厘米的长方形。这个长方体的表面积是多少平方厘米？",
+  // ===== Lesson 6: cuboids and cubes =====
+  "Surface area from three views": {
+    stem: "A cuboid's front view is a rectangle 5 cm long and 3 cm wide; its side view is a rectangle 4 cm long and 3 cm wide. What is the total surface area in square centimeters?",
     type: "fill_blank",
     answer: "94",
-    explanation: "长=5，宽=4，高=3。表面积 = 2(5×4 + 5×3 + 4×3) = 2(20+15+12) = 94平方厘米",
+    explanation: "Length = 5, width = 4, height = 3. Surface area = 2(5x4 + 5x3 + 4x3) = 2(20 + 15 + 12) = 94 sq cm",
     difficulty: 2,
   },
-  "长方体和正方体的展开图": {
-    stem: "一个正方体的展开图中，共有几个面？如果棱长为3厘米，展开图的总面积是多少平方厘米？",
+  "Nets of cuboids and cubes": {
+    stem: "How many faces are in the net of a cube? If the edge length is 3 cm, what is the total area of the net in square centimeters?",
     type: "fill_blank",
-    answer: "6个面，54平方厘米",
-    explanation: "正方体有6个面。每个面面积 = 3×3 = 9平方厘米。总面积 = 6×9 = 54平方厘米",
+    answer: "6 faces, 54 sq cm",
+    explanation: "A cube has 6 faces. Each face is 3 x 3 = 9 sq cm. Total = 6 x 9 = 54 sq cm",
     difficulty: 1,
   },
-  "水中浸没": {
-    stem: "一个长方体水槽，底面长20厘米，宽15厘米，水深10厘米。放入一个棱长5厘米的正方体铁块（完全浸没），水面上升了多少厘米？",
+  "Submerging in water": {
+    stem: "A rectangular tank has a base 20 cm long, 15 cm wide, with water 10 cm deep. A cube of edge 5 cm is fully submerged in it. By how many centimeters does the water level rise?",
     type: "fill_blank",
-    answer: "0.417(约0.42)",
-    explanation: "铁块体积 = 5³ = 125立方厘米。水面上升高度 = 125 ÷ (20×15) = 125 ÷ 300 ≈ 0.417厘米",
+    answer: "0.417 (about 0.42)",
+    explanation: "Cube volume = 5^3 = 125 cubic cm. Water rise = 125 / (20 x 15) = 125 / 300 ~= 0.417 cm",
     difficulty: 3,
   },
-  "立体图形染色": {
-    stem: "一个3×3×3的正方体由27个小正方体组成。把大正方体的表面涂红色后拆开，恰好三面被涂色的小正方体有几个？",
+  "Coloring 3D figures": {
+    stem: "A 3x3x3 cube is made of 27 unit cubes. The outside of the big cube is painted red, then it is taken apart. How many small cubes have exactly three painted faces?",
     type: "fill_blank",
     answer: "8",
-    explanation: "三面涂色的一定在顶点处。3×3×3的正方体有8个顶点，所以三面涂色的有8个。",
+    explanation: "Three painted faces only occur at the vertices. A 3x3x3 cube has 8 vertices, so 8 such cubes.",
     difficulty: 2,
   },
-  "切片法求体积": {
-    stem: "一个长方体被沿对角线切成两个完全相同的三棱柱。原长方体长6厘米，宽4厘米，高3厘米。每个三棱柱的体积是多少立方厘米？",
+  "Slicing to find volume": {
+    stem: "A cuboid is cut along a diagonal into two identical triangular prisms. The original cuboid is 6 cm long, 4 cm wide, 3 cm high. What is the volume of each triangular prism in cubic centimeters?",
     type: "fill_blank",
     answer: "36",
-    explanation: "长方体体积 = 6×4×3 = 72立方厘米。每个三棱柱 = 72÷2 = 36立方厘米",
+    explanation: "Cuboid volume = 6 x 4 x 3 = 72 cubic cm. Each triangular prism = 72 / 2 = 36 cubic cm",
     difficulty: 2,
   },
 
-  // ===== 第7讲：巧求面积 =====
-  "等积变形": {
-    stem: "三角形ABC中，底BC=10厘米，高为6厘米。D是BC上的中点，三角形ABD的面积是多少平方厘米？",
+  // ===== Lesson 7: clever ways to find areas =====
+  "Equal-area transformations": {
+    stem: "In triangle ABC, base BC = 10 cm and height = 6 cm. D is the midpoint of BC. What is the area of triangle ABD in square centimeters?",
     type: "fill_blank",
     answer: "15",
-    explanation: "三角形ABC面积 = 10×6÷2 = 30平方厘米。D是中点，ABD面积 = ABC面积÷2 = 15平方厘米",
+    explanation: "Area of triangle ABC = 10 x 6 / 2 = 30 sq cm. D is the midpoint, so area of ABD = area of ABC / 2 = 15 sq cm",
     difficulty: 2,
   },
-  "一半模型": {
-    stem: "正方形ABCD边长为8厘米，E是BC的中点。三角形AED的面积是多少平方厘米？",
+  "Half model": {
+    stem: "Square ABCD has side 8 cm. E is the midpoint of BC. What is the area of triangle AED in square centimeters?",
     type: "fill_blank",
     answer: "32",
-    explanation: "正方形面积=64。三角形AED = 正方形面积 - 三角形ABE - 三角形ECD = 64 - 16 - 16 = 32平方厘米",
+    explanation: "Square area = 64. Triangle AED = square area - triangle ABE - triangle ECD = 64 - 16 - 16 = 32 sq cm",
     difficulty: 3,
   },
-  "根据差不变的性质求面积": {
-    stem: "平行四边形ABCD中，E是对角线AC上一点。三角形ABE和三角形CDE的面积之差为0。已知三角形ABE面积为12平方厘米，三角形BCE面积是多少？",
+  "Finding areas using invariance of differences": {
+    stem: "In parallelogram ABCD, E is a point on diagonal AC. The difference between the areas of triangles ABE and CDE is 0. Given that the area of triangle ABE is 12 sq cm, what is the area of triangle BCE?",
     type: "fill_blank",
     answer: "12",
-    explanation: "对角线将平行四边形分成两个等面积的三角形。ABE=CDE=12，所以BCE=ADE。",
+    explanation: "The diagonal divides the parallelogram into two triangles of equal area. ABE = CDE = 12, so BCE = ADE.",
     difficulty: 3,
   },
-  "分割法求面积": {
-    stem: "一个梯形上底4厘米，下底8厘米，高5厘米。从上底的一个端点向下底引一条线段，把梯形分成两个三角形。较大三角形的面积是多少平方厘米？",
+  "Finding area by partitioning": {
+    stem: "A trapezoid has top base 4 cm, bottom base 8 cm, and height 5 cm. From one endpoint of the top base, draw a segment to the bottom base, dividing the trapezoid into two triangles. What is the area of the larger triangle in square centimeters?",
     type: "fill_blank",
     answer: "20",
-    explanation: "两个三角形共享同一个高5厘米。较大三角形底=8，面积=8×5÷2=20平方厘米",
+    explanation: "Both triangles share the same height 5 cm. The larger triangle has base 8, area = 8 x 5 / 2 = 20 sq cm",
     difficulty: 2,
   },
 
-  // ===== 第8讲：面积模型 =====
-  "风筝模型": {
-    stem: "在三角形ABC中，D是AB上一点，E是AC上一点，BD:DA=1:2，CE:EA=1:3。已知三角形ABC面积为24，三角形ADE面积是多少？",
+  // ===== Lesson 8: area models =====
+  "Kite model": {
+    stem: "In triangle ABC, D is on AB and E is on AC, with BD:DA = 1:2 and CE:EA = 1:3. Given that triangle ABC has area 24, what is the area of triangle ADE?",
     type: "fill_blank",
     answer: "12",
-    explanation: "DA/AB = 2/3，EA/AC = 3/4。三角形ADE面积 = (2/3)×(3/4)×24 = 12",
+    explanation: "DA/AB = 2/3, EA/AC = 3/4. Area of ADE = (2/3) x (3/4) x 24 = 12",
     difficulty: 4,
   },
-  "蝴蝶模型": {
-    stem: "梯形ABCD中，对角线AC和BD交于点O。已知三角形AOB面积为8，三角形COD面积为2。梯形ABCD的面积是多少？",
+  "Butterfly model": {
+    stem: "In trapezoid ABCD, diagonals AC and BD meet at O. Given that the area of triangle AOB is 8 and triangle COD is 2, what is the area of trapezoid ABCD?",
     type: "fill_blank",
     answer: "18",
-    explanation: "蝴蝶模型：三角形AOD面积 = 三角形BOC面积 = √(8×2) = 4。梯形面积 = 8+2+4+4 = 18",
+    explanation: "Butterfly model: area of triangle AOD = area of triangle BOC = sqrt(8 x 2) = 4. Trapezoid area = 8 + 2 + 4 + 4 = 18",
     difficulty: 4,
   },
-  "燕尾模型": {
-    stem: "三角形ABC中，D是BC上一点，BD:DC=2:3。已知三角形ABC面积为25，三角形ABD面积是多少？",
+  "Swallowtail model": {
+    stem: "In triangle ABC, D is on BC with BD:DC = 2:3. Given that triangle ABC has area 25, what is the area of triangle ABD?",
     type: "fill_blank",
     answer: "10",
-    explanation: "燕尾模型：BD:DC=2:3，所以ABD:ADC=2:3。三角形ABD面积 = 25×(2/5) = 10",
+    explanation: "Swallowtail model: BD:DC = 2:3, so ABD:ADC = 2:3. Area of ABD = 25 x (2/5) = 10",
     difficulty: 3,
   },
 
-  // ===== 第9讲：数与形 / 植树问题 =====
-  "数形结合求和（或差）的平方": {
-    stem: "不用计算器，求 101² = ?",
+  // ===== Lesson 9: numbers and shapes / planting trees =====
+  "Squares of sums (or differences) via shapes": {
+    stem: "Without a calculator, find 101^2 = ?",
     type: "fill_blank",
     answer: "10201",
-    explanation: "101² = (100+1)² = 100² + 2×100×1 + 1² = 10000 + 200 + 1 = 10201",
+    explanation: "101^2 = (100+1)^2 = 100^2 + 2 x 100 x 1 + 1^2 = 10000 + 200 + 1 = 10201",
     difficulty: 2,
   },
-  "数形结合求和（或差）的积": {
-    stem: "计算：99 × 101 = ?",
+  "Products of sums (or differences) via shapes": {
+    stem: "Compute: 99 x 101 = ?",
     type: "fill_blank",
     answer: "9999",
-    explanation: "(100-1)(100+1) = 100² - 1² = 10000 - 1 = 9999",
+    explanation: "(100-1)(100+1) = 100^2 - 1^2 = 10000 - 1 = 9999",
     difficulty: 2,
   },
-  "在直线、不封闭、封闭线上植树": {
-    stem: "在一条长100米的路的一侧植树，每隔5米种一棵（两端都种），共需要多少棵树？",
+  "Planting trees on lines, open paths, and closed loops": {
+    stem: "Plant trees along one side of a 100-meter road, every 5 meters (and at both ends). How many trees are needed?",
     type: "fill_blank",
     answer: "21",
-    explanation: "直线植树两端都种：棵数 = 间隔数 + 1 = 100÷5 + 1 = 20 + 1 = 21棵",
+    explanation: "Linear planting with both ends: number of trees = number of intervals + 1 = 100/5 + 1 = 20 + 1 = 21",
     difficulty: 1,
   },
-  "方阵问题": {
-    stem: "学生排成一个方阵，最外层一圈有60人。方阵最外层每边有多少人？",
+  "Square formation problems": {
+    stem: "Students stand in a square formation with 60 students on the outermost ring. How many students are on each side of the outer ring?",
     type: "fill_blank",
     answer: "16",
-    explanation: "最外层人数 = 4×(每边人数-1)。60 = 4×(n-1)，n-1 = 15，n = 16",
+    explanation: "People on the outer ring = 4 x (per side - 1). 60 = 4 x (n - 1), n - 1 = 15, n = 16",
     difficulty: 3,
   },
 
-  // ===== 第10讲：分数裂项 =====
-  "裂差型列项": {
-    stem: "计算：1/(1×2) + 1/(2×3) + 1/(3×4) + ... + 1/(9×10) = ?",
+  // ===== Lesson 10: telescoping fractions =====
+  "Telescoping with differences": {
+    stem: "Compute: 1/(1x2) + 1/(2x3) + 1/(3x4) + ... + 1/(9x10) = ?",
     type: "fill_blank",
     answer: "9/10",
-    explanation: "裂项：1/(n(n+1)) = 1/n - 1/(n+1)。原式 = (1-1/2)+(1/2-1/3)+...+(1/9-1/10) = 1 - 1/10 = 9/10",
+    explanation: "Telescoping: 1/(n(n+1)) = 1/n - 1/(n+1). Sum = (1 - 1/2) + (1/2 - 1/3) + ... + (1/9 - 1/10) = 1 - 1/10 = 9/10",
     difficulty: 3,
   },
-  "裂和型列项": {
-    stem: "计算：1/(1×3) + 1/(3×5) + 1/(5×7) + 1/(7×9) = ?",
+  "Telescoping with sums": {
+    stem: "Compute: 1/(1x3) + 1/(3x5) + 1/(5x7) + 1/(7x9) = ?",
     type: "fill_blank",
     answer: "4/9",
-    explanation: "1/(n(n+2)) = (1/2)(1/n - 1/(n+2))。原式 = (1/2)(1-1/3+1/3-1/5+1/5-1/7+1/7-1/9) = (1/2)(1-1/9) = 4/9",
+    explanation: "1/(n(n+2)) = (1/2)(1/n - 1/(n+2)). Sum = (1/2)(1 - 1/3 + 1/3 - 1/5 + 1/5 - 1/7 + 1/7 - 1/9) = (1/2)(1 - 1/9) = 4/9",
     difficulty: 4,
   },
-  "分组凑整、运算定理简算": {
-    stem: "计算：5/6 + 7/12 + 11/20 + 13/30 = ?（提示：每个分数都接近1/2）",
+  "Grouping for round numbers and using arithmetic laws": {
+    stem: "Compute: 5/6 + 7/12 + 11/20 + 13/30 = ? (Hint: each fraction is close to 1/2)",
     type: "fill_blank",
-    answer: "2 + 1/3 + 1/12 + 1/20 + ...(约2.37)",
-    explanation: "每个分数 = 1/2 + 剩余部分。5/6=1/2+1/3, 7/12=1/2+1/12, 11/20=1/2+1/20, 13/30=1/2-1/15。合计=2+(1/3+1/12+1/20-1/15)",
+    answer: "2 + 1/3 + 1/12 + 1/20 + ... (about 2.37)",
+    explanation: "Each fraction = 1/2 + a remainder. 5/6 = 1/2 + 1/3, 7/12 = 1/2 + 1/12, 11/20 = 1/2 + 1/20, 13/30 = 1/2 - 1/15. Total = 2 + (1/3 + 1/12 + 1/20 - 1/15)",
     difficulty: 4,
   },
 
-  // ===== 第11讲：比较与估算 =====
-  "小数和分数大小比较": {
-    stem: "比较大小：3/7 ○ 0.43（填>、<或=）",
+  // ===== Lesson 11: comparison and estimation =====
+  "Comparing decimals and fractions": {
+    stem: "Compare: 3/7 ? 0.43 (fill in >, <, or =)",
     type: "choice",
     options: ["A. >", "B. <", "C. ="],
     answer: "B",
-    explanation: "3/7 ≈ 0.4286，0.43 > 0.4286，所以 3/7 < 0.43",
+    explanation: "3/7 ~= 0.4286, 0.43 > 0.4286, so 3/7 < 0.43",
     difficulty: 2,
   },
-  "数的估算": {
-    stem: "不计算，估算 498 × 21 最接近哪个数？",
+  "Estimating numbers": {
+    stem: "Without computing, estimate which number 498 x 21 is closest to?",
     type: "choice",
     options: ["A. 8000", "B. 10000", "C. 10500", "D. 12000"],
     answer: "B",
-    explanation: "498 ≈ 500，21 ≈ 20。500 × 20 = 10000。实际值 = 10458，最接近10000。",
+    explanation: "498 ~= 500, 21 ~= 20. 500 x 20 = 10000. The actual value is 10458, closest to 10000.",
     difficulty: 1,
   },
-  "分数与循环小数之间转换": {
-    stem: "把循环小数 0.333... 化成分数是多少？",
+  "Converting between fractions and repeating decimals": {
+    stem: "Convert the repeating decimal 0.333... to a fraction.",
     type: "fill_blank",
     answer: "1/3",
-    explanation: "设x = 0.333...，则10x = 3.333...，10x - x = 3，9x = 3，x = 1/3",
+    explanation: "Let x = 0.333..., then 10x = 3.333..., 10x - x = 3, 9x = 3, x = 1/3",
     difficulty: 2,
   },
 
-  // ===== 第12讲：幻方与数阵图 =====
-  "三阶幻方": {
-    stem: "在三阶幻方中，用1-9填入3×3的格子，每行、每列、每条对角线的和都相等。中心格应填哪个数？",
+  // ===== Lesson 12: magic squares and number arrays =====
+  "3x3 magic square": {
+    stem: "In a 3x3 magic square, fill in 1-9 so that each row, column, and diagonal sums to the same value. What number goes in the center?",
     type: "fill_blank",
     answer: "5",
-    explanation: "1+2+...+9=45，每行和=45÷3=15。中心数一定是中位数5。",
+    explanation: "1+2+...+9 = 45, each row sums to 45/3 = 15. The center must be the median, 5.",
     difficulty: 2,
   },
-  "数阵图": {
-    stem: "将1~6分别填入三角形三条边的圆圈中（每个顶点被两条边共用），使每条边上三个数的和相等。每条边的和是多少？",
+  "Number arrays": {
+    stem: "Place 1-6 into the circles on the three sides of a triangle (each vertex is shared by two sides) so that the three numbers on each side sum to the same value. What is the sum on each side?",
     type: "fill_blank",
     answer: "9",
-    explanation: "1+2+3+4+5+6=21。三条边的总和=21+顶点数之和（顶点被计算2次）。设每边和为S，3S=21+顶点和。最常见解：每边和=9。",
+    explanation: "1+2+3+4+5+6 = 21. The total of the three sides equals 21 + (sum of vertices, since vertices are counted twice). Let the sum on each side be S, then 3S = 21 + (sum of vertices). The most common solution: each side sums to 9.",
     difficulty: 3,
   },
-  "直接运算型、反解未知数型": {
-    stem: "定义新运算 a☆b = 2a + 3b。求 3☆4 = ?",
+  "Direct-evaluation and inverse-unknown problems": {
+    stem: "Define the new operation a ☆ b = 2a + 3b. Find 3 ☆ 4 = ?",
     type: "fill_blank",
     answer: "18",
-    explanation: "3☆4 = 2×3 + 3×4 = 6 + 12 = 18",
+    explanation: "3 ☆ 4 = 2 x 3 + 3 x 4 = 6 + 12 = 18",
     difficulty: 1,
   },
-  "高斯取整": {
-    stem: "[x]表示不超过x的最大整数。[3.7] + [-2.3] = ?",
+  "Gauss floor function": {
+    stem: "[x] denotes the greatest integer not exceeding x. [3.7] + [-2.3] = ?",
     type: "fill_blank",
     answer: "0",
-    explanation: "[3.7]=3（不超过3.7的最大整数），[-2.3]=-3（不超过-2.3的最大整数）。3+(-3)=0",
+    explanation: "[3.7] = 3 (greatest integer not exceeding 3.7), [-2.3] = -3 (greatest integer not exceeding -2.3). 3 + (-3) = 0",
     difficulty: 3,
   },
 
-  // ===== 第13讲：单位1的转化 =====
-  "单位1的转化": {
-    stem: "一根绳子，第一次剪去全长的1/3，第二次剪去剩余的1/4。两次共剪去全长的几分之几？",
+  // ===== Lesson 13: changing the unit-1 reference =====
+  "Changing the unit-1 reference": {
+    stem: "A rope is cut twice. The first cut removes 1/3 of the whole length; the second cut removes 1/4 of what remains. What fraction of the whole rope was cut in total?",
     type: "fill_blank",
     answer: "1/2",
-    explanation: "第一次后剩余 = 1 - 1/3 = 2/3。第二次剪去 = 2/3 × 1/4 = 1/6。两次共剪去 = 1/3 + 1/6 = 1/2",
+    explanation: "After the first cut, 1 - 1/3 = 2/3 remains. The second cut removes 2/3 x 1/4 = 1/6. Total cut = 1/3 + 1/6 = 1/2",
     difficulty: 2,
   },
 
-  // ===== 第14讲：工程问题 =====
-  "工程问题": {
-    stem: "甲单独做一件工作需要10天，乙单独做需要15天。两人合作需要几天完成？",
+  // ===== Lesson 14: work problems =====
+  "Work problems": {
+    stem: "A alone takes 10 days to finish a job; B alone takes 15 days. How many days do they need working together?",
     type: "fill_blank",
     answer: "6",
-    explanation: "甲效率=1/10，乙效率=1/15。合作效率=1/10+1/15=5/30=1/6。需要6天。",
+    explanation: "A's rate = 1/10, B's rate = 1/15. Combined rate = 1/10 + 1/15 = 5/30 = 1/6. They need 6 days.",
     difficulty: 2,
   },
 
-  // ===== 第15讲：浓度问题 =====
-  "浓度问题": {
-    stem: "200克含盐10%的盐水中，需要加入多少克盐才能使浓度变为20%？",
+  // ===== Lesson 15: concentration problems =====
+  "Concentration problems": {
+    stem: "200 grams of saltwater contains 10% salt. How many grams of salt must be added to make the concentration 20%?",
     type: "fill_blank",
     answer: "25",
-    explanation: "现有盐 = 200×10% = 20克。设加x克盐：(20+x)/(200+x) = 20%，20+x = 40+0.2x，0.8x = 20，x = 25克",
+    explanation: "Current salt = 200 x 10% = 20 g. Let x grams be added: (20 + x) / (200 + x) = 20%, 20 + x = 40 + 0.2x, 0.8x = 20, x = 25 g",
     difficulty: 3,
   },
 
-  // ===== 第16讲：经济问题 =====
-  "经济问题": {
-    stem: "一件商品进价200元，标价300元，打八折出售。利润率是多少？",
+  // ===== Lesson 16: economics problems =====
+  "Economics problems": {
+    stem: "An item has a cost price of 200 yuan and a marked price of 300 yuan, sold at a 20% discount. What is the profit margin?",
     type: "fill_blank",
     answer: "20%",
-    explanation: "售价 = 300×0.8 = 240元。利润 = 240-200 = 40元。利润率 = 40÷200 = 20%",
+    explanation: "Selling price = 300 x 0.8 = 240 yuan. Profit = 240 - 200 = 40 yuan. Profit margin = 40 / 200 = 20%",
     difficulty: 2,
   },
 
-  // ===== 第17讲：平面几何 =====
-  "割与补": {
-    stem: "一个半圆的直径为10厘米。半圆的面积是多少平方厘米？（π取3.14）",
+  // ===== Lesson 17: plane geometry =====
+  "Cutting and supplementing": {
+    stem: "A semicircle has diameter 10 cm. What is its area in square centimeters? (Use pi = 3.14)",
     type: "fill_blank",
     answer: "39.25",
-    explanation: "半径=5，半圆面积 = πr²÷2 = 3.14×25÷2 = 39.25平方厘米",
+    explanation: "Radius = 5, semicircle area = pi r^2 / 2 = 3.14 x 25 / 2 = 39.25 sq cm",
     difficulty: 1,
   },
-  "比例关系": {
-    stem: "两个相似三角形的对应边之比为2:3。它们的面积之比是多少？",
+  "Proportional relationships": {
+    stem: "Two similar triangles have corresponding sides in ratio 2:3. What is the ratio of their areas?",
     type: "fill_blank",
     answer: "4:9",
-    explanation: "相似图形面积比 = 对应边比的平方 = 2²:3² = 4:9",
+    explanation: "For similar figures, area ratio = square of side ratio = 2^2 : 3^2 = 4:9",
     difficulty: 2,
   },
-  "整体计算和差不变": {
-    stem: "正方形边长为10厘米，在四个角各剪去一个边长为2厘米的小正方形。剩余图形的面积是多少平方厘米？",
+  "Whole-figure computation and invariant differences": {
+    stem: "A square has side 10 cm. A small square of side 2 cm is cut from each of the four corners. What is the area of the remaining figure in square centimeters?",
     type: "fill_blank",
     answer: "84",
-    explanation: "正方形面积 = 100。四个角 = 4×4 = 16。剩余 = 100-16 = 84平方厘米",
+    explanation: "Square area = 100. Four corners = 4 x 4 = 16. Remaining = 100 - 16 = 84 sq cm",
     difficulty: 1,
   },
 
-  // ===== 第18讲：立体几何 =====
-  "基本公式的运用": {
-    stem: "一个圆柱体底面半径为3厘米，高为10厘米。它的体积是多少立方厘米？（π取3.14）",
+  // ===== Lesson 18: solid geometry =====
+  "Applying basic formulas": {
+    stem: "A cylinder has a base radius of 3 cm and height 10 cm. What is its volume in cubic centimeters? (Use pi = 3.14)",
     type: "fill_blank",
     answer: "282.6",
-    explanation: "V = πr²h = 3.14×9×10 = 282.6立方厘米",
+    explanation: "V = pi r^2 h = 3.14 x 9 x 10 = 282.6 cubic cm",
     difficulty: 1,
   },
-  "切割与拼接": {
-    stem: "把一个底面半径为6厘米、高为8厘米的圆柱沿直径切成两半，表面积增加了多少平方厘米？",
+  "Cutting and assembling": {
+    stem: "A cylinder with base radius 6 cm and height 8 cm is cut in half along a diameter. By how many square centimeters does the surface area increase?",
     type: "fill_blank",
     answer: "192",
-    explanation: "切开后增加两个长方形截面。每个截面 = 直径×高 = 12×8 = 96平方厘米。共增加 = 2×96 = 192平方厘米",
+    explanation: "After cutting, two rectangular cross-sections are added. Each cross-section = diameter x height = 12 x 8 = 96 sq cm. Total increase = 2 x 96 = 192 sq cm",
     difficulty: 3,
   },
-  "空间思维": {
-    stem: "一个正方体有几个顶点、几条棱、几个面？",
+  "Spatial reasoning": {
+    stem: "How many vertices, edges, and faces does a cube have?",
     type: "fill_blank",
-    answer: "8个顶点、12条棱、6个面",
-    explanation: "正方体：8个顶点、12条棱（每个面4条，共4×6÷2=12）、6个面",
+    answer: "8 vertices, 12 edges, 6 faces",
+    explanation: "Cube: 8 vertices, 12 edges (each face has 4, total 4 x 6 / 2 = 12), 6 faces",
     difficulty: 1,
   },
-  "比列关系与等量关系（六年级：比）": {
-    stem: "一个长方体和一个正方体的体积相等。长方体长6厘米，宽4厘米，高3厘米。正方体的棱长大约是多少厘米？（保留一位小数）",
+  "Ratio and equality relationships (grade 6: ratios)": {
+    stem: "A cuboid and a cube have equal volumes. The cuboid is 6 cm long, 4 cm wide, 3 cm high. Approximately what is the cube's edge length in centimeters? (One decimal place.)",
     type: "fill_blank",
     answer: "4.2",
-    explanation: "长方体体积 = 6×4×3 = 72。正方体棱长 = ³√72 ≈ 4.16 ≈ 4.2厘米",
+    explanation: "Cuboid volume = 6 x 4 x 3 = 72. Cube edge = cube root of 72 ~= 4.16 ~= 4.2 cm",
     difficulty: 3,
   },
 
-  // ===== 第19讲：数论综合复习 =====
-  "整数的整除特征": {
-    stem: "下列哪个数能同时被2、3、5整除？",
+  // ===== Lesson 19: number theory comprehensive review =====
+  "Divisibility characteristics of integers": {
+    stem: "Which of the following numbers is divisible by 2, 3, and 5 simultaneously?",
     type: "choice",
     options: ["A. 145", "B. 210", "C. 315", "D. 402"],
     answer: "B",
-    explanation: "能被2整除→末位是偶数；能被3整除→各位数字和是3的倍数；能被5整除→末位是0或5。210：末位0（被2和5整除），2+1+0=3（被3整除）。✓",
+    explanation: "Divisible by 2 -> last digit even; divisible by 3 -> sum of digits is a multiple of 3; divisible by 5 -> last digit is 0 or 5. 210: last digit 0 (divisible by 2 and 5), 2+1+0 = 3 (divisible by 3). OK.",
     difficulty: 2,
   },
-  "质数和合数": {
-    stem: "20以内的质数共有几个？",
+  "Primes and composites": {
+    stem: "How many primes are there below 20?",
     type: "fill_blank",
     answer: "8",
-    explanation: "20以内的质数：2, 3, 5, 7, 11, 13, 17, 19，共8个。",
+    explanation: "Primes below 20: 2, 3, 5, 7, 11, 13, 17, 19, total 8.",
     difficulty: 1,
   },
-  "因数和倍数": {
-    stem: "24的因数有哪些？共有几个？",
+  "Factors and multiples": {
+    stem: "What are the factors of 24, and how many are there?",
     type: "fill_blank",
-    answer: "1,2,3,4,6,8,12,24，共8个",
-    explanation: "24=1×24=2×12=3×8=4×6，所以因数有：1,2,3,4,6,8,12,24，共8个",
+    answer: "1, 2, 3, 4, 6, 8, 12, 24, total 8",
+    explanation: "24 = 1 x 24 = 2 x 12 = 3 x 8 = 4 x 6, so the factors are 1, 2, 3, 4, 6, 8, 12, 24, total 8",
     difficulty: 1,
   },
-  "带余数法": {
-    stem: "100除以7，商和余数分别是多少？",
+  "Division with remainder": {
+    stem: "Divide 100 by 7. What are the quotient and remainder?",
     type: "fill_blank",
-    answer: "商14余2",
-    explanation: "100 ÷ 7 = 14...2。验证：14×7+2 = 98+2 = 100 ✓",
+    answer: "Quotient 14, remainder 2",
+    explanation: "100 / 7 = 14 ... 2. Check: 14 x 7 + 2 = 98 + 2 = 100. OK",
     difficulty: 1,
   },
-  "余数的性质": {
-    stem: "一个数除以8余5，除以3余2。这个数最小是多少？",
+  "Properties of remainders": {
+    stem: "A number leaves remainder 5 when divided by 8 and remainder 2 when divided by 3. What is the smallest such number?",
     type: "fill_blank",
     answer: "5",
-    explanation: "除以8余5的数：5,13,21,29...。检查除以3的余数：5÷3=1...2 ✓。最小是5。",
+    explanation: "Numbers leaving remainder 5 when divided by 8: 5, 13, 21, 29, .... Check the remainder when divided by 3: 5/3 = 1 ... 2. OK. Smallest is 5.",
     difficulty: 3,
   },
-  "位值原理": {
-    stem: "一个三位数，百位数字是a，十位数字是b，个位数字是c。这个三位数用a、b、c表示为？",
+  "Place-value principle": {
+    stem: "A three-digit number has hundreds digit a, tens digit b, ones digit c. Express it using a, b, c.",
     type: "fill_blank",
     answer: "100a + 10b + c",
-    explanation: "百位贡献 a×100，十位贡献 b×10，个位贡献 c×1。三位数 = 100a+10b+c",
+    explanation: "Hundreds contribute a x 100, tens b x 10, ones c x 1. Three-digit number = 100a + 10b + c",
     difficulty: 1,
   },
-  "进位制": {
-    stem: "把十进制数 25 转换成二进制数是多少？",
+  "Number bases": {
+    stem: "Convert decimal 25 to binary.",
     type: "fill_blank",
     answer: "11001",
-    explanation: "25÷2=12...1, 12÷2=6...0, 6÷2=3...0, 3÷2=1...1, 1÷2=0...1。从下往上读：11001",
+    explanation: "25/2 = 12 r 1, 12/2 = 6 r 0, 6/2 = 3 r 0, 3/2 = 1 r 1, 1/2 = 0 r 1. Read bottom to top: 11001",
     difficulty: 3,
   },
 
-  // ===== 第20讲：计数综合 =====
-  "基础计数": {
-    stem: "用1、2、3三个数字，可以组成多少个不同的三位数？（数字可以重复使用）",
+  // ===== Lesson 20: counting comprehensive =====
+  "Basic counting": {
+    stem: "Using the digits 1, 2, 3, how many distinct three-digit numbers can be formed (digits may repeat)?",
     type: "fill_blank",
     answer: "27",
-    explanation: "百位3种选择×十位3种×个位3种 = 3×3×3 = 27",
+    explanation: "Hundreds 3 choices x tens 3 x ones 3 = 3 x 3 x 3 = 27",
     difficulty: 1,
   },
-  "加乘原理": {
-    stem: "从A到B有3条路，从B到C有2条路。从A经B到C共有几种走法？",
+  "Addition and multiplication principles": {
+    stem: "There are 3 paths from A to B and 2 paths from B to C. How many ways are there to go from A to C via B?",
     type: "fill_blank",
     answer: "6",
-    explanation: "乘法原理：A→B有3种，B→C有2种，共 3×2 = 6种",
+    explanation: "Multiplication principle: 3 ways for A->B, 2 ways for B->C, total 3 x 2 = 6",
     difficulty: 1,
   },
-  "平面图形计数": {
-    stem: "一条直线上有5个点，过其中任意2个点可以画一条线段。共可以画多少条线段？",
+  "Plane figure counting": {
+    stem: "Five points lie on a single line. A line segment can be drawn through any two of them. How many line segments can be drawn?",
     type: "fill_blank",
     answer: "10",
-    explanation: "C(5,2) = 5×4÷2 = 10条线段",
+    explanation: "C(5, 2) = 5 x 4 / 2 = 10 line segments",
     difficulty: 2,
   },
 };
@@ -635,7 +635,7 @@ export async function POST() {
     }
 
     return NextResponse.json({
-      message: `插入 ${inserted} 道例题，跳过 ${skipped} 个知识点`,
+      message: `Inserted ${inserted} sample questions, skipped ${skipped} knowledge topics`,
       inserted,
       skipped,
       errors: errors.length > 0 ? errors : undefined,

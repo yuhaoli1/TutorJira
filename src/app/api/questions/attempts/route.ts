@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// POST /api/questions/attempts - 提交答案
+// POST /api/questions/attempts - submit answer
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     // Find the student record linked to this user
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!student) {
-      return NextResponse.json({ error: "未找到学生记录" }, { status: 404 });
+      return NextResponse.json({ error: "Student record not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     if (!question_id || answer === undefined || is_correct === undefined) {
       return NextResponse.json(
-        { error: "缺少必填字段：question_id, answer, is_correct" },
+        { error: "Missing required fields: question_id, answer, is_correct" },
         { status: 400 }
       );
     }
@@ -44,24 +44,24 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error("提交答案失败:", error);
+      console.error("Failed to submit answer:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ attempt });
   } catch (error) {
-    console.error("提交答案失败:", error);
-    return NextResponse.json({ error: "提交答案失败" }, { status: 500 });
+    console.error("Failed to submit answer:", error);
+    return NextResponse.json({ error: "Failed to submit answer" }, { status: 500 });
   }
 }
 
-// GET /api/questions/attempts - 获取做题记录
+// GET /api/questions/attempts - fetch attempt records
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: student } = await supabase
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!student) {
-      return NextResponse.json({ error: "未找到学生记录" }, { status: 404 });
+      return NextResponse.json({ error: "Student record not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -97,11 +97,11 @@ export async function GET(request: NextRequest) {
     const { data: attempts, error } = await query;
 
     if (error) {
-      console.error("获取做题记录失败:", error);
+      console.error("Failed to fetch attempt records:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 为错题查找来源任务（ticket_number + 任务标题）
+    // For wrong answers, look up the source task (ticket_number + task title)
     if (wrongOnly && attempts && attempts.length > 0) {
       const questionIds = [...new Set(attempts.map((a: { question_id: string }) => a.question_id))];
       const { data: sources } = await supabase
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         .order("submitted_at", { ascending: false });
 
       if (sources) {
-        // 每个 question_id 取第一个（最近的）来源
+        // For each question_id, take the first (most recent) source
         const sourceMap = new Map<string, { ticket_number: string; task_title: string }>();
         for (const s of sources) {
           if (!sourceMap.has(s.question_id) && s.task_assignments) {
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
             }
           }
         }
-        // 注入来源信息到每条 attempt
+        // Inject source info into each attempt
         for (const a of attempts) {
           const src = sourceMap.get(a.question_id);
           if (src) (a as Record<string, unknown>).source = src;
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ attempts });
   } catch (error) {
-    console.error("获取做题记录失败:", error);
-    return NextResponse.json({ error: "获取做题记录失败" }, { status: 500 });
+    console.error("Failed to fetch attempt records:", error);
+    return NextResponse.json({ error: "Failed to fetch attempt records" }, { status: 500 });
   }
 }

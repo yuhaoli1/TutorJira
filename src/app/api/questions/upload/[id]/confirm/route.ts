@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// POST /api/questions/upload/[id]/confirm - 确认保存题目
+// POST /api/questions/upload/[id]/confirm - confirm and save questions
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +11,7 @@ export async function POST(
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -21,10 +21,10 @@ export async function POST(
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 获取上传记录
+    // Fetch upload record
     const { data: upload, error: fetchError } = await supabase
       .from("question_uploads")
       .select("*")
@@ -32,7 +32,7 @@ export async function POST(
       .single();
 
     if (fetchError || !upload) {
-      return NextResponse.json({ error: "上传记录不存在" }, { status: 404 });
+      return NextResponse.json({ error: "Upload record not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -40,12 +40,12 @@ export async function POST(
 
     if (!Array.isArray(questions) || questions.length === 0) {
       return NextResponse.json(
-        { error: "请提供题目数组" },
+        { error: "Please provide a questions array" },
         { status: 400 }
       );
     }
 
-    // 批量插入题目
+    // Batch insert questions
     const insertData = questions.map((q: {
       topic_id?: string;
       type: string;
@@ -76,7 +76,7 @@ export async function POST(
 
     if (insertError) {
       return NextResponse.json(
-        { error: "保存题目失败: " + insertError.message },
+        { error: "Failed to save questions: " + insertError.message },
         { status: 500 }
       );
     }
@@ -96,19 +96,19 @@ export async function POST(
       }
     }
 
-    // 更新上传记录的题目数量
+    // Update the upload record's question count
     await supabase
       .from("question_uploads")
       .update({ question_count: inserted?.length || 0 })
       .eq("id", id);
 
     return NextResponse.json({
-      message: "题目保存成功",
+      message: "Questions saved successfully",
       count: inserted?.length || 0,
       questions: inserted,
     });
   } catch (error) {
-    console.error("保存题目失败:", error);
-    return NextResponse.json({ error: "保存题目失败" }, { status: 500 });
+    console.error("Failed to save questions:", error);
+    return NextResponse.json({ error: "Failed to save questions" }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// PATCH /api/questions/[id] - 编辑题目
+// PATCH /api/questions/[id] - edit question
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +11,7 @@ export async function PATCH(
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -21,7 +21,7 @@ export async function PATCH(
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -78,12 +78,12 @@ export async function PATCH(
 
     return NextResponse.json({ question });
   } catch (error) {
-    console.error("更新题目失败:", error);
-    return NextResponse.json({ error: "更新题目失败" }, { status: 500 });
+    console.error("Failed to update question:", error);
+    return NextResponse.json({ error: "Failed to update question" }, { status: 500 });
   }
 }
 
-// DELETE /api/questions/[id] - 删除题目
+// DELETE /api/questions/[id] - delete question
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -93,7 +93,7 @@ export async function DELETE(
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -103,7 +103,7 @@ export async function DELETE(
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { error } = await supabase
@@ -117,7 +117,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("删除题目失败:", error);
-    return NextResponse.json({ error: "删除题目失败" }, { status: 500 });
+    console.error("Failed to delete question:", error);
+    return NextResponse.json({ error: "Failed to delete question" }, { status: 500 });
   }
 }

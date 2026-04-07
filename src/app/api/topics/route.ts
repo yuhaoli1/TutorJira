@@ -7,13 +7,13 @@ export async function GET(request: Request) {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const url = new URL(request.url);
     const subject = url.searchParams.get("subject");
 
-    // 获取所有知识点（可按学科筛选）
+    // Fetch all knowledge topics (optionally filtered by subject)
     let query = supabase
       .from("knowledge_topics")
       .select("*")
@@ -29,16 +29,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 构建树形结构
+    // Build tree structure
     const topicMap = new Map<string, typeof topics[0] & { children: typeof topics }>();
     const roots: (typeof topics[0] & { children: typeof topics })[] = [];
 
-    // 初始化所有节点
+    // Initialize all nodes
     for (const topic of topics || []) {
       topicMap.set(topic.id, { ...topic, children: [] });
     }
 
-    // 构建树
+    // Build the tree
     for (const topic of topics || []) {
       const node = topicMap.get(topic.id)!;
       if (topic.parent_id && topicMap.has(topic.parent_id)) {
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // 获取所有学科列表
+    // Fetch list of all subjects
     const { data: allTopics } = await supabase
       .from("knowledge_topics")
       .select("subject")
@@ -58,9 +58,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ topics: roots, subjects });
   } catch (error) {
-    console.error("获取知识点失败:", error);
+    console.error("Failed to fetch knowledge topics:", error);
     return NextResponse.json(
-      { error: "获取知识点失败" },
+      { error: "Failed to fetch knowledge topics" },
       { status: 500 }
     );
   }

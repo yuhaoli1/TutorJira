@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// GET /api/tags/categories — 获取所有标签维度（可附带标签列表）
+// GET /api/tags/categories — fetch all tag categories (optionally with tag list)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ categories: data });
   } catch {
-    return NextResponse.json({ error: "获取标签维度失败" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch tag categories" }, { status: 500 });
   }
 }
 
-// POST /api/tags/categories — 创建标签维度
+// POST /api/tags/categories — create tag category
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const { name, slug, description, allow_multiple, sort_order } = body;
 
     if (!name || !slug) {
-      return NextResponse.json({ error: "name 和 slug 必填" }, { status: 400 });
+      return NextResponse.json({ error: "name and slug are required" }, { status: 400 });
     }
 
     const { data, error } = await supabase
@@ -59,6 +59,6 @@ export async function POST(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ category: data });
   } catch {
-    return NextResponse.json({ error: "创建标签维度失败" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create tag category" }, { status: 500 });
   }
 }

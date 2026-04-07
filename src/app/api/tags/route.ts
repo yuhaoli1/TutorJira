@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// GET /api/tags — 获取标签列表
+// GET /api/tags — fetch tag list
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -37,11 +37,11 @@ export async function GET(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ tags: data });
   } catch {
-    return NextResponse.json({ error: "获取标签失败" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch tags" }, { status: 500 });
   }
 }
 
-// POST /api/tags — 创建标签
+// POST /api/tags — create tag
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const { category_id, name, slug, parent_id, sort_order, metadata } = body;
 
     if (!category_id || !name) {
-      return NextResponse.json({ error: "category_id 和 name 必填" }, { status: 400 });
+      return NextResponse.json({ error: "category_id and name are required" }, { status: 400 });
     }
 
     const { data, error } = await supabase
@@ -68,23 +68,23 @@ export async function POST(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ tag: data });
   } catch {
-    return NextResponse.json({ error: "创建标签失败" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create tag" }, { status: 500 });
   }
 }
 
-// DELETE /api/tags?id=xxx — 删除标签
+// DELETE /api/tags?id=xxx — delete tag
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     const { error } = await supabase.from("question_tags").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "删除标签失败" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete tag" }, { status: 500 });
   }
 }

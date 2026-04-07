@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 
-// POST /api/tasks/attachments - 上传任务附件
+// POST /api/tasks/attachments - upload task attachment
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -16,17 +16,17 @@ export async function POST(request: NextRequest) {
     const assignmentId = formData.get("assignment_id") as string | null;
 
     if (!file || !assignmentId) {
-      return NextResponse.json({ error: "缺少文件或任务ID" }, { status: 400 });
+      return NextResponse.json({ error: "Missing file or task ID" }, { status: 400 });
     }
 
     // Only allow images
     if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "仅支持图片文件" }, { status: 400 });
+      return NextResponse.json({ error: "Only image files are supported" }, { status: 400 });
     }
 
     // Max 10MB
     if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "文件大小不能超过10MB" }, { status: 400 });
+      return NextResponse.json({ error: "File size must not exceed 10MB" }, { status: 400 });
     }
 
     const ext = file.name.split(".").pop() || "jpg";
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("附件上传失败:", uploadError);
-      return NextResponse.json({ error: "上传失败: " + uploadError.message }, { status: 500 });
+      console.error("Attachment upload failed:", uploadError);
+      return NextResponse.json({ error: "Upload failed: " + uploadError.message }, { status: 500 });
     }
 
     const { data: urlData } = serviceClient.storage
@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      return NextResponse.json({ error: "保存记录失败" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save record" }, { status: 500 });
     }
 
     return NextResponse.json({ attachment });
   } catch (error) {
-    console.error("附件上传失败:", error);
-    return NextResponse.json({ error: "上传失败" }, { status: 500 });
+    console.error("Attachment upload failed:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

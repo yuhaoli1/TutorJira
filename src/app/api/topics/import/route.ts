@@ -6,10 +6,10 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // 验证用户权限
+    // Verify user permissions
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "未登录" }, { status: 401 });
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -19,33 +19,33 @@ export async function POST(request: Request) {
       .single();
 
     if (!profile || !["admin", "teacher"].includes(profile.role)) {
-      return NextResponse.json({ error: "权限不足" }, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 支持 query param ?subject=奥数 和 ?mode=sync
+    // Supports query params ?subject=Math Olympiad and ?mode=sync
     const url = new URL(request.url);
-    const subject = url.searchParams.get("subject") || "奥数";
+    const subject = url.searchParams.get("subject") || "Math Olympiad";
     const mode = url.searchParams.get("mode") || "create"; // create | sync
 
-    // 目前只支持奥数，后续可以添加其他学科的 topics-data
+    // Currently only Math Olympiad is supported; topics-data for other subjects can be added later
     const topicsMap: Record<string, typeof MATH_TOPICS> = {
-      "奥数": MATH_TOPICS,
+      "Math Olympiad": MATH_TOPICS,
     };
 
     const topicsData = topicsMap[subject];
     if (!topicsData) {
       return NextResponse.json(
-        { error: `暂不支持学科: ${subject}，可用: ${Object.keys(topicsMap).join(", ")}` },
+        { error: `Unsupported subject: ${subject}, available: ${Object.keys(topicsMap).join(", ")}` },
         { status: 400 }
       );
     }
 
     if (mode === "sync") {
-      // 同步模式：对比现有数据，增加新的、更新已有的（不删除）
+      // Sync mode: compare with existing data, add new topics and update existing ones (no deletes)
       return await syncTopics(supabase, topicsData, subject);
     }
 
-    // 创建模式：检查是否已存在
+    // Create mode: check if data already exists
     const { count } = await supabase
       .from("knowledge_topics")
       .select("*", { count: "exact", head: true })
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     if (count && count > 0) {
       return NextResponse.json(
         {
-          error: `${subject}知识点已存在（${count}个），使用 ?mode=sync 来更新`,
+          error: `${subject} knowledge topics already exist (${count} entries), use ?mode=sync to update`,
           existing_count: count
         },
         { status: 409 }
@@ -64,13 +64,13 @@ export async function POST(request: Request) {
     const totalInserted = await insertTopics(supabase, topicsData, subject);
 
     return NextResponse.json({
-      message: `${subject}知识点导入成功`,
+      message: `${subject} knowledge topics imported successfully`,
       total_inserted: totalInserted,
     });
   } catch (error) {
-    console.error("知识点导入失败:", error);
+    console.error("Knowledge topic import failed:", error);
     return NextResponse.json(
-      { error: "知识点导入失败" },
+      { error: "Knowledge topic import failed" },
       { status: 500 }
     );
   }
@@ -87,7 +87,7 @@ async function insertTopics(
     const { data: parent, error: parentError } = await supabase
       .from("knowledge_topics")
       .insert({
-        title: `第${topic.sortOrder}讲：${topic.title}`,
+        title: `Lesson ${topic.sortOrder}: ${topic.title}`,
         subject,
         difficulty: 3,
         sort_order: topic.sortOrder,
@@ -97,7 +97,7 @@ async function insertTopics(
       .single();
 
     if (parentError) {
-      console.error("插入主知识点失败:", parentError);
+      console.error("Failed to insert parent knowledge topic:", parentError);
       continue;
     }
     totalInserted++;
@@ -114,7 +114,7 @@ async function insertTopics(
         });
 
       if (childError) {
-        console.error("插入子知识点失败:", childError);
+        console.error("Failed to insert child knowledge topic:", childError);
         continue;
       }
       totalInserted++;
@@ -133,7 +133,7 @@ async function syncTopics(
   let updated = 0;
   let unchanged = 0;
 
-  // 获取现有知识点
+  // Fetch existing knowledge topics
   const { data: existing } = await supabase
     .from("knowledge_topics")
     .select("*")
@@ -144,13 +144,13 @@ async function syncTopics(
   );
 
   for (const topic of topicsData) {
-    const parentTitle = `第${topic.sortOrder}讲：${topic.title}`;
+    const parentTitle = `Lesson ${topic.sortOrder}: ${topic.title}`;
     const existingParent = existingByTitle.get(parentTitle);
 
     let parentId: string;
 
     if (existingParent) {
-      // 更新排序
+      // Update sort order
       if (existingParent.sort_order !== topic.sortOrder) {
         await supabase
           .from("knowledge_topics")
@@ -162,7 +162,7 @@ async function syncTopics(
       }
       parentId = existingParent.id;
     } else {
-      // 新增
+      // Insert new
       const { data: parent } = await supabase
         .from("knowledge_topics")
         .insert({
@@ -180,7 +180,7 @@ async function syncTopics(
       added++;
     }
 
-    // 处理子知识点
+    // Handle child knowledge topics
     for (let i = 0; i < topic.subtopics.length; i++) {
       const existingChild = existingByTitle.get(topic.subtopics[i]);
       if (existingChild) {
@@ -201,7 +201,7 @@ async function syncTopics(
   }
 
   return NextResponse.json({
-    message: `${subject}知识点同步完成`,
+    message: `${subject} knowledge topics sync completed`,
     added,
     updated,
     unchanged,
