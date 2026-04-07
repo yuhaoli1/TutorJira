@@ -1,89 +1,89 @@
 export const QUESTION_EXTRACTION_SYSTEM_PROMPT = (topicNames?: string[]) => {
   const topicSection = topicNames && topicNames.length > 0
-    ? `\n9. suggested_topic：从以下知识点列表中选择最匹配的一个填入，必须完全匹配列表中的名称。如果都不匹配，填 ""
-可选知识点列表：
+    ? `\n9. suggested_topic: choose the single best-matching topic from the list below. The value must exactly match one of the names in the list. If none match, use ""
+Available topics:
 ${topicNames.map(t => `- ${t}`).join("\n")}`
     : "";
 
-  return `你是一个专业的数学题目提取助手。你的任务是从给定的图片或文本中提取数学题目，并将其结构化为JSON格式。
+  return `You are a professional math problem extraction assistant. Your task is to extract math problems from a given image or text and structure them as JSON.
 
-请严格按照以下JSON格式输出，不要包含任何其他文字：
+Output strictly in the following JSON format. Do not include any other text:
 
 [
   {
-    "stem": "题目内容（完整的题干文字）",
+    "stem": "Problem content (the full text of the question)",
     "type": "choice | fill_blank | solution",
-    "options": ["A. 选项1", "B. 选项2", "C. 选项3", "D. 选项4"],
-    "answer": "正确答案",
-    "explanation": "解题思路和解析",
+    "options": ["A. option 1", "B. option 2", "C. option 3", "D. option 4"],
+    "answer": "Correct answer",
+    "explanation": "Solution approach and explanation",
     "difficulty": 3,
-    "suggested_topic": "知识点名称"
+    "suggested_topic": "Topic name"
   }
 ]
 
-规则：
-1. type 分类：
-   - "choice"：选择题（必须有 options 字段）
-   - "fill_blank"：填空题（answer 为填空答案）
-   - "solution"：解答题（answer 为完整解答过程）
-2. difficulty 范围 1-5（1=简单，5=困难），根据题目的知识点深度和计算复杂度判断
-3. options 字段仅在 type 为 "choice" 时需要
-4. 如果能推断出答案和解析，请尽量提供
-5. 如果无法确定答案，answer 填 "待填写"
-6. stem 中的数学公式用文字描述，例如 "x的平方" 而非 "x²"
-7. 保持原题的完整性，不要修改或简化题目内容
-8. 只输出 JSON 数组，不要输出任何其他内容
-9. **OCR 纠错**：图片可能模糊或有噪点，请根据数学常识自动纠正识别错误。常见情况：
-   - "×" 可能被误识别为 "%"、"x"、"X"，根据数学上下文判断
-   - "÷" 可能被误识别为 "+"、":" 等
-   - 中文单位（厘米、米、千克等）可能识别为乱码，请根据题意补全
-   - 数字 "0" 和字母 "O"、数字 "1" 和字母 "l" 等易混淆字符，根据上下文纠正
-   - 选项内容如果出现明显乱码，请根据题目逻辑推断正确内容${topicSection}`;
+Rules:
+1. type categories:
+   - "choice": multiple-choice question (must include the options field)
+   - "fill_blank": fill-in-the-blank question (answer is the value to fill in)
+   - "solution": free-response/show-your-work question (answer is the complete solution)
+2. difficulty range 1-5 (1 = easy, 5 = hard), based on the depth of the underlying concept and the computational complexity
+3. The options field is only required when type is "choice"
+4. If you can infer the answer and explanation, please provide them whenever possible
+5. If you cannot determine the answer, set answer to "TBD"
+6. In stem, describe math formulas in words, e.g. "x squared" instead of "x²"
+7. Keep the original problem intact — do not modify or simplify the content
+8. Output only the JSON array. Do not output anything else
+9. **OCR correction**: the image may be blurry or noisy, so automatically correct recognition errors using mathematical common sense. Common cases:
+   - "×" may be misread as "%", "x", or "X"; decide based on the math context
+   - "÷" may be misread as "+", ":", etc.
+   - Units (inches, feet, pounds, etc.) may come back as garbled text; restore them based on the problem
+   - Easily confused characters such as the digit "0" vs. the letter "O", or the digit "1" vs. the letter "l" — fix using context
+   - If an option contains obviously garbled text, infer the intended content from the logic of the problem${topicSection}`;
 };
 
-export const QUESTION_EXTRACTION_USER_PROMPT_IMAGE = `请从这张图片中提取所有数学题目，按照系统提示的JSON格式输出。`;
+export const QUESTION_EXTRACTION_USER_PROMPT_IMAGE = `Please extract all math problems from this image and output them in the JSON format described in the system prompt.`;
 
 export const QUESTION_EXTRACTION_USER_PROMPT_TEXT = (text: string) =>
-  `请从以下文本中提取所有数学题目，按照系统提示的JSON格式输出。
+  `Please extract all math problems from the following text and output them in the JSON format described in the system prompt.
 
-文本内容：
+Text content:
 ${text}`;
 
-// ===== OCR 纠错 prompt =====
+// ===== OCR correction prompt =====
 
-export const OCR_CORRECTION_PROMPT = `你是一个数学题目校对助手。以下是从图片中 OCR 识别出的数学题目 JSON，可能存在识别错误（乱码、错字、符号错误等）。
+export const OCR_CORRECTION_PROMPT = `You are a math problem proofreading assistant. Below is a JSON array of math problems extracted from an image via OCR. It may contain recognition errors (garbled text, wrong characters, wrong symbols, etc.).
 
-请先根据题干计算出正确答案，再根据数学逻辑纠正所有错误，最后返回修正后的 JSON 数组。
+First compute the correct answer from the question stem yourself, then fix any errors based on mathematical reasoning, and finally return the corrected JSON array.
 
-纠错步骤：
-1. 先读懂题干，自己算出正确答案
-2. 检查每个选项是否合理：
-   - 选择题的选项应该是不同的值，不能有重复
-   - 选项中的乱码（如 "1BEXK"）：根据题目类型推断应有的数值。例如周长题选项应该是不同的数值+单位
-   - 干扰项通常是常见的计算错误结果（如只算了一半、算成面积等）
-3. 修正 answer 字段，确保答案与正确计算结果一致
+Correction steps:
+1. Read the stem carefully and work out the correct answer yourself
+2. Check whether each option is reasonable:
+   - The options of a multiple-choice question must be different values; there should be no duplicates
+   - For garbled options (e.g. "1BEXK"): infer the intended numeric value from the type of problem. For example, options for a perimeter problem should be different numeric values with units
+   - Distractors are typically the result of common calculation mistakes (e.g. computing only half the value, computing the area instead, etc.)
+3. Update the answer field so that it matches the correctly computed result
 
-纠错规则：
-- 数学符号错误："%" 应为 "×"，":" 应为 "÷" 等
-- 单位乱码：根据题目上下文补全正确的中文单位（厘米、米、千克等）
-- 数字与字母混淆：0/O、1/l 等
-- 选项不能重复：如果纠错后两个选项值相同，说明纠错有误，需要重新推断
-- 如果内容没有问题，保持原样不变
-- 只输出修正后的 JSON 数组，不要输出任何其他内容`;
+Correction rules:
+- Math symbol errors: "%" should be "×", ":" should be "÷", etc.
+- Garbled units: restore the correct English unit (inches, feet, pounds, etc.) based on the context of the problem
+- Digit/letter confusion: 0/O, 1/l, etc.
+- Options must not be duplicates: if two options end up equal after correction, the correction is wrong and you must re-infer
+- If a piece of content has no problem, leave it unchanged
+- Output only the corrected JSON array. Do not output anything else`;
 
-// ===== 答案识别 prompts =====
+// ===== Answer recognition prompts =====
 
-export const ANSWER_EXTRACTION_SYSTEM_PROMPT = `你是一个小学数学答案识别和判题助手。学生拍了一张答题纸的照片，请根据提供的题目列表和标准答案，从照片中识别出每道题的答案，并判断是否正确。
+export const ANSWER_EXTRACTION_SYSTEM_PROMPT = `You are an answer recognition and grading assistant for US elementary school math. A student has taken a photo of an answer sheet. Given the list of problems and their correct answers, identify the student's answer for each problem from the photo and decide whether it is correct.
 
-规则：
-1. 对于选择题，只返回选项字母（如 A、B、C、D）
-2. 对于填空题，返回填写的数字或文字
-3. 对于解答题，返回学生写的完整解答过程
-4. 如果某道题在照片中找不到答案，answer 填 ""，is_correct 填 false
-5. 判断正确时要考虑：答案顺序不同但内容完整算正确、数学表达式等价算正确、单位省略但数值正确算正确
-6. 严格按照 JSON 数组格式返回，不要输出任何其他内容
+Rules:
+1. For multiple-choice questions, return only the option letter (e.g. A, B, C, D)
+2. For fill-in-the-blank questions, return the number or text the student wrote
+3. For free-response questions, return the student's full written solution
+4. If a problem cannot be found in the photo, set answer to "" and is_correct to false
+5. When judging correctness, consider: answers in a different order but with the same complete content count as correct; mathematically equivalent expressions count as correct; missing units but a correct numeric value count as correct
+6. Return strictly as a JSON array. Do not output anything else
 
-返回格式：
+Return format:
 [{"index": 0, "answer": "...", "is_correct": true}, {"index": 1, "answer": "...", "is_correct": false}, ...]`;
 
 export const ANSWER_EXTRACTION_USER_PROMPT = (
@@ -91,15 +91,15 @@ export const ANSWER_EXTRACTION_USER_PROMPT = (
 ) => {
   const list = questions
     .map((q) => {
-      let desc = `第${q.index + 1}题 [${q.type === "choice" ? "选择题" : q.type === "fill_blank" ? "填空题" : "解答题"}]: ${q.stem}`;
+      let desc = `Problem ${q.index + 1} [${q.type === "choice" ? "Multiple choice" : q.type === "fill_blank" ? "Fill in the blank" : "Free response"}]: ${q.stem}`;
       if (q.options && q.options.length > 0) {
-        desc += `\n  选项: ${q.options.join(" | ")}`;
+        desc += `\n  Options: ${q.options.join(" | ")}`;
       }
       if (q.correct_answer) {
-        desc += `\n  标准答案: ${q.correct_answer}`;
+        desc += `\n  Correct answer: ${q.correct_answer}`;
       }
       return desc;
     })
     .join("\n");
-  return `请从照片中识别以下每道题的学生答案，并对比标准答案判断是否正确：\n\n${list}`;
+  return `Please identify the student's answer for each of the problems below from the photo, and compare each one against the correct answer to decide whether it is correct:\n\n${list}`;
 };

@@ -16,7 +16,7 @@ export class DeepSeekProvider implements AIProvider {
     this.model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
     this.baseUrl = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
     if (!this.apiKey) {
-      throw new Error("DEEPSEEK_API_KEY 环境变量未设置");
+      throw new Error("DEEPSEEK_API_KEY environment variable is not set");
     }
   }
 
@@ -41,7 +41,7 @@ export class DeepSeekProvider implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`DeepSeek API 调用失败: ${response.status} - ${errorText}`);
+      throw new Error(`DeepSeek API call failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -53,10 +53,10 @@ export class DeepSeekProvider implements AIProvider {
 
   private async buildMessages(request: AIExtractionRequest) {
     if (request.imageBase64 && request.imageMimeType) {
-      // DeepSeek chat 不支持图片，先用 OCR 转文字再处理
+      // DeepSeek chat does not support images, so OCR them to text first
       const ocrText = await this.ocrImage(request.imageBase64, request.imageMimeType);
       if (!ocrText.trim()) {
-        throw new Error("图片 OCR 未提取到文字内容");
+        throw new Error("Image OCR did not extract any text content");
       }
       return [
         {
@@ -75,14 +75,14 @@ export class DeepSeekProvider implements AIProvider {
       ];
     }
 
-    throw new Error("必须提供图片或文本内容");
+    throw new Error("Either image or text content must be provided");
   }
 
   /**
-   * 用视觉模型做 OCR：优先豆包（国内可用），其次 OpenAI
+   * Use a vision model for OCR: prefer Doubao (available in mainland China), then fall back to OpenAI
    */
   private async ocrImage(base64: string, mimeType: string): Promise<string> {
-    // 优先用豆包视觉模型（国内可用）
+    // Prefer Doubao vision model (available in mainland China)
     const doubaoKey = process.env.DOUBAO_API_KEY;
     if (doubaoKey) {
       try {
@@ -107,7 +107,7 @@ export class DeepSeekProvider implements AIProvider {
                   },
                   {
                     type: "text",
-                    text: "请将图片中的所有文字内容完整地转录出来，保持原始格式和排版。包括题号、题目内容、选项、答案和解析。",
+                    text: "Please transcribe all of the text in the image in full, preserving the original formatting and layout. Include problem numbers, problem statements, options, answers, and explanations.",
                   },
                 ],
               },
@@ -119,11 +119,11 @@ export class DeepSeekProvider implements AIProvider {
           return data.choices?.[0]?.message?.content || "";
         }
       } catch (e) {
-        console.warn("豆包 OCR fallback failed:", e);
+        console.warn("Doubao OCR fallback failed:", e);
       }
     }
 
-    // 其次用 OpenAI
+    // Fall back to OpenAI
     const openaiKey = process.env.OPENAI_API_KEY;
     if (openaiKey) {
       try {
@@ -146,7 +146,7 @@ export class DeepSeekProvider implements AIProvider {
                   },
                   {
                     type: "text",
-                    text: "请将图片中的所有文字内容完整地转录出来，保持原始格式和排版。包括题号、题目内容、选项、答案和解析。",
+                    text: "Please transcribe all of the text in the image in full, preserving the original formatting and layout. Include problem numbers, problem statements, options, answers, and explanations.",
                   },
                 ],
               },
@@ -162,14 +162,14 @@ export class DeepSeekProvider implements AIProvider {
       }
     }
 
-    throw new Error("DeepSeek 不支持直接处理图片，请配置 DOUBAO_API_KEY 或 OPENAI_API_KEY 用于图片 OCR，或上传 PDF/文本文件");
+    throw new Error("DeepSeek does not support images directly. Please configure DOUBAO_API_KEY or OPENAI_API_KEY for image OCR, or upload a PDF/text file instead.");
   }
 
   private parseQuestions(rawText: string): ExtractedQuestion[] {
     try {
       const jsonMatch = rawText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
-        console.error("无法从AI响应中提取JSON:", rawText);
+        console.error("Failed to extract JSON from AI response:", rawText);
         return [];
       }
       const parsed = JSON.parse(jsonMatch[0]);
@@ -181,13 +181,13 @@ export class DeepSeekProvider implements AIProvider {
           ? q.type
           : "solution") as ExtractedQuestion["type"],
         options: Array.isArray(q.options) ? q.options.map(String) : undefined,
-        answer: String(q.answer || "待填写"),
+        answer: String(q.answer || "TBD"),
         explanation: q.explanation ? String(q.explanation) : undefined,
         difficulty: Math.min(5, Math.max(1, Number(q.difficulty) || 3)),
         suggested_topic: q.suggested_topic ? String(q.suggested_topic) : undefined,
       }));
     } catch (e) {
-      console.error("解析AI响应失败:", e);
+      console.error("Failed to parse AI response:", e);
       return [];
     }
   }

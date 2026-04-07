@@ -14,7 +14,7 @@ export class OpenAIProvider implements AIProvider {
     this.apiKey = process.env.OPENAI_API_KEY || "";
     this.model = process.env.OPENAI_MODEL || "gpt-4o";
     if (!this.apiKey) {
-      throw new Error("OPENAI_API_KEY 环境变量未设置");
+      throw new Error("OPENAI_API_KEY environment variable is not set");
     }
   }
 
@@ -39,7 +39,7 @@ export class OpenAIProvider implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`OpenAI API 调用失败: ${response.status} - ${errorText}`);
+      throw new Error(`OpenAI API call failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -79,14 +79,14 @@ export class OpenAIProvider implements AIProvider {
       ];
     }
 
-    throw new Error("必须提供图片或文本内容");
+    throw new Error("Either image or text content must be provided");
   }
 
   private parseQuestions(rawText: string): ExtractedQuestion[] {
     try {
       const jsonMatch = rawText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
-        console.error("无法从AI响应中提取JSON:", rawText);
+        console.error("Failed to extract JSON from AI response:", rawText);
         return [];
       }
       const parsed = JSON.parse(jsonMatch[0]);
@@ -98,13 +98,13 @@ export class OpenAIProvider implements AIProvider {
           ? q.type
           : "solution") as ExtractedQuestion["type"],
         options: Array.isArray(q.options) ? q.options.map(String) : undefined,
-        answer: String(q.answer || "待填写"),
+        answer: String(q.answer || "TBD"),
         explanation: q.explanation ? String(q.explanation) : undefined,
         difficulty: Math.min(5, Math.max(1, Number(q.difficulty) || 3)),
         suggested_topic: q.suggested_topic ? String(q.suggested_topic) : undefined,
       }));
     } catch (e) {
-      console.error("解析AI响应失败:", e);
+      console.error("Failed to parse AI response:", e);
       return [];
     }
   }
