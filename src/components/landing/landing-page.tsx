@@ -444,16 +444,16 @@ export function LandingPage() {
             Why <span style={{ color: GREEN }}>Firefly</span>?
           </h2>
           <p className="text-base md:text-lg leading-relaxed mb-8" style={{ color: GRAY }}>
-            A single firefly doesn&rsquo;t look like much. But{" "}
+            In a few rivers and meadows around the world, fireflies do something extraordinary:{" "}
             <span className="font-bold" style={{ color: DARK }}>
-              gather enough of them
-            </span>{" "}
-            and you have light to read by.
+              they sync
+            </span>
+            . Thousands of them blink in unison — not because anyone tells them to, but because each one watches its neighbours and adjusts.
             <br className="hidden md:block" />
-            That&rsquo;s how learning works too — small wins, collected over time, become real understanding.
+            Learning works the same way. A student practices. A parent notices. A teacher adjusts. One small light at a time, the whole pattern gets brighter.
             <br className="hidden md:block" />
             <span className="font-bold" style={{ color: GREEN_DARK }}>
-              We use AI to help every student gather their own fireflies.
+              Firefly keeps students, parents, and teachers in sync — so every flash counts.
             </span>
           </p>
           <div
@@ -461,7 +461,7 @@ export function LandingPage() {
             style={{ borderColor: GREEN, background: GREEN_LIGHT, color: GREEN_DARK }}
           >
             <LogoIcon size={24} />
-            Small lights, big learning
+            Learn together. Shine together.
           </div>
         </div>
       </section>
