@@ -4,8 +4,8 @@ import type { TaskCardData } from "@/components/tasks/task-card";
 import type { Label } from "@/components/tasks/label-picker";
 
 /**
- * 看板数据获取 — 服务端和客户端共用
- * 返回 cards 和 students 列表
+ * Board data fetcher — shared between server and client.
+ * Returns the list of cards and students.
  */
 export async function fetchBoardData(
   supabase: SupabaseClient,
@@ -20,7 +20,7 @@ export async function fetchBoardData(
     return { cards: [], students: [] };
   }
 
-  // 主查询
+  // Main query
   let query = supabase
     .from("task_assignments")
     .select(
@@ -46,7 +46,7 @@ export async function fetchBoardData(
 
   if (!assignments) return { cards: [], students: [] };
 
-  // 收集 IDs
+  // Collect IDs
   const assignmentIds = assignments.map((a) => a.id);
   const safeIds = assignmentIds.length > 0 ? assignmentIds : ["__none__"];
 
@@ -59,7 +59,7 @@ export async function fetchBoardData(
   ];
   const safeTaskIds = taskIds.length > 0 ? taskIds : ["__none__"];
 
-  // 一次 Promise.all 获取所有辅助数据
+  // Fetch all auxiliary data in a single Promise.all
   const [testResultsRes, commentsRes, attachmentsRes, labelsRes, questionsCountRes] =
     await Promise.all([
       supabase.from("test_results").select("*").in("task_assignment_id", safeIds),

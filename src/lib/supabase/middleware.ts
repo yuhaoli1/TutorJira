@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 未登录用户重定向到登录页
+  // Redirect unauthenticated users to the login page
   if (
     !user &&
     request.nextUrl.pathname !== "/" &&

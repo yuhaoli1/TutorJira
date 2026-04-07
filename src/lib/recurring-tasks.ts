@@ -89,7 +89,7 @@ export async function generateRecurringTasks(): Promise<number> {
 
   let totalGenerated = 0;
 
-  // ✅ 收集所有待创建的任务，最后批量插入
+  // ✅ Collect every task to create, then bulk-insert at the end
   const allTaskInserts: {
     title: string;
     type: TaskType;
@@ -118,13 +118,13 @@ export async function generateRecurringTasks(): Promise<number> {
       });
     }
 
-    // 记录每个模板最后的日期
+    // Record the last date for each template
     templateDateMap.set(template.id, dates[dates.length - 1]);
   }
 
   if (allTaskInserts.length === 0) return 0;
 
-  // ✅ 批量插入所有任务（重复的会被 unique constraint 跳过）
+  // ✅ Bulk-insert all tasks (duplicates are skipped by the unique constraint)
   const { data: createdTasks } = await supabase
     .from("tasks")
     .upsert(allTaskInserts, {
@@ -135,7 +135,7 @@ export async function generateRecurringTasks(): Promise<number> {
 
   if (!createdTasks || createdTasks.length === 0) return 0;
 
-  // ✅ 批量创建所有 assignments
+  // ✅ Bulk-create all assignments
   const allAssignments: { task_id: string; student_id: string }[] = [];
   const templateStudentMap = new Map<string, string[]>();
   for (const t of templates as RecurringTemplate[]) {
@@ -155,7 +155,7 @@ export async function generateRecurringTasks(): Promise<number> {
 
   totalGenerated = createdTasks.length;
 
-  // ✅ 批量更新 last_generated_date
+  // ✅ Bulk-update last_generated_date
   const updatePromises = Array.from(templateDateMap.entries()).map(
     ([templateId, lastDate]) =>
       supabase

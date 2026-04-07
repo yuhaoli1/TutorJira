@@ -1,7 +1,7 @@
 /**
- * 标签工具函数 — 从 tags 数组推导出 type / difficulty 等字段
- * 当旧字段 (questions.type, questions.difficulty, questions.topic_id) 被删除后，
- * 组件只需调用这些函数即可，无需任何改动。
+ * Tag helpers — derive type / difficulty / etc. from the `tags` array.
+ * Once legacy columns (questions.type, questions.difficulty, questions.topic_id)
+ * are removed, components only need to call these helpers — no other changes.
  */
 
 export interface QuestionTag {
@@ -16,21 +16,21 @@ export interface QuestionTag {
   } | null;
 }
 
-/** 从标签数组中提取题型 slug（choice / fill_blank / solution 等） */
+/** Extract question-type slug (choice / fill_blank / solution / ...) from tags. */
 export function getTypeFromTags(tags?: QuestionTag[]): string {
   if (!tags) return "solution";
   const tag = tags.find((t) => t.question_tag_categories?.slug === "question_type");
   return tag?.slug || "solution";
 }
 
-/** 从标签数组中提取难度数值 (1-5) */
+/** Extract difficulty value (1-5) from tags. */
 export function getDifficultyFromTags(tags?: QuestionTag[]): number {
   if (!tags) return 3;
   const tag = tags.find((t) => t.question_tag_categories?.slug === "difficulty");
   return tag?.slug ? parseInt(tag.slug) || 3 : 3;
 }
 
-/** 从标签数组中提取知识点名称列表 */
+/** Extract knowledge-point names from tags. */
 export function getKnowledgePointsFromTags(tags?: QuestionTag[]): string[] {
   if (!tags) return [];
   return tags
@@ -38,7 +38,7 @@ export function getKnowledgePointsFromTags(tags?: QuestionTag[]): string[] {
     .map((t) => t.name);
 }
 
-/** 从标签数组中提取年级标签 */
+/** Extract grade label from tags. */
 export function getGradeFromTags(tags?: QuestionTag[]): string | null {
   if (!tags) return null;
   const tag = tags.find((t) => t.question_tag_categories?.slug === "grade");
