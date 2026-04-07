@@ -88,7 +88,7 @@ export function TaskDetailPanel({
         setActivities(
           data.map((a) => ({
             ...a,
-            performer_name: nameMap.get(a.performed_by) || "未知用户",
+            performer_name: nameMap.get(a.performed_by) || "Unknown",
           }))
         );
       }
@@ -148,7 +148,7 @@ export function TaskDetailPanel({
       }))
     );
 
-    await logActivity("result_recorded", null, results.map((r) => `${r.subject}:${r.total_questions}题错${r.wrong_count}`).join(", "));
+    await logActivity("result_recorded", null, results.map((r) => `${r.subject}: ${r.wrong_count}/${r.total_questions} wrong`).join(", "));
 
     setSaving(false);
     onUpdate();
@@ -159,11 +159,11 @@ export function TaskDetailPanel({
     setSaving(true);
 
     const changes: string[] = [];
-    if (editTitle !== card.taskTitle) changes.push(`标题: ${card.taskTitle} → ${editTitle}`);
-    if (editType !== card.taskType) changes.push(`类型: ${TASK_TYPES[card.taskType]} → ${TASK_TYPES[editType]}`);
-    if (editPriority !== card.priority) changes.push(`优先级: ${TASK_PRIORITIES[card.priority]} → ${TASK_PRIORITIES[editPriority]}`);
-    if (editDescription !== (card.taskDescription ?? "")) changes.push("描述已更新");
-    if (editDueDate !== card.dueDateRaw.split("T")[0]) changes.push(`截止日期: ${card.dueDateRaw.split("T")[0]} → ${editDueDate}`);
+    if (editTitle !== card.taskTitle) changes.push(`Title: ${card.taskTitle} → ${editTitle}`);
+    if (editType !== card.taskType) changes.push(`Type: ${TASK_TYPES[card.taskType]} → ${TASK_TYPES[editType]}`);
+    if (editPriority !== card.priority) changes.push(`Priority: ${TASK_PRIORITIES[card.priority]} → ${TASK_PRIORITIES[editPriority]}`);
+    if (editDescription !== (card.taskDescription ?? "")) changes.push("Description updated");
+    if (editDueDate !== card.dueDateRaw.split("T")[0]) changes.push(`Due date: ${card.dueDateRaw.split("T")[0]} → ${editDueDate}`);
 
     const { error } = await supabase
       .from("tasks")
@@ -180,7 +180,7 @@ export function TaskDetailPanel({
       await logActivity("task_edited", null, changes.join("; "));
     }
 
-    // 同时保存备注（如果有变更）
+    // Also save the note (if changed)
     if (note !== (card.note || "")) {
       await supabase
         .from("task_assignments")
@@ -211,7 +211,7 @@ export function TaskDetailPanel({
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString("zh-CN", {
+    return d.toLocaleDateString("en-US", {
       month: "numeric",
       day: "numeric",
       hour: "2-digit",
@@ -231,14 +231,14 @@ export function TaskDetailPanel({
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white border-l border-[#E8EAED] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#E8EAED] px-6 py-5">
-        <h3 className="text-sm font-bold text-[#2E3338]">任务详情</h3>
+        <h3 className="text-sm font-bold text-[#2E3338]">Task details</h3>
         <div className="flex items-center gap-2">
           {isTeacher && !editing && (
             <button
               onClick={() => setEditing(true)}
               className="rounded-full px-3 py-1 text-xs font-medium text-[#4D5766] hover:bg-[#F4F5F6] transition-colors duration-150"
             >
-              编辑
+              Edit
             </button>
           )}
           <button
@@ -254,11 +254,11 @@ export function TaskDetailPanel({
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
 
         {editing ? (
-          /* ========== 编辑模式 ========== */
+          /* ========== Edit mode ========== */
           <div className="space-y-5">
-            {/* 类型 */}
+            {/* Type */}
             <div>
-              <label className="mb-2 block text-xs text-[#B4BCC8]">类型</label>
+              <label className="mb-2 block text-xs text-[#B4BCC8]">Type</label>
               <select
                 value={editType}
                 onChange={(e) => setEditType(e.target.value as TaskType)}
@@ -270,9 +270,9 @@ export function TaskDetailPanel({
               </select>
             </div>
 
-            {/* 标题 */}
+            {/* Title */}
             <div>
-              <label className="mb-2 block text-xs text-[#B4BCC8]">标题</label>
+              <label className="mb-2 block text-xs text-[#B4BCC8]">Title</label>
               <input
                 type="text"
                 value={editTitle}
@@ -281,21 +281,21 @@ export function TaskDetailPanel({
               />
             </div>
 
-            {/* 描述 */}
+            {/* Description */}
             <div>
-              <label className="mb-2 block text-xs text-[#B4BCC8]">描述</label>
+              <label className="mb-2 block text-xs text-[#B4BCC8]">Description</label>
               <textarea
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="添加任务描述..."
+                placeholder="Add a task description..."
                 rows={3}
                 className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150 resize-none"
               />
             </div>
 
-            {/* 优先级 */}
+            {/* Priority */}
             <div>
-              <label className="mb-2 block text-xs text-[#B4BCC8]">优先级</label>
+              <label className="mb-2 block text-xs text-[#B4BCC8]">Priority</label>
               <div className="flex gap-2">
                 {(Object.entries(TASK_PRIORITIES) as [TaskPriority, string][]).map(([value, label]) => (
                   <button
@@ -320,9 +320,9 @@ export function TaskDetailPanel({
               </div>
             </div>
 
-            {/* 截止日期 */}
+            {/* Due date */}
             <div>
-              <label className="mb-2 block text-xs text-[#B4BCC8]">截止日期</label>
+              <label className="mb-2 block text-xs text-[#B4BCC8]">Due date</label>
               <input
                 type="date"
                 value={editDueDate}
@@ -333,35 +333,35 @@ export function TaskDetailPanel({
 
             <div className="border-t border-[#E8EAED] pt-4" />
 
-            {/* 成绩录入 */}
+            {/* Results entry */}
             <TestResultForm
               initialResults={card.testResults}
               onSave={saveResults}
               saving={saving}
             />
 
-            {/* 备注 */}
+            {/* Note */}
             <div>
-              <label className="text-xs text-[#B4BCC8]">备注</label>
+              <label className="text-xs text-[#B4BCC8]">Note</label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="mt-1.5 w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
                 rows={2}
-                placeholder="添加备注..."
+                placeholder="Add a note..."
               />
             </div>
 
-            {/* 标签 */}
+            {/* Labels */}
             <div className="space-y-2">
-              <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
+              <h4 className="text-[13px] font-medium text-[#2E3338]">Labels</h4>
               <LabelPicker selectedIds={labelIds} onChange={syncLabels} />
             </div>
 
-            {/* 关联题目 */}
+            {/* Linked questions */}
             <TaskQuestionPicker taskId={card.taskId} onUpdate={onUpdate} initialShowAnswers={card.showAnswersAfterSubmit} />
 
-            {/* 保存/取消 */}
+            {/* Save/Cancel */}
             <div className="flex gap-2 pt-2">
               <Button
                 onClick={saveEdits}
@@ -369,7 +369,7 @@ export function TaskDetailPanel({
                 className="flex-1"
                 size="sm"
               >
-                {saving ? "保存中..." : "确认编辑"}
+                {saving ? "Saving..." : "Save changes"}
               </Button>
               <Button
                 onClick={cancelEdit}
@@ -377,14 +377,14 @@ export function TaskDetailPanel({
                 className="flex-1"
                 size="sm"
               >
-                取消
+                Cancel
               </Button>
             </div>
           </div>
         ) : (
-          /* ========== 查看模式 ========== */
+          /* ========== View mode ========== */
           <>
-            {/* 类型 + 优先级行 */}
+            {/* Type + priority row */}
             <div className="flex items-center gap-2">
               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${typeColors[card.taskType]}`}>
                 {TASK_TYPES[card.taskType]}
@@ -397,38 +397,38 @@ export function TaskDetailPanel({
               </span>
             </div>
 
-            {/* 标题 */}
+            {/* Title */}
             <div>
               <p className="text-base font-bold text-[#2E3338]">{card.taskTitle}</p>
             </div>
 
-            {/* 描述 */}
+            {/* Description */}
             <div>
-              <span className="text-xs text-[#B4BCC8]">描述</span>
+              <span className="text-xs text-[#B4BCC8]">Description</span>
               {card.taskDescription ? (
                 <div className="mt-1.5 rounded-xl bg-[#FAFAFA] p-4">
                   <p className="text-[13px] text-[#4D5766] whitespace-pre-wrap leading-relaxed">{card.taskDescription}</p>
                 </div>
               ) : (
-                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无描述</p>
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">No description</p>
               )}
             </div>
 
-            {/* 信息栏 */}
+            {/* Info row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs text-[#B4BCC8]">学生</span>
+                <span className="text-xs text-[#B4BCC8]">Student</span>
                 <p className="mt-0.5 text-[13px] font-medium text-[#2E3338]">{card.studentName}</p>
               </div>
               <div>
-                <span className="text-xs text-[#B4BCC8]">截止日期</span>
+                <span className="text-xs text-[#B4BCC8]">Due date</span>
                 <p className="mt-0.5 text-[13px] font-medium text-[#2E3338]">{card.dueDate}</p>
               </div>
             </div>
 
-            {/* 成绩 */}
+            {/* Results */}
             <div className="border-t border-[#E8EAED] pt-4 space-y-2">
-              <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
+              <h4 className="text-[13px] font-medium text-[#2E3338]">Results</h4>
               {card.testResults.length > 0 ? (
                 card.testResults.map((r, i) => {
                   const rate = Math.round(
@@ -441,7 +441,7 @@ export function TaskDetailPanel({
                     >
                       <span className="text-[#2E3338]">{r.subject}</span>
                       <span className="text-[#4D5766]">
-                        {r.total_questions}题 错{r.wrong_count}{" "}
+                        {r.wrong_count}/{r.total_questions} wrong{" "}
                         <span
                           className={
                             rate >= 80
@@ -458,39 +458,39 @@ export function TaskDetailPanel({
                   );
                 })
               ) : (
-                <p className="text-[13px] text-[#B4BCC8]">暂无成绩</p>
+                <p className="text-[13px] text-[#B4BCC8]">No results yet</p>
               )}
             </div>
 
-            {/* 备注 */}
+            {/* Note */}
             <div className="border-t border-[#E8EAED] pt-4">
-              <span className="text-xs text-[#B4BCC8]">{isTeacher ? "备注" : "老师备注"}</span>
+              <span className="text-xs text-[#B4BCC8]">{isTeacher ? "Note" : "Teacher note"}</span>
               {card.note ? (
                 <p className="mt-1 text-[13px] text-[#4D5766] whitespace-pre-wrap">{card.note}</p>
               ) : (
-                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无备注</p>
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">No notes</p>
               )}
             </div>
           </>
         )}
 
-        {/* ========== 以下在编辑和查看模式都显示 ========== */}
+        {/* ========== Shown in both edit and view modes ========== */}
 
-        {/* 标签 */}
+        {/* Labels */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
             {card.labels && card.labels.length > 0 ? (
               <LabelChips labels={card.labels} />
             ) : (
               <div>
-                <h4 className="text-[13px] font-medium text-[#2E3338]">标签</h4>
-                <p className="mt-1 text-[13px] text-[#B4BCC8]">暂无标签</p>
+                <h4 className="text-[13px] font-medium text-[#2E3338]">Labels</h4>
+                <p className="mt-1 text-[13px] text-[#B4BCC8]">No labels</p>
               </div>
             )}
           </div>
         )}
 
-        {/* 关联题目 */}
+        {/* Linked questions */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
             {isTeacher ? (
@@ -506,14 +506,14 @@ export function TaskDetailPanel({
           </div>
         )}
 
-        {/* 学生作答记录（老师查看） */}
+        {/* Student submissions (teacher view) */}
         {!editing && isTeacher && card.questionCount > 0 && (
           <div className="border-t border-[#E8EAED] pt-4">
             <StudentSubmissionView assignmentId={card.id} taskId={card.taskId} />
           </div>
         )}
 
-        {/* 附件 */}
+        {/* Attachments */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
             <TaskAttachments
@@ -523,21 +523,21 @@ export function TaskDetailPanel({
           </div>
         )}
 
-        {/* 对话 */}
+        {/* Comments */}
         {!editing && (
           <div className="border-t border-[#E8EAED] pt-4">
             <TaskComments assignmentId={card.id} />
           </div>
         )}
 
-        {/* 活动记录（编辑和查看模式都显示） */}
+        {/* Activity log (shown in both modes) */}
         <div className="border-t border-[#E8EAED] pt-4">
           <button
             onClick={() => setShowActivity(!showActivity)}
             className="flex items-center gap-1.5 text-[13px] font-medium text-[#4D5766] hover:text-[#2E3338] transition-colors"
           >
             <span className="text-sm">{showActivity ? "▾" : "▸"}</span>
-            活动记录
+            Activity
             {activities.length > 0 && (
               <span className="rounded-full bg-[#F4F5F6] px-2 py-0.5 text-xs text-[#B4BCC8]">
                 {activities.length}
@@ -548,7 +548,7 @@ export function TaskDetailPanel({
           {showActivity && (
             <div className="mt-3 space-y-0">
               {activities.length === 0 ? (
-                <p className="text-xs text-[#B4BCC8] py-2">暂无活动记录</p>
+                <p className="text-xs text-[#B4BCC8] py-2">No activity yet</p>
               ) : (
                 activities.map((a, i) => (
                   <div key={a.id} className="flex gap-3 py-2.5">
@@ -569,7 +569,7 @@ export function TaskDetailPanel({
                             <span className="font-medium">{formatStatusLabel(a.new_value ?? "")}</span>
                           </>
                         ) : a.action === "task_edited" ? (
-                          "编辑了任务"
+                          "edited the task"
                         ) : (
                           ACTIVITY_ACTIONS[a.action as keyof typeof ACTIVITY_ACTIONS] || a.action
                         )}
@@ -587,7 +587,7 @@ export function TaskDetailPanel({
         </div>
       </div>
 
-      {/* Actions — 非编辑模式才显示 */}
+      {/* Actions — shown only outside edit mode */}
       {!editing && (
         <div className="border-t border-[#E8EAED] p-5 space-y-2">
           {isTeacher && (
@@ -600,7 +600,7 @@ export function TaskDetailPanel({
                     className="flex-1"
                     size="sm"
                   >
-                    ✅ 批阅通过
+                    ✅ Approve
                   </Button>
                 )}
                 {card.status !== "rejected" && (
@@ -611,7 +611,7 @@ export function TaskDetailPanel({
                     className="flex-1"
                     size="sm"
                   >
-                    ↩️ 打回重做
+                    ↩️ Reject
                   </Button>
                 )}
               </div>
@@ -620,7 +620,7 @@ export function TaskDetailPanel({
                 disabled={saving}
                 className="w-full rounded-lg py-2 text-[13px] font-medium text-[#B4BCC8] hover:text-[#4D5766] hover:bg-[#F4F5F6] transition-colors duration-150"
               >
-                关闭任务
+                Close task
               </button>
             </>
           )}
@@ -631,13 +631,13 @@ export function TaskDetailPanel({
               className="w-full"
               size="sm"
             >
-              提交
+              Submit
             </Button>
           )}
         </div>
       )}
 
-      {/* 关闭确认弹窗 — 内嵌成绩录入 */}
+      {/* Close confirmation dialog — with inline results entry */}
       {showCloseConfirm && (
         <CloseTaskDialog
           card={card}
@@ -646,10 +646,10 @@ export function TaskDetailPanel({
           onConfirm={async (results) => {
             setSaving(true);
             if (results === "na") {
-              // 标记为无需成绩
-              await logActivity("task_closed", card.status, "closed (无需成绩)");
+              // Mark as no results needed
+              await logActivity("task_closed", card.status, "closed (no results)");
             } else if (results && results.length > 0) {
-              // 保存成绩
+              // Save results
               await supabase
                 .from("test_results")
                 .delete()
@@ -665,13 +665,13 @@ export function TaskDetailPanel({
               await logActivity(
                 "result_recorded",
                 null,
-                results.map((r) => `${r.subject}:${r.total_questions}题错${r.wrong_count}`).join(", ")
+                results.map((r) => `${r.subject}: ${r.wrong_count}/${r.total_questions} wrong`).join(", ")
               );
               await logActivity("task_closed", card.status, "closed");
             } else {
               await logActivity("task_closed", card.status, "closed");
             }
-            // 关闭任务
+            // Close the task
             await supabase
               .from("task_assignments")
               .update({ status: "closed" })
@@ -688,12 +688,12 @@ export function TaskDetailPanel({
         <div className="fixed inset-0 z-[60] bg-white">
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between border-b border-[#E8EAED] px-6 py-4">
-              <h3 className="text-sm font-bold text-[#2E3338]">任务做题</h3>
+              <h3 className="text-sm font-bold text-[#2E3338]">Practice</h3>
               <button
                 onClick={() => setPracticeQuestionIds(null)}
                 className="rounded-full p-1.5 text-[#B4BCC8] hover:bg-[#F4F5F6] hover:text-[#4D5766]"
               >
-                ✕ 退出
+                ✕ Exit
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
@@ -711,7 +711,7 @@ export function TaskDetailPanel({
   );
 }
 
-// Inline mini practice console — 全部做完后统一提交
+// Inline mini practice console — submit all together at the end
 export function TaskPracticeConsole({
   assignmentId,
   questionIds,
@@ -729,12 +729,12 @@ export function TaskPracticeConsole({
   const [answer, setAnswer] = useState("");
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(true);
-  // 收集每题的答案
+  // Collect answers for each question
   const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [correctResults, setCorrectResults] = useState<Map<string, boolean>>(new Map());
-  // 拍照提交模式
+  // Photo submit mode
   type SubmitMode = "per-question" | "photo-all";
   const [submitMode, setSubmitMode] = useState<SubmitMode>("per-question");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -760,7 +760,7 @@ export function TaskPracticeConsole({
         const qs = data.questions || [];
         setQuestions(qs);
 
-        // 加载之前的提交记录（如果有）
+        // Load any previous submission
         const { data: prevAnswers } = await supabaseClient
           .from("task_submission_answers")
           .select("question_id, answer")
@@ -772,7 +772,7 @@ export function TaskPracticeConsole({
             if (idx >= 0) prevMap.set(idx, pa.answer);
           });
           setAnswers(prevMap);
-          // 设置第一题的已保存答案
+          // Set the saved answer for the first question
           const firstAnswer = prevMap.get(0);
           if (firstAnswer && qs.length > 0) {
             if (qs[0].type === "choice") setSelected(firstAnswer);
@@ -785,25 +785,25 @@ export function TaskPracticeConsole({
     fetchQuestions();
   }, [questionIds, assignmentId, supabaseClient]);
 
-  if (loading) return <p className="text-center text-[#B4BCC8] py-8">加载中...</p>;
-  if (questions.length === 0) return <p className="text-center text-[#B4BCC8] py-8">没有题目</p>;
+  if (loading) return <p className="text-center text-[#B4BCC8] py-8">Loading...</p>;
+  if (questions.length === 0) return <p className="text-center text-[#B4BCC8] py-8">No questions</p>;
 
-  const typeLabel: Record<string, string> = { choice: "选择题", fill_blank: "填空题", solution: "解答题" };
+  const typeLabel: Record<string, string> = { choice: "Multiple choice", fill_blank: "Fill in the blank", solution: "Short answer" };
   const typeColor: Record<string, string> = { choice: "bg-blue-50 text-blue-600", fill_blank: "bg-amber-50 text-amber-600", solution: "bg-green-50 text-green-600" };
 
-  // 提交全部答案 — 用 AI 判断对错，再 upsert 到 task_submission_answers
+  // Submit all answers — use AI to judge correctness, then upsert to task_submission_answers
   const handleSubmitAll = async (finalAnswers?: Map<number, string>) => {
     setSubmitting(true);
     const answersToSubmit = finalAnswers ?? answers;
 
     let correctMap = new Map<string, boolean>();
 
-    // 如果拍照模式已经有判题结果，直接复用，跳过 check-answers 调用
+    // If photo mode already has correctness results, reuse them and skip check-answers
     if (photoCorrectResults && photoCorrectResults.size > 0) {
       correctMap = photoCorrectResults;
-      setPhotoCorrectResults(null); // 用完清除
+      setPhotoCorrectResults(null); // clear after use
     } else {
-      // 调用 AI 检查答案
+      // Call AI to check answers
       const answersToCheck = questions.map((q, i) => ({
         question_id: q.id,
         student_answer: answersToSubmit.get(i) ?? "",
@@ -825,7 +825,7 @@ export function TaskPracticeConsole({
           }
         }
       } catch (e) {
-        console.error("AI 答案检查失败，使用简单比较:", e);
+        console.error("AI answer check failed, falling back to simple compare:", e);
       }
     }
 
@@ -841,12 +841,12 @@ export function TaskPracticeConsole({
       };
     });
 
-    // Upsert — 根据 (task_assignment_id, question_id) 唯一约束覆盖旧答案
+    // Upsert — unique constraint (task_assignment_id, question_id) overrides old answers
     await supabaseClient
       .from("task_submission_answers")
       .upsert(rows, { onConflict: "task_assignment_id,question_id" });
 
-    // 也记录到 question_attempts（兼容已有的做题统计）
+    // Also record in question_attempts (to keep existing practice stats)
     for (const row of rows) {
       fetch("/api/questions/attempts", {
         method: "POST",
@@ -860,7 +860,7 @@ export function TaskPracticeConsole({
       });
     }
 
-    // 保存判题结果用于展示
+    // Store correctness results for display
     const resultMap = new Map<string, boolean>();
     for (const row of rows) {
       resultMap.set(row.question_id, row.is_correct);
@@ -872,7 +872,7 @@ export function TaskPracticeConsole({
     setSubmitted(true);
   };
 
-  // 保存当前题答案并跳转
+  // Save current answer and jump
   const saveAndGo = (targetIdx: number) => {
     const q = questions[current];
     const userAnswer = q.type === "choice" ? selected : answer;
@@ -880,7 +880,7 @@ export function TaskPracticeConsole({
       setAnswers((prev) => new Map(prev).set(current, userAnswer));
     }
     setCurrent(targetIdx);
-    // 恢复目标题的已保存答案
+    // Restore target question's saved answer
     const saved = answers.get(targetIdx) ?? "";
     const targetQ = questions[targetIdx];
     if (targetQ.type === "choice") {
@@ -892,15 +892,15 @@ export function TaskPracticeConsole({
     }
   };
 
-  // 拍照上传处理
+  // Handle photo upload
   const handlePhotoSelect = (file: File) => {
     if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
     setPhotoFile(file);
     setExtractedAnswers(null);
-    setPhotoPreview("selected"); // 标记已选择，不加载图片数据
+    setPhotoPreview("selected"); // mark selected; don't load image data
   };
 
-  // 调用 AI 识别照片中的答案
+  // Use AI to recognize answers in the photo
   const handleExtractAnswers = async () => {
     if (!photoFile) return;
     setExtracting(true);
@@ -923,7 +923,7 @@ export function TaskPracticeConsole({
         const cMap = new Map<string, boolean>();
         for (const item of extracted) {
           map.set(item.index, item.answer);
-          // 保存 AI 一起返回的判题结果
+          // Store AI-returned correctness results
           const qId = questions[item.index]?.id;
           if (qId) cMap.set(qId, item.is_correct ?? false);
         }
@@ -931,16 +931,16 @@ export function TaskPracticeConsole({
         setPhotoCorrectResults(cMap);
       } else {
         const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        setExtractError(err.error || "识别失败");
+        setExtractError(err.error || "Recognition failed");
       }
     } catch (e) {
-      console.error("答案识别失败:", e);
-      setExtractError("网络错误，请重试");
+      console.error("Answer recognition failed:", e);
+      setExtractError("Network error, please retry");
     }
     setExtracting(false);
   };
 
-  // 单题拍照识别
+  // Per-question photo recognition
   const handlePerQuestionPhoto = async (questionIndex: number, file: File) => {
     if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) return;
     setPerQuestionExtracting(questionIndex);
@@ -961,12 +961,12 @@ export function TaskPracticeConsole({
         }
       }
     } catch (e) {
-      console.error("单题答案识别失败:", e);
+      console.error("Per-question answer recognition failed:", e);
     }
     setPerQuestionExtracting(null);
   };
 
-  // ============= 已提交页面 =============
+  // ============= Submitted view =============
   if (submitted) {
     const results = questions.map((q, i) => {
       const userAnswer = answers.get(i) ?? "";
@@ -978,21 +978,21 @@ export function TaskPracticeConsole({
     return (
       <div className="max-w-lg mx-auto space-y-6 py-4">
         <div className="text-center space-y-3">
-          <p className="text-lg font-bold text-[#2E3338]">已提交！</p>
+          <p className="text-lg font-bold text-[#2E3338]">Submitted!</p>
           <p className="text-[#4D5766]">
-            共 {questions.length} 题，已作答 {answers.size} 题
+            {answers.size} of {questions.length} answered
           </p>
           {showAnswers && (
             <p className="text-[#4D5766]">
-              正确 <span className="font-bold text-green-600">{correctCount}</span> 题，
-              正确率 <span className={`font-bold ${rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}`}>{rate}%</span>
+              <span className="font-bold text-green-600">{correctCount}</span> correct,{" "}
+              <span className={`font-bold ${rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}`}>{rate}%</span>
             </p>
           )}
         </div>
 
         {showAnswers && (
           <div className="space-y-3">
-            <h4 className="text-[13px] font-medium text-[#2E3338]">答题详情</h4>
+            <h4 className="text-[13px] font-medium text-[#2E3338]">Details</h4>
             {results.map((r, i) => (
               <div key={r.id} className={`rounded-xl p-4 border ${r.correct ? "border-green-200 bg-green-50/50" : "border-red-200 bg-red-50/50"}`}>
                 <div className="flex items-center gap-2 mb-2">
@@ -1001,14 +1001,14 @@ export function TaskPracticeConsole({
                     {typeLabel[r.type] || r.type}
                   </span>
                   <span className={`ml-auto text-xs font-medium ${r.correct ? "text-green-600" : "text-red-600"}`}>
-                    {r.correct ? "正确" : "错误"}
+                    {r.correct ? "Correct" : "Wrong"}
                   </span>
                 </div>
                 <p className="text-[13px] text-[#2E3338] mb-2">{r.content.stem}</p>
                 <div className="text-xs space-y-1">
-                  <p className="text-[#4D5766]">你的答案：<span className="font-medium">{r.userAnswer || "（未作答）"}</span></p>
+                  <p className="text-[#4D5766]">Your answer: <span className="font-medium">{r.userAnswer || "(not answered)"}</span></p>
                   {!r.correct && (
-                    <p className="text-green-700">正确答案：<span className="font-medium">{r.content.answer}</span></p>
+                    <p className="text-green-700">Correct answer: <span className="font-medium">{r.content.answer}</span></p>
                   )}
                   {r.content.explanation && (
                     <p className="text-[#B4BCC8] mt-1">{r.content.explanation}</p>
@@ -1021,7 +1021,7 @@ export function TaskPracticeConsole({
 
         {!showAnswers && (
           <div className="rounded-xl bg-[#F4F5F6] p-4 text-center">
-            <p className="text-[13px] text-[#4D5766]">答案将由老师批阅后反馈</p>
+            <p className="text-[13px] text-[#4D5766]">Your teacher will review and share feedback</p>
           </div>
         )}
 
@@ -1029,13 +1029,13 @@ export function TaskPracticeConsole({
           onClick={onFinish}
           className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
         >
-          返回任务
+          Back to task
         </button>
       </div>
     );
   }
 
-  // ============= 答题页面 =============
+  // ============= Answering view =============
   const q = questions[current];
   const isChoice = q.type === "choice";
   const hasAnswer = isChoice ? !!selected : !!answer.trim();
@@ -1043,7 +1043,7 @@ export function TaskPracticeConsole({
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* 模式切换 */}
+      {/* Mode switch */}
       <div className="flex rounded-full bg-[#F4F5F6] p-1">
         <button
           onClick={() => setSubmitMode("per-question")}
@@ -1051,7 +1051,7 @@ export function TaskPracticeConsole({
             submitMode === "per-question" ? "bg-[#163300] text-white" : "text-[#4D5766]"
           }`}
         >
-          逐题作答
+          One at a time
         </button>
         <button
           onClick={() => setSubmitMode("photo-all")}
@@ -1059,28 +1059,28 @@ export function TaskPracticeConsole({
             submitMode === "photo-all" ? "bg-[#163300] text-white" : "text-[#4D5766]"
           }`}
         >
-          拍照提交
+          Submit photo
         </button>
       </div>
 
-      {/* ===== 拍照提交模式 ===== */}
+      {/* ===== Photo submit mode ===== */}
       {submitMode === "photo-all" && (
         <div className="space-y-4">
-          {/* 上传区域 */}
+          {/* Upload area */}
           {!photoPreview ? (
             <button
               onClick={() => photoInputRef.current?.click()}
               className="w-full border-2 border-dashed border-[#B4BCC8] rounded-2xl py-12 flex flex-col items-center gap-3 text-[#B4BCC8] hover:border-[#163300] hover:text-[#163300] transition-colors"
             >
               <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
-              <span className="text-sm font-medium">拍照或上传答题纸</span>
-              <span className="text-xs">支持 JPG、PNG，最大 10MB</span>
+              <span className="text-sm font-medium">Take or upload a photo of your work</span>
+              <span className="text-xs">JPG or PNG, max 10MB</span>
             </button>
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-3 rounded-2xl border border-[#E8EAED] bg-[#F4F5F6] px-4 py-3">
                 <span className="text-2xl">☑️</span>
-                <span className="flex-1 text-sm text-[#333] truncate">{photoFile?.name || "已选择图片"}</span>
+                <span className="flex-1 text-sm text-[#333] truncate">{photoFile?.name || "Image selected"}</span>
                 <button
                   onClick={() => {
                     setPhotoFile(null);
@@ -1100,7 +1100,7 @@ export function TaskPracticeConsole({
                   disabled={extracting}
                   className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
                 >
-                  {extracting ? "识别中..." : "识别答案"}
+                  {extracting ? "Recognizing..." : "Recognize answers"}
                 </button>
               )}
               {extractError && (
@@ -1121,10 +1121,10 @@ export function TaskPracticeConsole({
             }}
           />
 
-          {/* 识别结果编辑 */}
+          {/* Recognition results editor */}
           {extractedAnswers && (
             <div className="space-y-3">
-              <h4 className="text-[13px] font-medium text-[#2E3338]">识别结果（可编辑后提交）</h4>
+              <h4 className="text-[13px] font-medium text-[#2E3338]">Recognized answers (edit then submit)</h4>
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {questions.map((q, i) => (
                   <div key={q.id} className="flex items-center gap-2 rounded-xl border border-[#E8EAED] px-3 py-2">
@@ -1142,7 +1142,7 @@ export function TaskPracticeConsole({
                           return next;
                         });
                       }}
-                      placeholder="未识别到"
+                      placeholder="Not recognized"
                       className="flex-1 min-w-0 border-0 bg-transparent text-[13px] text-[#2E3338] outline-none placeholder:text-[#B4BCC8]"
                     />
                     {extractedAnswers.get(i) ? (
@@ -1159,14 +1159,14 @@ export function TaskPracticeConsole({
                 disabled={submitting}
                 className="w-full rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
               >
-                {submitting ? "提交中..." : "确认提交"}
+                {submitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* ===== 逐题作答模式 ===== */}
+      {/* ===== One at a time mode ===== */}
       {submitMode === "per-question" && (
         <>
           {/* Progress */}
@@ -1177,7 +1177,7 @@ export function TaskPracticeConsole({
             <span className="text-xs text-[#B4BCC8]">{current + 1}/{questions.length}</span>
           </div>
 
-          {/* 题号导航 */}
+          {/* Question number nav */}
           <div className="flex flex-wrap gap-1.5">
             {questions.map((_, i) => {
               const answered = answers.has(i) || (i === current && hasAnswer);
@@ -1236,14 +1236,14 @@ export function TaskPracticeConsole({
                   type="text"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="输入答案..."
+                  placeholder="Enter your answer..."
                   className="flex-1 rounded-xl border-[1.5px] border-[#B4BCC8] px-4 py-3 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15"
                 />
                 <button
                   onClick={() => perQPhotoRef.current?.click()}
                   disabled={perQuestionExtracting === current}
                   className="shrink-0 w-11 h-11 rounded-xl border-[1.5px] border-[#B4BCC8] flex items-center justify-center text-[#B4BCC8] hover:border-[#163300] hover:text-[#163300] disabled:opacity-40 transition-colors"
-                  title="拍照识别答案"
+                  title="Recognize answer from photo"
                 >
                   {perQuestionExtracting === current ? (
                     <span className="text-xs">...</span>
@@ -1274,7 +1274,7 @@ export function TaskPracticeConsole({
                 onClick={() => saveAndGo(current - 1)}
                 className="flex-1 rounded-full border border-[#E8EAED] py-3 text-sm font-medium text-[#4D5766] hover:bg-[#F4F5F6] transition-colors"
               >
-                上一题
+                Previous
               </button>
             )}
             {current < questions.length - 1 ? (
@@ -1282,7 +1282,7 @@ export function TaskPracticeConsole({
                 onClick={() => saveAndGo(current + 1)}
                 className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white hover:bg-[#1e4400] transition-colors"
               >
-                下一题
+                Next
               </button>
             ) : (
               <button
@@ -1295,12 +1295,12 @@ export function TaskPracticeConsole({
                 disabled={submitting}
                 className="flex-1 rounded-full bg-[#163300] py-3 text-sm font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
               >
-                {submitting ? "提交中..." : `提交全部 (${answeredCount}/${questions.length})`}
+                {submitting ? "Submitting..." : `Submit all (${answeredCount}/${questions.length})`}
               </button>
             )}
           </div>
 
-          {/* 随时可提交 */}
+          {/* Always allow submitting progress */}
           {current < questions.length - 1 && (
             <button
               onClick={() => {
@@ -1312,7 +1312,7 @@ export function TaskPracticeConsole({
               disabled={submitting || answers.size === 0}
               className="w-full text-center py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] disabled:opacity-40 transition-colors"
             >
-              提交已作答的 {answeredCount} 题
+              Submit {answeredCount} answered
             </button>
           )}
         </>
@@ -1321,7 +1321,7 @@ export function TaskPracticeConsole({
   );
 }
 
-/* ─── 老师查看学生作答记录 ─── */
+/* ─── Teacher view of student submissions ─── */
 function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string; taskId: string }) {
   const [submissions, setSubmissions] = useState<{
     question_id: string;
@@ -1343,7 +1343,7 @@ function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string;
         .order("submitted_at");
 
       if (data && data.length > 0) {
-        // 获取题目信息
+        // Fetch question details
         const qIds = data.map((d) => d.question_id);
         const { data: questions } = await supabase
           .from("questions")
@@ -1365,8 +1365,8 @@ function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string;
   if (submissions.length === 0) {
     return (
       <div className="space-y-2">
-        <h4 className="text-[13px] font-medium text-[#2E3338]">学生作答</h4>
-        <p className="text-xs text-[#B4BCC8]">学生尚未提交</p>
+        <h4 className="text-[13px] font-medium text-[#2E3338]">Student answers</h4>
+        <p className="text-xs text-[#B4BCC8]">Not submitted yet</p>
       </div>
     );
   }
@@ -1382,12 +1382,12 @@ function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string;
         className="flex items-center gap-1.5 text-[13px] font-medium text-[#2E3338] hover:text-[#163300] transition-colors w-full"
       >
         <span className="text-sm">{expanded ? "▾" : "▸"}</span>
-        学生作答
+        Student answers
         <span className={`ml-1 text-xs font-medium ${rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}`}>
           {correctCount}/{submissions.length} ({rate}%)
         </span>
         <span className="ml-auto text-[11px] text-[#B4BCC8]">
-          {lastSubmitted.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          {lastSubmitted.toLocaleDateString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
         </span>
       </button>
 
@@ -1398,16 +1398,16 @@ function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string;
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-[#B4BCC8]">{i + 1}.</span>
                 <span className={`text-xs font-medium ${s.is_correct ? "text-green-600" : "text-red-600"}`}>
-                  {s.is_correct ? "正确" : "错误"}
+                  {s.is_correct ? "Correct" : "Wrong"}
                 </span>
               </div>
               {s.question && (
                 <>
                   <p className="text-[13px] text-[#2E3338] line-clamp-2 mb-1">{s.question.stem}</p>
                   <div className="text-xs space-y-0.5">
-                    <p className="text-[#4D5766]">学生答案：<span className="font-medium">{s.answer || "（未作答）"}</span></p>
+                    <p className="text-[#4D5766]">Student answer: <span className="font-medium">{s.answer || "(not answered)"}</span></p>
                     {!s.is_correct && (
-                      <p className="text-green-700">正确答案：<span className="font-medium">{s.question.answer}</span></p>
+                      <p className="text-green-700">Correct answer: <span className="font-medium">{s.question.answer}</span></p>
                     )}
                   </div>
                 </>
@@ -1420,7 +1420,7 @@ function StudentSubmissionView({ assignmentId, taskId }: { assignmentId: string;
   );
 }
 
-/* ─── 关闭任务弹窗（内嵌成绩录入） ─── */
+/* ─── Close task dialog (with inline results entry) ─── */
 function CloseTaskDialog({
   card,
   saving,
@@ -1433,7 +1433,7 @@ function CloseTaskDialog({
   onConfirm: (results: { subject: string; total_questions: number; wrong_count: number }[] | "na" | null) => void;
 }) {
   const hasResults = card.testResults.length > 0;
-  // "record" = 录入/修改成绩, "na" = 无需成绩, "skip" = 不录入直接关闭
+  // "record" = enter/edit results, "na" = not applicable, "skip" = close without entering
   const [closeMode, setCloseMode] = useState<"record" | "na" | "skip">("record");
   const [rows, setRows] = useState(
     hasResults
@@ -1441,7 +1441,7 @@ function CloseTaskDialog({
       : [{ subject: "", total_questions: 0, wrong_count: 0 }]
   );
 
-  // 如果没有手动成绩，尝试从 AI 批改结果预填
+  // If no manual results, try to prefill from AI-graded submissions
   useEffect(() => {
     if (hasResults || card.questionCount === 0) return;
     const supabase = createClient();
@@ -1453,7 +1453,7 @@ function CloseTaskDialog({
         if (data && data.length > 0) {
           const total = data.length;
           const wrong = data.filter((d) => !d.is_correct).length;
-          setRows([{ subject: card.taskTitle || "作业", total_questions: total, wrong_count: wrong }]);
+          setRows([{ subject: card.taskTitle || "Homework", total_questions: total, wrong_count: wrong }]);
         }
       });
   }, [hasResults, card.id, card.questionCount, card.taskTitle]);
@@ -1467,12 +1467,12 @@ function CloseTaskDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
       <div className="w-full max-w-md mx-4 bg-white rounded-2xl p-6 space-y-4 shadow-xl">
-        <h4 className="text-base font-bold text-[#2E3338]">关闭任务</h4>
+        <h4 className="text-base font-bold text-[#2E3338]">Close task</h4>
         <p className="text-[13px] text-[#4D5766]">
-          关闭后任务将从看板中隐藏。
+          Closed tasks are hidden from the board.
         </p>
 
-        {/* 成绩选项 */}
+        {/* Result options */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[13px] text-[#2E3338] cursor-pointer">
             <input
@@ -1482,7 +1482,7 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("record")}
               className="accent-[#163300]"
             />
-            {hasResults ? "修改成绩" : "录入成绩"}
+            {hasResults ? "Edit results" : "Enter results"}
           </label>
           <label className="flex items-center gap-2 text-[13px] text-[#2E3338] cursor-pointer">
             <input
@@ -1492,7 +1492,7 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("skip")}
               className="accent-[#163300]"
             />
-            {hasResults ? "保留现有成绩，直接关闭" : "暂不录入，直接关闭"}
+            {hasResults ? "Keep existing results and close" : "Close without entering results"}
           </label>
           <label className="flex items-center gap-2 text-[13px] text-[#B4BCC8] cursor-pointer">
             <input
@@ -1502,32 +1502,32 @@ function CloseTaskDialog({
               onChange={() => setCloseMode("na")}
               className="accent-[#B4BCC8]"
             />
-            此任务无需成绩（N/A）
+            No results needed (N/A)
           </label>
         </div>
 
         {closeMode === "record" && (
           <div className="space-y-2 border-t pt-3">
             <p className="text-[12px] font-medium text-[#4D5766]">
-              {hasResults ? "当前成绩（可修改）" : "成绩录入"}
+              {hasResults ? "Current results (editable)" : "Enter results"}
             </p>
             {rows.map((row, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="科目"
+                  placeholder="Subject"
                   value={row.subject}
                   onChange={(e) => updateRow(i, "subject", e.target.value)}
                   className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-1.5 text-[13px] outline-none focus:border-[#163300]"
                 />
                 <input
                   type="number"
-                  placeholder="总题"
+                  placeholder="Total"
                   value={row.total_questions || ""}
                   onChange={(e) => updateRow(i, "total_questions", parseInt(e.target.value) || 0)}
                   className="w-14 rounded-lg border-[1.5px] border-[#B4BCC8] px-2 py-1.5 text-[13px] outline-none focus:border-[#163300]"
                 />
-                <span className="text-xs text-[#B4BCC8]">错</span>
+                <span className="text-xs text-[#B4BCC8]">wrong</span>
                 <input
                   type="number"
                   placeholder="0"
@@ -1549,12 +1549,12 @@ function CloseTaskDialog({
               onClick={() => setRows((p) => [...p, { subject: "", total_questions: 0, wrong_count: 0 }])}
               className="text-[12px] text-[#163300] font-medium hover:underline"
             >
-              + 添加科目
+              + Add subject
             </button>
           </div>
         )}
 
-        {/* 按钮 */}
+        {/* Buttons */}
         <div className="flex flex-col gap-2 pt-2">
           <Button
             onClick={() => onConfirm(
@@ -1567,18 +1567,18 @@ function CloseTaskDialog({
             className="w-full"
           >
             {saving
-              ? "处理中..."
+              ? "Processing..."
               : closeMode === "record" && validRows.length > 0
-                ? "保存成绩并关闭"
+                ? "Save results and close"
                 : closeMode === "na"
-                  ? "标记无需成绩并关闭"
-                  : "确认关闭"}
+                  ? "Mark N/A and close"
+                  : "Confirm close"}
           </Button>
           <button
             onClick={onClose}
             className="w-full py-2 text-[13px] text-[#B4BCC8] hover:text-[#4D5766] transition-colors"
           >
-            取消
+            Cancel
           </button>
         </div>
       </div>

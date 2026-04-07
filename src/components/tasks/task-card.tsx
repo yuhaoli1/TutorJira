@@ -40,7 +40,7 @@ const typeColors: Record<TaskType, string> = {
 };
 
 function getDueDateBadge(dueDateRaw: string, status: string) {
-  // 已确认的任务不显示截止标识
+  // Confirmed tasks don't show a due-date badge.
   if (status === "confirmed") return null;
 
   const now = new Date();
@@ -50,13 +50,14 @@ function getDueDateBadge(dueDateRaw: string, status: string) {
   const diffDays = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return { label: `逾期${Math.abs(diffDays)}天`, className: "bg-red-100 text-red-600" };
+    const days = Math.abs(diffDays);
+    return { label: `${days}d overdue`, className: "bg-red-100 text-red-600" };
   }
   if (diffDays === 0) {
-    return { label: "今天截止", className: "bg-amber-100 text-amber-700" };
+    return { label: "Due today", className: "bg-amber-100 text-amber-700" };
   }
   if (diffDays === 1) {
-    return { label: "明天截止", className: "bg-blue-50 text-blue-600" };
+    return { label: "Due tomorrow", className: "bg-blue-50 text-blue-600" };
   }
   return null;
 }
@@ -118,7 +119,7 @@ export function TaskCard({
         <span className="text-xs text-[#B4BCC8] flex-shrink-0">{card.dueDate}</span>
       </div>
 
-      {/* 标签行：类型 + 优先级 + 截止 */}
+      {/* Tag row: type, priority, due-date badge */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span
           className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeColors[card.taskType]}`}
@@ -139,26 +140,26 @@ export function TaskCard({
         )}
       </div>
 
-      {/* 标题 */}
+      {/* Title */}
       <p className="mt-2.5 text-[13px] font-medium text-[#2E3338] line-clamp-2">{card.taskTitle}</p>
 
-      {/* 描述预览 */}
+      {/* Description preview */}
       {card.taskDescription && (
         <p className="mt-1 text-xs text-[#B4BCC8] line-clamp-1">{card.taskDescription}</p>
       )}
 
-      {/* 标签 */}
+      {/* Labels */}
       <LabelChips labels={card.labels} />
 
-      {/* 学生 + 元数据 */}
+      {/* Student + metadata */}
       <div className="mt-1.5 flex items-center gap-2 text-xs text-[#B4BCC8]">
         <span>{card.studentName}</span>
-        {card.questionCount > 0 && <span>📝{card.questionCount}题</span>}
+        {card.questionCount > 0 && <span>📝{card.questionCount}</span>}
         {card.attachmentCount > 0 && <span>📎{card.attachmentCount}</span>}
         {card.commentCount > 0 && <span>💬{card.commentCount}</span>}
       </div>
 
-      {/* 成绩 */}
+      {/* Test results */}
       {card.testResults.length > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1">
           {card.testResults.map((r, i) => (
@@ -166,7 +167,7 @@ export function TaskCard({
               key={i}
               className="rounded-full bg-[#F4F5F6] px-2 py-0.5 text-xs text-[#4D5766]"
             >
-              {r.subject} {r.total_questions}错{r.wrong_count}
+              {r.subject} {r.wrong_count}/{r.total_questions} wrong
             </span>
           ))}
         </div>

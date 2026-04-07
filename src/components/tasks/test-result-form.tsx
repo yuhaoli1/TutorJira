@@ -48,13 +48,13 @@ export function TestResultForm({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-[13px] font-medium text-[#2E3338]">成绩录入</h4>
+      <h4 className="text-[13px] font-medium text-[#2E3338]">Test results</h4>
       {rows.map((row, i) => (
         <div key={i} className="flex items-center gap-2">
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="科目"
+              placeholder="Subject"
               value={row.subject}
               onChange={(e) => updateRow(i, "subject", e.target.value)}
               list="subject-list"
@@ -63,17 +63,17 @@ export function TestResultForm({
           </div>
           <input
             type="number"
-            placeholder="总题"
+            placeholder="Total"
             value={row.total_questions || ""}
             onChange={(e) =>
               updateRow(i, "total_questions", parseInt(e.target.value) || 0)
             }
             className="w-16 rounded-lg border-[1.5px] border-[#B4BCC8] px-2.5 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           />
-          <span className="text-xs text-[#B4BCC8]">错</span>
+          <span className="text-xs text-[#B4BCC8]">wrong</span>
           <input
             type="number"
-            placeholder="错题"
+            placeholder="Wrong"
             value={row.wrong_count || ""}
             onChange={(e) =>
               updateRow(i, "wrong_count", parseInt(e.target.value) || 0)
@@ -102,7 +102,7 @@ export function TestResultForm({
           onClick={addRow}
           className="text-[13px] text-[#163300] hover:text-[#163300]/70 font-medium transition-colors duration-150"
         >
-          + 添加科目
+          + Add subject
         </button>
       </div>
 
@@ -112,7 +112,7 @@ export function TestResultForm({
         className="w-full"
         size="sm"
       >
-        {saving ? "保存中..." : "保存成绩"}
+        {saving ? "Saving..." : "Save results"}
       </Button>
     </div>
   );

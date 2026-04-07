@@ -111,7 +111,7 @@ export function TaskDetailPage({
       taskType: taskData.type as TaskType,
       priority: taskData.priority || "medium",
       studentName: student.name,
-      dueDate: new Date(taskData.due_date).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" }),
+      dueDate: new Date(taskData.due_date).toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
       dueDateRaw: taskData.due_date,
       note: a.note,
       labels,
@@ -146,7 +146,7 @@ export function TaskDetailPage({
       const userIds = [...new Set(data.map((a) => a.performed_by))];
       const { data: users } = await supabase.from("users").select("id, name").in("id", userIds);
       const nameMap = new Map(users?.map((u) => [u.id, u.name]) ?? []);
-      setActivities(data.map((a) => ({ ...a, performer_name: nameMap.get(a.performed_by) || "未知" })));
+      setActivities(data.map((a) => ({ ...a, performer_name: nameMap.get(a.performed_by) || "Unknown" })));
     }
   };
 
@@ -192,7 +192,7 @@ export function TaskDetailPage({
     await supabase.from("test_results").insert(
       results.map((r) => ({ task_assignment_id: task.id, subject: r.subject, total_questions: r.total_questions, wrong_count: r.wrong_count }))
     );
-    await logActivity("result_recorded", null, results.map((r) => `${r.subject}:${r.total_questions}题错${r.wrong_count}`).join(", "));
+    await logActivity("result_recorded", null, results.map((r) => `${r.subject}: ${r.wrong_count}/${r.total_questions} wrong`).join(", "));
     setSaving(false);
     fetchTask();
     fetchActivities();
@@ -202,11 +202,11 @@ export function TaskDetailPage({
     if (!task) return;
     setSaving(true);
     const changes: string[] = [];
-    if (editTitle !== task.taskTitle) changes.push(`标题: ${task.taskTitle} → ${editTitle}`);
-    if (editType !== task.taskType) changes.push(`类型: ${TASK_TYPES[task.taskType]} → ${TASK_TYPES[editType]}`);
-    if (editPriority !== task.priority) changes.push(`优先级: ${TASK_PRIORITIES[task.priority]} → ${TASK_PRIORITIES[editPriority]}`);
-    if (editDescription !== (task.taskDescription ?? "")) changes.push("描述已更新");
-    if (editDueDate !== task.dueDateRaw.split("T")[0]) changes.push(`截止日期已更新`);
+    if (editTitle !== task.taskTitle) changes.push(`Title: ${task.taskTitle} → ${editTitle}`);
+    if (editType !== task.taskType) changes.push(`Type: ${TASK_TYPES[task.taskType]} → ${TASK_TYPES[editType]}`);
+    if (editPriority !== task.priority) changes.push(`Priority: ${TASK_PRIORITIES[task.priority]} → ${TASK_PRIORITIES[editPriority]}`);
+    if (editDescription !== (task.taskDescription ?? "")) changes.push("Description updated");
+    if (editDueDate !== task.dueDateRaw.split("T")[0]) changes.push(`Due date updated`);
 
     await supabase.from("tasks").update({
       title: editTitle.trim(),
@@ -233,14 +233,14 @@ export function TaskDetailPage({
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-[#B4BCC8]">加载中...</div>;
+    return <div className="flex items-center justify-center h-64 text-[#B4BCC8]">Loading...</div>;
   }
 
   if (!task) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-[#B4BCC8]">任务不存在</p>
-        <Button onClick={() => router.push(backPath)} variant="outline" size="sm">返回</Button>
+        <p className="text-[#B4BCC8]">Task not found</p>
+        <Button onClick={() => router.push(backPath)} variant="outline" size="sm">Back</Button>
       </div>
     );
   }
@@ -249,7 +249,7 @@ export function TaskDetailPage({
   const formatStatusLabel = (s: string) => TASK_STATUS[s as keyof typeof TASK_STATUS] || s;
   const formatTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
   const typeColors: Record<TaskType, string> = {
@@ -260,12 +260,12 @@ export function TaskDetailPage({
     other: "bg-[#F4F5F6] text-[#4D5766]",
   };
 
-  // Practice overlay — 使用统一的 TaskPracticeConsole（含拍照提交）
+  // Practice overlay — uses the unified TaskPracticeConsole (includes photo submit)
   if (practiceQuestionIds && practiceQuestionIds.length > 0) {
     return (
       <div className="space-y-4">
         <button onClick={() => setPracticeQuestionIds(null)} className="text-sm text-[#4D5766] hover:text-[#2E3338]">
-          ← 返回任务
+          ← Back to task
         </button>
         <TaskPracticeConsole
           assignmentId={task.id}
@@ -282,7 +282,7 @@ export function TaskDetailPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6">
         <button onClick={() => router.push(backPath)} className="text-sm text-[#B4BCC8] hover:text-[#4D5766] transition-colors">
-          ← 返回
+          ← Back
         </button>
         <span className="text-sm text-[#B4BCC8]">/</span>
         <span className="text-sm font-mono font-semibold text-[#4D5766]">SY-{task.ticketNumber}</span>
@@ -292,27 +292,27 @@ export function TaskDetailPage({
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {editing ? (
-            /* ===== 编辑模式 ===== */
+            /* ===== Edit mode ===== */
             <div className="rounded-2xl border border-[#E8EAED] bg-white p-6 space-y-5">
               <div>
-                <label className="mb-2 block text-xs text-[#B4BCC8]">类型</label>
+                <label className="mb-2 block text-xs text-[#B4BCC8]">Type</label>
                 <select value={editType} onChange={(e) => setEditType(e.target.value as TaskType)}
                   className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15">
                   {Object.entries(TASK_TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-xs text-[#B4BCC8]">标题</label>
+                <label className="mb-2 block text-xs text-[#B4BCC8]">Title</label>
                 <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                   className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15" />
               </div>
               <div>
-                <label className="mb-2 block text-xs text-[#B4BCC8]">描述</label>
-                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={4} placeholder="添加任务描述..."
+                <label className="mb-2 block text-xs text-[#B4BCC8]">Description</label>
+                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={4} placeholder="Add a task description..."
                   className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 resize-none" />
               </div>
               <div>
-                <label className="mb-2 block text-xs text-[#B4BCC8]">优先级</label>
+                <label className="mb-2 block text-xs text-[#B4BCC8]">Priority</label>
                 <div className="flex gap-2">
                   {(Object.entries(TASK_PRIORITIES) as [TaskPriority, string][]).map(([v, l]) => (
                     <button key={v} type="button" onClick={() => setEditPriority(v)}
@@ -325,19 +325,19 @@ export function TaskDetailPage({
                 </div>
               </div>
               <div>
-                <label className="mb-2 block text-xs text-[#B4BCC8]">截止日期</label>
+                <label className="mb-2 block text-xs text-[#B4BCC8]">Due date</label>
                 <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)}
                   className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15" />
               </div>
               <div className="flex gap-2 pt-2">
                 <Button onClick={saveEdits} disabled={saving || !editTitle.trim()} className="flex-1" size="sm">
-                  {saving ? "保存中..." : "保存修改"}
+                  {saving ? "Saving..." : "Save changes"}
                 </Button>
-                <Button onClick={() => setEditing(false)} variant="outline" className="flex-1" size="sm">取消</Button>
+                <Button onClick={() => setEditing(false)} variant="outline" className="flex-1" size="sm">Cancel</Button>
               </div>
             </div>
           ) : (
-            /* ===== 查看模式 ===== */
+            /* ===== View mode ===== */
             <div className="rounded-2xl border border-[#E8EAED] bg-white p-6 space-y-5">
               {/* Header */}
               <div className="flex items-start justify-between">
@@ -358,7 +358,7 @@ export function TaskDetailPage({
                 {isTeacher && (
                   <button onClick={() => setEditing(true)}
                     className="rounded-full px-4 py-1.5 text-xs font-medium text-[#4D5766] hover:bg-[#F4F5F6] border border-[#E8EAED] transition-colors">
-                    编辑
+                    Edit
                   </button>
                 )}
               </div>
@@ -373,7 +373,7 @@ export function TaskDetailPage({
               {/* Labels */}
               {isTeacher ? (
                 <div className="space-y-2">
-                  <h4 className="text-xs text-[#B4BCC8]">标签</h4>
+                  <h4 className="text-xs text-[#B4BCC8]">Labels</h4>
                   <LabelPicker selectedIds={labelIds} onChange={syncLabels} />
                 </div>
               ) : (
@@ -387,14 +387,14 @@ export function TaskDetailPage({
                 <TestResultForm initialResults={task.testResults} onSave={saveResults} saving={saving} />
               ) : task.testResults.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-[13px] font-medium text-[#2E3338]">成绩</h4>
+                  <h4 className="text-[13px] font-medium text-[#2E3338]">Results</h4>
                   {task.testResults.map((r, i) => {
                     const rate = Math.round(((r.total_questions - r.wrong_count) / r.total_questions) * 100);
                     return (
                       <div key={i} className="flex items-center justify-between rounded-xl bg-[#F4F5F6] px-4 py-3 text-[13px]">
                         <span className="text-[#2E3338]">{r.subject}</span>
                         <span className="text-[#4D5766]">
-                          {r.total_questions}题 错{r.wrong_count}{" "}
+                          {r.wrong_count}/{r.total_questions} wrong{" "}
                           <span className={rate >= 80 ? "text-green-600" : rate >= 60 ? "text-amber-600" : "text-red-600"}>({rate}%)</span>
                         </span>
                       </div>
@@ -406,13 +406,13 @@ export function TaskDetailPage({
               {/* Notes */}
               {isTeacher ? (
                 <div>
-                  <label className="text-xs text-[#B4BCC8]">备注</label>
-                  <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="添加备注..."
+                  <label className="text-xs text-[#B4BCC8]">Note</label>
+                  <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Add a note..."
                     className="mt-1.5 w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15" />
                 </div>
               ) : task.note && (
                 <div>
-                  <span className="text-xs text-[#B4BCC8]">老师备注</span>
+                  <span className="text-xs text-[#B4BCC8]">Teacher note</span>
                   <p className="mt-1 text-[13px] text-[#4D5766]">{task.note}</p>
                 </div>
               )}
@@ -422,15 +422,15 @@ export function TaskDetailPage({
                 {isTeacher && (
                   <>
                     {task.status !== "confirmed" && (
-                      <Button onClick={() => updateStatus("confirmed")} disabled={saving} size="sm">确认</Button>
+                      <Button onClick={() => updateStatus("confirmed")} disabled={saving} size="sm">Confirm</Button>
                     )}
                     {task.status !== "rejected" && (
-                      <Button onClick={() => updateStatus("rejected")} disabled={saving} variant="destructive" size="sm">打回</Button>
+                      <Button onClick={() => updateStatus("rejected")} disabled={saving} variant="destructive" size="sm">Reject</Button>
                     )}
                   </>
                 )}
                 {!isTeacher && (task.status === "pending" || task.status === "rejected") && (
-                  <Button onClick={() => updateStatus("submitted")} disabled={saving} size="sm">提交</Button>
+                  <Button onClick={() => updateStatus("submitted")} disabled={saving} size="sm">Submit</Button>
                 )}
               </div>
             </div>
@@ -456,15 +456,15 @@ export function TaskDetailPage({
           {/* Info card */}
           <div className="rounded-2xl border border-[#E8EAED] bg-white p-5 space-y-4">
             <div>
-              <span className="text-xs text-[#B4BCC8]">学生</span>
+              <span className="text-xs text-[#B4BCC8]">Student</span>
               <p className="mt-0.5 text-[13px] font-medium text-[#2E3338]">{task.studentName}</p>
             </div>
             <div>
-              <span className="text-xs text-[#B4BCC8]">截止日期</span>
+              <span className="text-xs text-[#B4BCC8]">Due date</span>
               <p className="mt-0.5 text-[13px] font-medium text-[#2E3338]">{task.dueDate}</p>
             </div>
             <div>
-              <span className="text-xs text-[#B4BCC8]">编号</span>
+              <span className="text-xs text-[#B4BCC8]">Ticket</span>
               <p className="mt-0.5 text-[13px] font-mono font-semibold text-[#2E3338]">SY-{task.ticketNumber}</p>
             </div>
           </div>
@@ -476,9 +476,9 @@ export function TaskDetailPage({
 
           {/* Activity log */}
           <div className="rounded-2xl border border-[#E8EAED] bg-white p-5">
-            <h4 className="text-[13px] font-medium text-[#2E3338] mb-3">活动记录</h4>
+            <h4 className="text-[13px] font-medium text-[#2E3338] mb-3">Activity</h4>
             {activities.length === 0 ? (
-              <p className="text-xs text-[#B4BCC8]">暂无记录</p>
+              <p className="text-xs text-[#B4BCC8]">No activity yet</p>
             ) : (
               <div className="space-y-0">
                 {activities.map((a, i) => (
@@ -492,7 +492,7 @@ export function TaskDetailPage({
                         <span className="font-medium text-[#2E3338]">{a.performer_name}</span>{" "}
                         {a.action === "status_change" ? (
                           <>{formatStatusLabel(a.old_value ?? "")} → <span className="font-medium">{formatStatusLabel(a.new_value ?? "")}</span></>
-                        ) : a.action === "task_edited" ? "编辑了任务" : (
+                        ) : a.action === "task_edited" ? "edited the task" : (
                           ACTIVITY_ACTIONS[a.action as keyof typeof ACTIVITY_ACTIONS] || a.action
                         )}
                       </p>

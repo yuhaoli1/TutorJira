@@ -100,7 +100,7 @@ export function LabelPicker({
           onClick={() => setShowCreate(!showCreate)}
           className="rounded-full px-3 py-1 text-xs font-medium text-[#B4BCC8] hover:text-[#4D5766] hover:bg-[#F4F5F6] transition-colors duration-150"
         >
-          + 新标签
+          + New label
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export function LabelPicker({
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="标签名称"
+            placeholder="Label name"
             className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             onKeyDown={(e) => { if (e.key === "Enter") createLabel(); }}
           />
@@ -134,13 +134,13 @@ export function LabelPicker({
               disabled={creating || !newName.trim()}
               className="rounded-full bg-[#163300] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors"
             >
-              创建
+              Create
             </button>
             <button
               onClick={() => { setShowCreate(false); setNewName(""); }}
               className="rounded-full px-3 py-1.5 text-xs font-medium text-[#B4BCC8] hover:text-[#4D5766]"
             >
-              取消
+              Cancel
             </button>
           </div>
         </div>

@@ -137,7 +137,7 @@ export function TaskQuestionPicker({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-[13px] font-medium text-[#2E3338]">
-          关联题目
+          Linked questions
           {linked.length > 0 && (
             <span className="ml-1.5 text-xs text-[#B4BCC8]">{linked.length}</span>
           )}
@@ -147,15 +147,15 @@ export function TaskQuestionPicker({
             onClick={() => { setShowBrowser(!showBrowser); if (!showBrowser) searchQuestions(); }}
             className="rounded-full px-3 py-1 text-xs font-medium text-[#163300] hover:bg-[#F4F5F6] transition-colors duration-150"
           >
-            {showBrowser ? "收起" : "+ 添加题目"}
+            {showBrowser ? "Collapse" : "+ Add questions"}
           </button>
         )}
       </div>
 
-      {/* 提交后展示答案开关 */}
+      {/* Show answers after submit toggle */}
       {!readOnly && linked.length > 0 && (
         <div className="flex items-center justify-between rounded-lg bg-[#F4F5F6] px-3 py-2">
-          <span className="text-[12px] text-[#4D5766]">学生提交后展示答案/讲解</span>
+          <span className="text-[12px] text-[#4D5766]">Show answers/explanations after student submits</span>
           <button
             type="button"
             onClick={() => toggleShowAnswers(!showAnswers)}
@@ -215,13 +215,13 @@ export function TaskQuestionPicker({
               onChange={(e) => setSelectedTagId(e.target.value)}
               className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-2.5 py-1.5 text-[13px] text-[#2E3338] outline-none"
             >
-              <option value="all">全部知识点</option>
+              <option value="all">All topics</option>
               {knowledgeTags.filter((t) => !t.parent_id).map((root) => {
                 const children = knowledgeTags.filter((t) => t.parent_id === root.id);
                 if (children.length === 0) return <option key={root.id} value={root.id}>{root.name}</option>;
                 return (
                   <optgroup key={root.id} label={root.name}>
-                    <option value={root.id}>{root.name}（全部）</option>
+                    <option value={root.id}>{root.name} (all)</option>
                     {children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </optgroup>
                 );
@@ -232,14 +232,14 @@ export function TaskQuestionPicker({
               disabled={searching}
               className="rounded-lg bg-[#163300] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
             >
-              搜索
+              Search
             </button>
           </div>
 
           <div className="max-h-48 overflow-y-auto space-y-1.5">
             {available.length === 0 ? (
               <p className="text-xs text-[#B4BCC8] py-3 text-center">
-                {searching ? "搜索中..." : "没有更多可添加的题目"}
+                {searching ? "Searching..." : "No more questions to add"}
               </p>
             ) : (
               available.map((q) => (
@@ -263,7 +263,7 @@ export function TaskQuestionPicker({
                     )}
                     <p className="text-[13px] text-[#2E3338] line-clamp-2">{q.content.stem}</p>
                   </div>
-                  <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ 添加</span>
+                  <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ Add</span>
                 </div>
               ))
             )}
@@ -295,7 +295,7 @@ export function TaskQuestionList({
 
   useEffect(() => {
     const fetchData = async () => {
-      // 获取关联题目
+      // Fetch linked questions
       const { data } = await supabase
         .from("task_questions")
         .select(`
@@ -328,7 +328,7 @@ export function TaskQuestionList({
         setLinked(linkedData);
       }
 
-      // 获取提交记录
+      // Fetch submission records
       const { data: subs } = await supabase
         .from("task_submission_answers")
         .select("question_id, answer, is_correct, submitted_at")
@@ -361,49 +361,49 @@ export function TaskQuestionList({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-[13px] font-medium text-[#2E3338]">
-          题目
+          Questions
           <span className="ml-1.5 text-xs text-[#B4BCC8]">{linked.length}</span>
         </h4>
         <button
           onClick={() => onStartPractice(linked.map((l) => l.question_id))}
           className="rounded-full bg-[#163300] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#1e4400] transition-colors duration-150"
         >
-          {hasSubmissions ? "重新做题" : "开始做题"}
+          {hasSubmissions ? "Retry" : "Start"}
         </button>
       </div>
 
-      {/* 提交摘要 */}
+      {/* Submission summary */}
       {hasSubmissions && (
         <div className="rounded-xl bg-[#F4F5F6] p-3">
           <div className="flex items-center justify-between">
             <div className="text-[13px] text-[#2E3338]">
-              <span className="font-medium">已提交</span>
+              <span className="font-medium">Submitted</span>
               {showAnswers && (
                 <span className={`ml-2 text-xs font-medium ${
                   correctCount / submissions.size >= 0.8 ? "text-green-600"
                     : correctCount / submissions.size >= 0.6 ? "text-amber-600"
                     : "text-red-600"
                 }`}>
-                  {correctCount}/{submissions.size} 正确
+                  {correctCount}/{submissions.size} correct
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2">
               {lastTime && (
                 <span className="text-[11px] text-[#B4BCC8]">
-                  {lastTime.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {lastTime.toLocaleDateString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
               <button
                 onClick={() => setShowHistory(!showHistory)}
                 className="text-[12px] font-medium text-[#163300] hover:underline"
               >
-                {showHistory ? "收起" : "查看详情"}
+                {showHistory ? "Collapse" : "View details"}
               </button>
             </div>
           </div>
 
-          {/* 展开详情 */}
+          {/* Expanded details */}
           {showHistory && (
             <div className="mt-3 space-y-2 border-t border-[#E8EAED] pt-3">
               {linked.map((tq, i) => {
@@ -418,21 +418,21 @@ export function TaskQuestionList({
                       <span className="text-xs text-[#B4BCC8]">{i + 1}.</span>
                       {sub ? (
                         <span className={`text-[11px] font-medium ${sub.is_correct ? "text-green-600" : "text-red-600"}`}>
-                          {sub.is_correct ? "正确" : "错误"}
+                          {sub.is_correct ? "Correct" : "Wrong"}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-[#B4BCC8]">未作答</span>
+                        <span className="text-[11px] text-[#B4BCC8]">Not answered</span>
                       )}
                     </div>
                     <p className="text-[12px] text-[#2E3338] line-clamp-1">{tq.question.content.stem}</p>
                     {sub && (
                       <div className="mt-1 text-[11px]">
-                        <span className="text-[#4D5766]">我的答案：</span>
-                        <span className="font-medium text-[#2E3338]">{sub.answer || "（空）"}</span>
+                        <span className="text-[#4D5766]">My answer: </span>
+                        <span className="font-medium text-[#2E3338]">{sub.answer || "(empty)"}</span>
                         {!sub.is_correct && showAnswers && (
                           <>
                             <span className="mx-1 text-[#B4BCC8]">|</span>
-                            <span className="text-green-700">正确：{tq.question.content.answer}</span>
+                            <span className="text-green-700">Correct: {tq.question.content.answer}</span>
                           </>
                         )}
                       </div>
@@ -445,7 +445,7 @@ export function TaskQuestionList({
         </div>
       )}
 
-      {/* 题目列表（未提交时显示） */}
+      {/* Question list (shown before submission) */}
       {!hasSubmissions && (
         <div className="space-y-1.5">
           {linked.map((tq, i) => (

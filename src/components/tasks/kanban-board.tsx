@@ -55,7 +55,7 @@ export function KanbanBoard({
   initialCards,
   initialStudents,
 }: KanbanBoardProps) {
-  // ✅ 用服务端预取的数据初始化，首屏立即显示
+  // Initialize from server-prefetched data so the first paint is instant.
   const [cards, setCards] = useState<TaskCardData[]>(initialCards ?? []);
   const [students, setStudents] = useState<Student[]>(initialStudents ?? []);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
@@ -69,7 +69,7 @@ export function KanbanBoard({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  // 客户端刷新（创建/更新/拖拽后用）
+  // Client-side refresh after create/update/drag.
   const fetchBoard = useCallback(async () => {
     const { cards: newCards, students: newStudents } = await fetchBoardData(
       supabase,
@@ -79,18 +79,18 @@ export function KanbanBoard({
     setStudents(newStudents);
   }, [supabase, allowedStudentIds]);
 
-  // 如果没有 initialData，首次加载走客户端获取（兜底）
+  // Fallback: if no initial data was passed, fetch on the client.
   useEffect(() => {
     if (!initialCards) {
       fetchBoard();
     }
-    // fire-and-forget: 生成周期任务
+    // fire-and-forget: generate any recurring tasks that are due
     if (isTeacher) {
       fetch("/api/recurring-tasks/generate", { method: "POST" });
     }
   }, [fetchBoard, initialCards, isTeacher]);
 
-  // useMemo: 过滤 + 分列
+  // Filter + group cards by column.
   const filteredCards = useMemo(() => {
     if (selectedStudent === "all") return cards;
     const studentIdByName = new Map(students.map((s) => [s.name, s.id]));
@@ -171,7 +171,7 @@ export function KanbanBoard({
               onChange={(e) => setSelectedStudent(e.target.value)}
               className="rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-3 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
             >
-              <option value="all">全部学生</option>
+              <option value="all">All students</option>
               {students.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -182,7 +182,7 @@ export function KanbanBoard({
         </div>
         {isTeacher && (
           <Button onClick={() => setShowCreate(true)} size="sm">
-            + 新建任务
+            + New task
           </Button>
         )}
       </div>

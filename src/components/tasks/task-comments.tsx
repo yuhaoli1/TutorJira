@@ -44,7 +44,7 @@ export function TaskComments({ assignmentId }: { assignmentId: string }) {
     setComments(
       data.map((c) => ({
         ...c,
-        author_name: userMap.get(c.author_id)?.name ?? "未知",
+        author_name: userMap.get(c.author_id)?.name ?? "Unknown",
         author_role: userMap.get(c.author_id)?.role ?? "",
       }))
     );
@@ -81,24 +81,24 @@ export function TaskComments({ assignmentId }: { assignmentId: string }) {
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "刚刚";
-    if (diffMin < 60) return `${diffMin}分钟前`;
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr}小时前`;
-    return d.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    if (diffHr < 24) return `${diffHr}h ago`;
+    return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
   const roleLabel: Record<string, string> = {
-    admin: "管理员",
-    teacher: "老师",
-    student: "学生",
-    parent: "家长",
+    admin: "Admin",
+    teacher: "Teacher",
+    student: "Student",
+    parent: "Parent",
   };
 
   return (
     <div className="space-y-3">
       <h4 className="text-[13px] font-medium text-[#2E3338]">
-        对话
+        Messages
         {comments.length > 0 && (
           <span className="ml-1.5 text-xs text-[#B4BCC8]">{comments.length}</span>
         )}
@@ -107,7 +107,7 @@ export function TaskComments({ assignmentId }: { assignmentId: string }) {
       {/* Messages */}
       <div className="max-h-64 overflow-y-auto space-y-2.5">
         {comments.length === 0 && (
-          <p className="text-xs text-[#B4BCC8] py-3 text-center">暂无消息，发条消息开始对话</p>
+          <p className="text-xs text-[#B4BCC8] py-3 text-center">No messages yet — send the first one</p>
         )}
         {comments.map((c) => {
           const isMe = c.author_id === currentUserId;
@@ -147,7 +147,7 @@ export function TaskComments({ assignmentId }: { assignmentId: string }) {
               send();
             }
           }}
-          placeholder="输入消息..."
+          placeholder="Type a message..."
           className="flex-1 rounded-full border-[1.5px] border-[#E8EAED] px-4 py-2 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
         />
         <button
@@ -155,7 +155,7 @@ export function TaskComments({ assignmentId }: { assignmentId: string }) {
           disabled={sending || !text.trim()}
           className="rounded-full bg-[#163300] px-4 py-2 text-[13px] font-medium text-white disabled:opacity-40 hover:bg-[#1e4400] transition-colors duration-150"
         >
-          发送
+          Send
         </button>
       </div>
     </div>

@@ -33,7 +33,7 @@ export function TaskCreatePanel({
   const [loading, setLoading] = useState(false);
   const [labelIds, setLabelIds] = useState<string[]>([]);
 
-  // 关联题目
+  // Linked questions
   const [selectedQuestions, setSelectedQuestions] = useState<{ id: string; type: QuestionType; stem: string; topic?: string; tags?: unknown[] }[]>([]);
   const [showQuestionBrowser, setShowQuestionBrowser] = useState(false);
   const [knowledgeTags, setKnowledgeTags] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
@@ -42,7 +42,7 @@ export function TaskCreatePanel({
   const [searchingQ, setSearchingQ] = useState(false);
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
 
-  // 附件上传
+  // Attachment upload
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -247,7 +247,7 @@ export function TaskCreatePanel({
   return (
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white border-l border-[#E8EAED] flex flex-col">
       <div className="flex items-center justify-between border-b border-[#E8EAED] px-6 py-5">
-        <h3 className="text-sm font-bold text-[#2E3338]">新建任务</h3>
+        <h3 className="text-sm font-bold text-[#2E3338]">New task</h3>
         <button
           onClick={onClose}
           className="rounded-full p-1.5 text-[#B4BCC8] hover:bg-[#F4F5F6] hover:text-[#4D5766] transition-colors duration-150"
@@ -257,10 +257,10 @@ export function TaskCreatePanel({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        {/* 任务类型 */}
+        {/* Task type */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            类型
+            Type
           </label>
           <select
             value={type}
@@ -275,38 +275,38 @@ export function TaskCreatePanel({
           </select>
         </div>
 
-        {/* 标题 */}
+        {/* Title */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            标题
+            Title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="例如：第三单元默写"
+            placeholder="e.g., Unit 3 spelling"
             className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150"
           />
         </div>
 
-        {/* 描述 */}
+        {/* Description */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            描述（可选）
+            Description (optional)
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="详细说明任务要求..."
+            placeholder="Details or instructions..."
             rows={3}
             className="w-full rounded-lg border-[1.5px] border-[#B4BCC8] px-3 py-2.5 text-[13px] text-[#2E3338] outline-none focus:border-[#163300] focus:ring-2 focus:ring-[#163300]/15 transition-colors duration-150 resize-none"
           />
         </div>
 
-        {/* 优先级 */}
+        {/* Priority */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            优先级
+            Priority
           </label>
           <div className="flex gap-2">
             {(Object.entries(TASK_PRIORITIES) as [TaskPriority, string][]).map(([value, label]) => (
@@ -332,19 +332,19 @@ export function TaskCreatePanel({
           </div>
         </div>
 
-        {/* 标签 */}
+        {/* Labels */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            标签（可选）
+            Labels (optional)
           </label>
           <LabelPicker selectedIds={labelIds} onChange={setLabelIds} />
         </div>
 
-        {/* 关联题目 */}
+        {/* Linked questions */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[13px] font-medium text-[#4D5766]">
-              关联题目（可选）
+              Linked questions (optional)
               {selectedQuestions.length > 0 && (
                 <span className="ml-1.5 text-xs text-[#B4BCC8]">{selectedQuestions.length}</span>
               )}
@@ -354,11 +354,11 @@ export function TaskCreatePanel({
               onClick={() => { setShowQuestionBrowser(!showQuestionBrowser); if (!showQuestionBrowser) searchQuestions(); }}
               className="text-xs font-medium text-[#163300] hover:text-[#163300]/70 transition-colors"
             >
-              {showQuestionBrowser ? "收起" : "+ 添加题目"}
+              {showQuestionBrowser ? "Collapse" : "+ Add questions"}
             </button>
           </div>
 
-          {/* 已选题目 */}
+          {/* Selected questions */}
           {selectedQuestions.length > 0 && (
             <div className="space-y-1.5 mb-3">
               {selectedQuestions.map((q, i) => (
@@ -393,10 +393,10 @@ export function TaskCreatePanel({
             </div>
           )}
 
-          {/* 提交后展示答案开关 */}
+          {/* Show answers after submit toggle */}
           {selectedQuestions.length > 0 && (
             <div className="flex items-center justify-between rounded-lg bg-[#F4F5F6] px-3 py-2">
-              <span className="text-[12px] text-[#4D5766]">学生提交后展示答案/讲解</span>
+              <span className="text-[12px] text-[#4D5766]">Show answers/explanations after student submits</span>
               <button
                 type="button"
                 onClick={() => setShowAnswersAfterSubmit(!showAnswersAfterSubmit)}
@@ -413,7 +413,7 @@ export function TaskCreatePanel({
             </div>
           )}
 
-          {/* 题目浏览器 */}
+          {/* Question browser */}
           {showQuestionBrowser && (
             <div className="rounded-xl border border-[#E8EAED] p-3 space-y-3 bg-[#FAFAFA]">
               <div className="flex gap-2">
@@ -422,13 +422,13 @@ export function TaskCreatePanel({
                   onChange={(e) => setSelectedTagId(e.target.value)}
                   className="flex-1 rounded-lg border-[1.5px] border-[#B4BCC8] bg-white px-2.5 py-1.5 text-[13px] outline-none"
                 >
-                  <option value="all">全部知识点</option>
+                  <option value="all">All topics</option>
                   {knowledgeTags.filter((t) => !t.parent_id).map((root) => {
                     const children = knowledgeTags.filter((t) => t.parent_id === root.id);
                     if (children.length === 0) return <option key={root.id} value={root.id}>{root.name}</option>;
                     return (
                       <optgroup key={root.id} label={root.name}>
-                        <option value={root.id}>{root.name}（全部）</option>
+                        <option value={root.id}>{root.name} (all)</option>
                         {children.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </optgroup>
                     );
@@ -440,13 +440,13 @@ export function TaskCreatePanel({
                   disabled={searchingQ}
                   className="rounded-lg bg-[#163300] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                 >
-                  搜索
+                  Search
                 </button>
               </div>
               <div className="max-h-48 overflow-y-auto space-y-1.5">
                 {availableQuestions.length === 0 ? (
                   <p className="text-xs text-[#B4BCC8] py-3 text-center">
-                    {searchingQ ? "搜索中..." : "没有更多可添加的题目"}
+                    {searchingQ ? "Searching..." : "No more questions to add"}
                   </p>
                 ) : (
                   availableQuestions.map((q) => (
@@ -475,7 +475,7 @@ export function TaskCreatePanel({
                         )}
                         <p className="text-[13px] text-[#2E3338] line-clamp-2">{q.stem}</p>
                       </div>
-                      <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ 添加</span>
+                      <span className="text-xs text-[#163300] font-medium flex-shrink-0">+ Add</span>
                     </div>
                   ))
                 )}
@@ -484,10 +484,10 @@ export function TaskCreatePanel({
           )}
         </div>
 
-        {/* 附件上传 */}
+        {/* Attachment upload */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            附件（可选）
+            Attachments (optional)
           </label>
           <input
             ref={fileRef}
@@ -521,13 +521,13 @@ export function TaskCreatePanel({
               <span className="text-xl">+</span>
             </button>
           </div>
-          <p className="mt-1 text-[11px] text-[#B4BCC8]">支持图片，单张最大10MB</p>
+          <p className="mt-1 text-[11px] text-[#B4BCC8]">Images only, max 10MB each</p>
         </div>
 
-        {/* 重复任务开关 */}
+        {/* Recurring task toggle */}
         <div className="flex items-center justify-between">
           <label className="text-[13px] font-medium text-[#4D5766]">
-            重复任务
+            Recurring task
           </label>
           <button
             type="button"
@@ -544,13 +544,13 @@ export function TaskCreatePanel({
           </button>
         </div>
 
-        {/* 重复设置 */}
+        {/* Recurrence settings */}
         {isRecurring && (
           <div className="space-y-4 rounded-xl border border-[#E8EAED] p-4 bg-[#FAFAFA]">
-            {/* 频率 */}
+            {/* Frequency */}
             <div>
               <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-                频率
+                Frequency
               </label>
               <select
                 value={recurrenceType}
@@ -565,11 +565,11 @@ export function TaskCreatePanel({
               </select>
             </div>
 
-            {/* 周几 (仅每周模式) */}
+            {/* Weekdays (weekly mode only) */}
             {recurrenceType === "weekly" && (
               <div>
                 <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-                  选择周几
+                  Select days
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {Object.entries(WEEKDAYS).map(([day, label]) => {
@@ -594,10 +594,10 @@ export function TaskCreatePanel({
               </div>
             )}
 
-            {/* 结束日期 */}
+            {/* End date */}
             <div>
               <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-                结束日期（可选）
+                End date (optional)
               </label>
               <input
                 type="date"
@@ -609,10 +609,10 @@ export function TaskCreatePanel({
           </div>
         )}
 
-        {/* 截止日期 / 开始日期 */}
+        {/* Due date / Start date */}
         <div>
           <label className="mb-2 block text-[13px] font-medium text-[#4D5766]">
-            {isRecurring ? "开始日期" : "截止日期"}
+            {isRecurring ? "Start date" : "Due date"}
           </label>
           <input
             type="date"
@@ -622,23 +622,23 @@ export function TaskCreatePanel({
           />
         </div>
 
-        {/* 指派学生 */}
+        {/* Assign students */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[13px] font-medium text-[#4D5766]">
-              指派学生
+              Assign students
             </label>
             <button
               onClick={toggleAll}
               className="text-xs text-[#163300] hover:text-[#163300]/70 font-medium transition-colors duration-150"
             >
               {selectedStudents.length === students.length
-                ? "取消全选"
-                : "全选"}
+                ? "Deselect all"
+                : "Select all"}
             </button>
           </div>
           {students.length === 0 ? (
-            <p className="text-[13px] text-[#B4BCC8]">暂无学生，请先添加学生</p>
+            <p className="text-[13px] text-[#B4BCC8]">No students yet — add a student first</p>
           ) : (
             <div className="max-h-60 overflow-y-auto space-y-0.5 rounded-xl border border-[#E8EAED] p-2">
               {students.map((s) => (
@@ -673,10 +673,10 @@ export function TaskCreatePanel({
           className="w-full"
         >
           {loading
-            ? "创建中..."
+            ? "Creating..."
             : isRecurring
-              ? `创建重复任务（${selectedStudents.length}人）`
-              : `创建任务（${selectedStudents.length}人）`}
+              ? `Create recurring task (${selectedStudents.length})`
+              : `Create task (${selectedStudents.length})`}
         </Button>
       </div>
     </div>

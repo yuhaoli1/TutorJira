@@ -59,10 +59,10 @@ export function TaskAttachments({
         fetchAttachments();
       } else {
         const data = await res.json();
-        alert(data.error || "上传失败");
+        alert(data.error || "Upload failed");
       }
     } catch {
-      alert("上传失败");
+      alert("Upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -80,7 +80,7 @@ export function TaskAttachments({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-[13px] font-medium text-[#2E3338]">
-          附件
+          Attachments
           {attachments.length > 0 && (
             <span className="ml-1.5 text-xs text-[#B4BCC8]">{attachments.length}</span>
           )}
@@ -92,7 +92,7 @@ export function TaskAttachments({
               disabled={uploading}
               className="rounded-full px-3 py-1 text-xs font-medium text-[#163300] hover:bg-[#F4F5F6] transition-colors duration-150 disabled:opacity-40"
             >
-              {uploading ? "上传中..." : "+ 上传图片"}
+              {uploading ? "Uploading..." : "+ Upload image"}
             </button>
             <input
               ref={fileRef}
@@ -106,7 +106,7 @@ export function TaskAttachments({
       </div>
 
       {attachments.length === 0 ? (
-        <p className="text-xs text-[#B4BCC8] py-2">暂无附件</p>
+        <p className="text-xs text-[#B4BCC8] py-2">No attachments yet</p>
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {attachments.map((a) => (
@@ -138,7 +138,7 @@ export function TaskAttachments({
           <div className="relative max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
             <img
               src={preview}
-              alt="预览"
+              alt="Preview"
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
             <button
