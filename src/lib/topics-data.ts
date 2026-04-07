@@ -1,4 +1,5 @@
-// 2024 五进六奥数课程计划 — 知识点数据
+// Common Core Math — Grades 5 and 6 curriculum topics.
+// Each entry is a lesson-sized cluster; subtopics map to Common Core standards.
 export interface TopicSeed {
   title: string;
   sortOrder: number;
@@ -6,104 +7,198 @@ export interface TopicSeed {
 }
 
 export const MATH_TOPICS: TopicSeed[] = [
+  // ===== Grade 5 =====
   {
-    title: "小数乘、除法的速算与巧算",
+    title: "Place Value & Decimal Operations",
     sortOrder: 1,
-    subtopics: ["拆分与凑整", "积不变的规律", "除法的性质的应用", "多位小数的乘、除法"],
+    subtopics: [
+      "Read and write decimals to thousandths",
+      "Compare and round decimals",
+      "Multiply multi-digit whole numbers",
+      "Divide multi-digit whole numbers",
+      "Add, subtract, multiply, and divide decimals",
+    ],
   },
   {
-    title: "最大公因数和最小公倍数 / 分解质因数",
+    title: "Powers of Ten & Exponents",
     sortOrder: 2,
-    subtopics: ["最大公因数", "最小公倍数", "两者之间的关系", "分解质因数的应用", "分数的拆分"],
+    subtopics: [
+      "Patterns in place value when multiplying or dividing by 10",
+      "Powers of 10 and exponent notation",
+      "Convert among metric units using powers of 10",
+    ],
   },
   {
-    title: "火车行程问题",
+    title: "Adding & Subtracting Fractions",
     sortOrder: 3,
-    subtopics: ["火车过桥问题", "火车相遇问题", "火车追及问题"],
+    subtopics: [
+      "Equivalent fractions and common denominators",
+      "Add and subtract fractions with unlike denominators",
+      "Add and subtract mixed numbers",
+      "Word problems involving fraction sums and differences",
+    ],
   },
   {
-    title: "解复杂方程 / 错中求解",
+    title: "Multiplying & Dividing Fractions",
     sortOrder: 4,
-    subtopics: ["解方程的各种题型", "小数乘除中的错中求解", "方程中的错中求解问题"],
+    subtopics: [
+      "Multiply a fraction by a whole number",
+      "Multiply a fraction by a fraction",
+      "Area models for fraction multiplication",
+      "Divide unit fractions by whole numbers",
+      "Divide whole numbers by unit fractions",
+    ],
   },
   {
-    title: "列方程解应用题",
+    title: "Numerical Expressions",
     sortOrder: 5,
-    subtopics: ["解决鸡兔同笼问题", "解决盈亏问题", "解决年龄问题", "解决相遇、追及问题", "解决流水行船问题"],
+    subtopics: [
+      "Order of operations with grouping symbols",
+      "Write simple numerical expressions",
+      "Interpret expressions without evaluating",
+    ],
   },
   {
-    title: "长方体和正方体",
+    title: "Volume of Rectangular Prisms",
     sortOrder: 6,
-    subtopics: ["三视图求表面积", "长方体和正方体的展开图", "水中浸没", "立体图形染色", "切片法求体积"],
+    subtopics: [
+      "Understand volume as unit cubes",
+      "Find volume with V = l x w x h",
+      "Volume of composite solid figures",
+      "Real-world volume problems",
+    ],
   },
   {
-    title: "巧求面积 / 不规则图形的面积",
+    title: "Coordinate Plane (Grade 5)",
     sortOrder: 7,
-    subtopics: ["等积变形", "一半模型", "根据差不变的性质求面积", "分割法求面积"],
+    subtopics: [
+      "Plot points in the first quadrant",
+      "Graph real-world relationships",
+      "Interpret coordinate values in context",
+    ],
   },
   {
-    title: "面积模型",
+    title: "Classifying 2D Figures",
     sortOrder: 8,
-    subtopics: ["风筝模型", "蝴蝶模型", "燕尾模型"],
+    subtopics: [
+      "Hierarchy of quadrilaterals",
+      "Classify triangles by sides and angles",
+      "Attributes of polygons",
+    ],
   },
   {
-    title: "数与形 / 植树问题与方阵问题",
+    title: "Converting Measurement Units",
     sortOrder: 9,
-    subtopics: ["数形结合求和（或差）的平方", "数形结合求和（或差）的积", "在直线、不封闭、封闭线上植树", "方阵问题"],
+    subtopics: [
+      "Customary units of length, weight, and capacity",
+      "Metric units of length, mass, and volume",
+      "Multi-step conversion problems",
+    ],
   },
   {
-    title: "分数裂项 / 分数加减法的速算与巧算",
+    title: "Line Plots & Data (Grade 5)",
     sortOrder: 10,
-    subtopics: ["裂差型列项", "裂和型列项", "分组凑整、运算定理简算"],
+    subtopics: [
+      "Create line plots with fractional units",
+      "Interpret data displayed on a line plot",
+      "Solve problems using measurement data",
+    ],
   },
+
+  // ===== Grade 6 =====
   {
-    title: "比较与估算 / 循环小数",
+    title: "Ratios & Rates",
     sortOrder: 11,
-    subtopics: ["小数和分数大小比较", "数的估算", "分数与循环小数之间转换"],
+    subtopics: [
+      "Ratio language and notation",
+      "Equivalent ratios and ratio tables",
+      "Unit rates",
+      "Rate and ratio word problems",
+    ],
   },
   {
-    title: "幻方与数阵图 / 定义新运算",
+    title: "Percent",
     sortOrder: 12,
-    subtopics: ["三阶幻方", "数阵图", "直接运算型、反解未知数型", "高斯取整"],
+    subtopics: [
+      "Understand percent as a rate per 100",
+      "Find the percent of a quantity",
+      "Find the whole given a part and the percent",
+    ],
   },
   {
-    title: "单位1的转化",
+    title: "Dividing Fractions by Fractions",
     sortOrder: 13,
-    subtopics: ["单位1的转化"],
+    subtopics: [
+      "Interpret quotients of fractions",
+      "Divide fractions by fractions using visual models",
+      "Word problems involving division of fractions",
+    ],
   },
   {
-    title: "工程问题",
+    title: "Multi-Digit & Decimal Computation",
     sortOrder: 14,
-    subtopics: ["工程问题"],
+    subtopics: [
+      "Multi-digit division using the standard algorithm",
+      "Add, subtract, multiply, and divide multi-digit decimals",
+      "Greatest common factor and least common multiple",
+      "Distributive property with whole numbers",
+    ],
   },
   {
-    title: "浓度问题",
+    title: "Rational Numbers",
     sortOrder: 15,
-    subtopics: ["浓度问题"],
+    subtopics: [
+      "Positive and negative numbers in real-world contexts",
+      "Opposites and absolute value",
+      "Compare and order rational numbers",
+    ],
   },
   {
-    title: "经济问题",
+    title: "Coordinate Plane: Four Quadrants",
     sortOrder: 16,
-    subtopics: ["经济问题"],
+    subtopics: [
+      "Plot points in all four quadrants",
+      "Reflect points across the axes",
+      "Distance between points with the same x- or y-coordinate",
+    ],
   },
   {
-    title: "平面几何",
+    title: "Expressions",
     sortOrder: 17,
-    subtopics: ["割与补", "比例关系", "整体计算和差不变"],
+    subtopics: [
+      "Write and evaluate numerical expressions with exponents",
+      "Write and evaluate algebraic expressions",
+      "Identify equivalent expressions",
+      "Apply the distributive, associative, and commutative properties",
+    ],
   },
   {
-    title: "立体几何",
+    title: "Equations & Inequalities",
     sortOrder: 18,
-    subtopics: ["基本公式的运用", "切割与拼接", "空间思维", "比列关系与等量关系（六年级：比）"],
+    subtopics: [
+      "Solve one-variable equations",
+      "Write and graph one-variable inequalities",
+      "Dependent and independent variables",
+    ],
   },
   {
-    title: "数论综合复习",
+    title: "Geometry: Area, Surface Area & Volume",
     sortOrder: 19,
-    subtopics: ["整数的整除特征", "质数和合数", "因数和倍数", "带余数法", "余数的性质", "位值原理", "进位制"],
+    subtopics: [
+      "Area of triangles, special quadrilaterals, and polygons",
+      "Volume of right rectangular prisms with fractional edges",
+      "Surface area using nets",
+      "Polygons on the coordinate plane",
+    ],
   },
   {
-    title: "计数综合",
+    title: "Statistics",
     sortOrder: 20,
-    subtopics: ["基础计数", "加乘原理", "平面图形计数"],
+    subtopics: [
+      "Statistical questions and variability",
+      "Measures of center: mean, median, mode",
+      "Measures of variability: range, IQR, mean absolute deviation",
+      "Display data with dot plots, histograms, and box plots",
+    ],
   },
 ];

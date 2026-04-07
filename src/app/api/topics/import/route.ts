@@ -22,14 +22,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Supports query params ?subject=Math Olympiad and ?mode=sync
+    // Supports query params ?subject=Math and ?mode=sync
     const url = new URL(request.url);
-    const subject = url.searchParams.get("subject") || "Math Olympiad";
+    const subject = url.searchParams.get("subject") || "Math";
     const mode = url.searchParams.get("mode") || "create"; // create | sync
 
-    // Currently only Math Olympiad is supported; topics-data for other subjects can be added later
+    // Currently only Math (Common Core grades 5–6) is supported;
+    // topics-data for other subjects can be added later.
     const topicsMap: Record<string, typeof MATH_TOPICS> = {
-      "Math Olympiad": MATH_TOPICS,
+      Math: MATH_TOPICS,
     };
 
     const topicsData = topicsMap[subject];
