@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Google_Sans_Flex, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const googleSansFlex = Google_Sans_Flex({
+  variable: "--font-google-sans-flex",
   subsets: ["latin"],
 });
 
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${googleSansFlex.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
