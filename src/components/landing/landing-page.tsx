@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LogoIcon } from "@/components/shared/logo";
 
 /* ── Brand Colors (from logo) ── */
 const GREEN = "#8CC63F";
@@ -200,8 +199,14 @@ export function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-white/10" style={{ background: "rgba(10, 22, 40, 0.85)" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-2.5">
           <Link href="/" className="flex items-center gap-2">
-            <LogoIcon size={36} />
-            <span className="text-xl font-black tracking-tight text-white">
+            <Image
+              src="/logo.png"
+              alt=""
+              width={28}
+              height={28}
+              className="object-contain"
+            />
+            <span className="text-xl font-[590] tracking-display text-white">
               Firefly
             </span>
           </Link>
@@ -306,7 +311,12 @@ export function LandingPage() {
 
               <div className="flex-shrink-0 relative">
                 <div className="absolute inset-0 rounded-full blur-3xl opacity-20" style={{ background: "#CCFF44" }} />
-                <LogoIcon size={360} className="relative z-10 drop-shadow-[0_0_40px_rgba(200,255,50,0.3)]" />
+                <span
+                  className="relative z-10 font-[590] tracking-display-lg drop-shadow-[0_0_40px_rgba(200,255,50,0.3)]"
+                  style={{ color: "#CCFF44", fontSize: 140, lineHeight: 1 }}
+                >
+                  Firefly
+                </span>
               </div>
             </div>
           </div>
@@ -439,7 +449,13 @@ export function LandingPage() {
       {/* ────── Brand Story ────── */}
       <section className="py-16 md:py-24 px-6 bg-white">
         <div className="max-w-3xl mx-auto text-center">
-          <LogoIcon size={80} className="mx-auto mb-6" />
+          <Image
+            src="/logo.png"
+            alt="Firefly mascot"
+            width={96}
+            height={96}
+            className="mx-auto mb-6 object-contain"
+          />
           <h2 className="text-3xl md:text-4xl font-black mb-6" style={{ color: DARK }}>
             Why <span style={{ color: GREEN }}>Firefly</span>?
           </h2>
@@ -460,7 +476,6 @@ export function LandingPage() {
             className="inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl border-2 border-b-4 text-sm font-bold"
             style={{ borderColor: GREEN, background: GREEN_LIGHT, color: GREEN_DARK }}
           >
-            <LogoIcon size={24} />
             Learn together. Shine together.
           </div>
         </div>
@@ -473,7 +488,6 @@ export function LandingPage() {
             className="rounded-[2rem] p-10 md:p-16 text-white relative overflow-hidden border-b-[6px]"
             style={{ background: GREEN, borderBottomColor: GREEN_DARK }}
           >
-            <LogoIcon size={64} className="mx-auto mb-6 relative z-10 drop-shadow-lg" />
             <h2 className="text-3xl md:text-4xl font-black mb-4 relative z-10">
               Ready to get started?
             </h2>
@@ -495,8 +509,7 @@ export function LandingPage() {
       <footer className="py-8 px-6 bg-white border-t-[3px]" style={{ borderColor: GREEN_LIGHT }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <LogoIcon size={28} />
-            <span className="text-lg font-black" style={{ color: DARK }}>Firefly</span>
+            <span className="text-lg font-[590] tracking-display" style={{ color: "#163300" }}>Firefly</span>
             <span className="text-sm ml-1" style={{ color: GRAY }}>AI learning platform</span>
           </div>
           <p className="text-sm" style={{ color: GRAY }}>

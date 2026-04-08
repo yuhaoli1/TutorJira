@@ -127,15 +127,14 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center px-4" style={{ background: "#F9FDF4" }}>
       {/* Top-left logo link */}
       <a href="/" className="absolute top-5 left-6 flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <img src="/logo.png" alt="Firefly" className="w-8 h-8 object-contain" />
-        <span className="text-base font-black text-[#2D2D2D] tracking-tight">Firefly</span>
+        <img src="/logo.png" alt="" className="w-7 h-7 object-contain" />
+        <span className="text-base font-[590] tracking-display text-[#163300]">Firefly</span>
       </a>
 
       <div className="w-full max-w-sm space-y-8 rounded-3xl bg-white p-8 border-2 border-b-4 border-[#E8F5D6]">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.png" alt="Firefly" className="w-12 h-12 object-contain" />
-            <h1 className="text-2xl font-black text-[#2D2D2D] tracking-tight">Firefly</h1>
+          <div className="flex items-center justify-center mb-1">
+            <h1 className="text-2xl font-[590] tracking-display text-[#163300]">Firefly</h1>
           </div>
           <p className="mt-1 text-sm text-[#6B7280]">AI learning platform · Sign in or create an account</p>
         </div>

@@ -6,6 +6,17 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Library,
+  Users,
+  Settings,
+  Pencil,
+  BookX,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -13,21 +24,21 @@ interface NavItem {
 }
 
 // Icons keyed by route href so they survive translations.
-const EMOJI_BY_HREF: Record<string, string> = {
-  "/admin/dashboard": "📊",
-  "/teacher/dashboard": "📊",
-  "/teacher/tasks": "📋",
-  "/teacher/questions": "📚",
-  "/teacher/students": "👨‍🎓",
-  "/admin/students": "👨‍🎓",
-  "/parent/dashboard": "👪",
-  "/admin/settings": "⚙️",
-  "/student/tasks": "📋",
-  "/student/practice": "✏️",
-  "/student/wrong-book": "📕",
-  "/student/grades": "📈",
-  "/parent/tasks": "📋",
-  "/parent/children": "📈",
+const ICON_BY_HREF: Record<string, LucideIcon> = {
+  "/admin/dashboard": LayoutDashboard,
+  "/teacher/dashboard": LayoutDashboard,
+  "/teacher/tasks": ClipboardList,
+  "/teacher/questions": Library,
+  "/teacher/students": Users,
+  "/admin/students": Users,
+  "/parent/dashboard": LayoutDashboard,
+  "/admin/settings": Settings,
+  "/student/tasks": ClipboardList,
+  "/student/practice": Pencil,
+  "/student/wrong-book": BookX,
+  "/student/grades": TrendingUp,
+  "/parent/tasks": ClipboardList,
+  "/parent/children": Users,
 };
 
 // When an admin browses any sub-app the sidebar always shows the admin nav.
@@ -73,10 +84,16 @@ export function Sidebar({ title, navItems, userName, role, userRole }: SidebarPr
       <aside className="hidden md:flex md:w-56 md:flex-col md:fixed md:inset-y-0 border-r border-[#E8EAED] bg-white">
         <div className="flex flex-col flex-1 overflow-y-auto">
           <div className="px-5 pt-6 pb-4">
-            <h1 className="text-sm font-bold text-[#2E3338] leading-snug tracking-tight flex items-center gap-1.5">
-              <img src="/logo.png" alt="Firefly" className="w-6 h-6 object-contain flex-shrink-0" />
-              {title}
-            </h1>
+            <div className="flex items-center gap-2">
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-6 h-6 object-contain flex-shrink-0"
+              />
+              <span className="text-[15px] font-[590] tracking-display text-[#163300]">
+                Firefly
+              </span>
+            </div>
             <p className="mt-1 text-xs text-[#B4BCC8]">
               {userName} · {role}
             </p>
@@ -84,19 +101,25 @@ export function Sidebar({ title, navItems, userName, role, userRole }: SidebarPr
           <nav className="flex-1 px-3 space-y-1">
             {displayNavItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-              const emoji = EMOJI_BY_HREF[item.href] || "";
+              const Icon = ICON_BY_HREF[item.href];
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors duration-150",
+                    "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors duration-150",
                     isActive
-                      ? "bg-[#163300] text-white"
+                      ? "bg-[#F4F5F6] text-[#163300]"
                       : "text-[#4D5766] hover:bg-[#F4F5F6] hover:text-[#2E3338]"
                   )}
                 >
-                  {emoji && <span className="text-sm leading-none">{emoji}</span>}
+                  {Icon && (
+                    <Icon
+                      size={15}
+                      strokeWidth={1.75}
+                      className="flex-shrink-0"
+                    />
+                  )}
                   {item.label}
                 </Link>
               );
@@ -117,7 +140,7 @@ export function Sidebar({ title, navItems, userName, role, userRole }: SidebarPr
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-[#E8EAED] bg-white py-2 md:hidden">
         {displayNavItems.slice(0, 5).map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          const emoji = EMOJI_BY_HREF[item.href] || "";
+          const Icon = ICON_BY_HREF[item.href];
           return (
             <Link
               key={item.href}
@@ -129,7 +152,7 @@ export function Sidebar({ title, navItems, userName, role, userRole }: SidebarPr
                   : "text-[#B4BCC8]"
               )}
             >
-              {emoji && <span className="text-sm">{emoji}</span>}
+              {Icon && <Icon size={16} strokeWidth={1.75} />}
               <span>{item.label}</span>
             </Link>
           );

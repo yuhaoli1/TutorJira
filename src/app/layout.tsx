@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Google_Sans_Flex, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import "./globals.css";
 
-// Linear's look depends on Inter Variable + OpenType cv01/ss03 — the OpenType
-// features are applied globally in globals.css via font-feature-settings.
-const inter = Inter({
-  variable: "--font-inter",
+// Google Sans Flex is Google's variable sans — warmer than Inter while still
+// disciplined enough to carry the Linear-style layout.
+const googleSans = Google_Sans_Flex({
+  variable: "--font-google-sans-flex",
   subsets: ["latin"],
 });
 
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${googleSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>

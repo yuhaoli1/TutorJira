@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-google-sans-flex);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-inter);
+  --font-heading: var(--font-google-sans-flex);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -126,8 +126,6 @@
   }
   html {
     @apply font-sans;
-    /* Linear's geometric character: enable Inter's cv01 + ss03 stylistic sets */
-    font-feature-settings: "cv01", "ss03";
   }
   /* Linear-style display headings: tight tracking scales with size. */
   .tracking-display {
